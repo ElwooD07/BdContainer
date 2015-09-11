@@ -63,7 +63,8 @@ namespace dbc
 		NOT_VALID = 0x09,
 		IS_EMPTY = 0x0a,
 		IS_DAMAGED = 0x0b,
-		NO_ACCESS = 0x0c,
+		IS_LOCKED = 0x0c,
+		NO_ACCESS = 0x0d,
 
 		INCIDENT_INTERNAL,
 		INCIDENT_UNDEFINED,

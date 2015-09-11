@@ -14,5 +14,7 @@ namespace dbc
 			strm << str;
 			strm >> number;
 		}
+
+		std::string BinaryToHexString(const void* data, size_t data_len);
 	}
 }

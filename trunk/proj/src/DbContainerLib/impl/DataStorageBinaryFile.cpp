@@ -8,54 +8,61 @@
 
 namespace
 {
-	static const size_t MAX_PASSWORD_LEN = 256;
-	static const size_t BIN_HEADER_LEN = MAX_PASSWORD_LEN * 4;
-	static const std::string BIN_FILE_EXT = ".bin";
+	const size_t MAX_PASSWORD_LEN = 256;
+	const size_t BIN_HEADER_LEN = MAX_PASSWORD_LEN * 4;
+	const std::string BIN_FILE_EXT = ".bin";
+	const std::string s_testExpression = "Database Container Project";
 
 	std::string GetBinFilePath(const std::string& db_path)
 	{
 		return db_path + BIN_FILE_EXT;
 	}
 
-	std::string CalculateAdaptedHash(const std::string& data, const char* salt, size_t outLen)
+	void GetKeyAndIvFromPassword(const std::string& password, dbc::crypting::RawData& key, dbc::crypting::RawData& iv)
 	{
-		std::string hash(dbc::crypto::SHA3_GetHash(data + salt));
-		hash.resize(outLen);
-		return hash;
-	}
+		assert(key.empty() && iv.empty());
 
-	std::string GetKeyFromPassword(const std::string& password)
-	{
 		static const char s_salt[]("arbadakarba123");
-		return CalculateAdaptedHash(password, s_salt, dbc::crypto::AES_BLOCK_SIZE);
+		dbc::crypting::RawData hash = dbc::crypting::utils::SHA3_GetHash(dbc::crypting::utils::StringToRawData(password + s_salt));
+		const unsigned int keyAndIvLen = dbc::crypting::AesCryptorBase::GetKeyAndIvLen();
+		assert(hash.size() == keyAndIvLen * 2);
+		key.assign(hash.begin(), hash.begin() + keyAndIvLen);
+		iv.assign(hash.begin() + keyAndIvLen, hash.end());
 	}
 
-	std::string GetIvFromPassword(const std::string& password)
+	void FillHeader(const std::string password, const dbc::crypting::RawData& key, const dbc::crypting::RawData& iv, std::ostream &out)
 	{
-		static const char s_salt[]("tmdfiycyhdsmwiietyhccyneotitn");
-		return CalculateAdaptedHash(password, s_salt, dbc::crypto::AES_BLOCK_SIZE);
-	}
+		std::istringstream istreamPass(s_testExpression);
+		dbc::crypting::AesEncryptor encryptor(key, iv);
+		encryptor.Encrypt(istreamPass, out, s_testExpression.size());
 
-	void FillHeader(const std::string password, std::ostream &out)
-	{
-		std::string key = GetKeyFromPassword(password); // AES key
-		std::string iv = GetIvFromPassword(password); // AES IV
-
-		std::istringstream istreamPass(password);
-		dbc::crypto::AES_Encrypt(key, iv, istreamPass, out, password.length()); // Writing encrypted password
-
-		assert(password.length() <= BIN_HEADER_LEN);
-		size_t trashLen = BIN_HEADER_LEN - password.length();
+		assert(s_testExpression.size() <= BIN_HEADER_LEN);
+		size_t trashLen = BIN_HEADER_LEN - s_testExpression.size();
 		if (trashLen > 0)
 		{
-			std::string trash(trashLen, '\0');
-			dbc::crypto::RandomSequence(dbc::crypto::GetSeed(password), trash);
-			out.write(trash.c_str(), trash.length());
+			dbc::crypting::RawData trash(trashLen, '\0');
+			dbc::crypting::utils::RandomSequence(dbc::crypting::utils::GetSeed(dbc::crypting::utils::StringToRawData(password)), trash);
+			out.write(reinterpret_cast<const char*>(trash.data()), trash.size());
 		}
 		if (out.rdstate() != std::ios_base::goodbit)
 		{
 			throw dbc::ContainerException(dbc::ERR_DATA, dbc::CANT_WRITE);
 		}
+	}
+
+	bool PasswordIsCorrect(const std::string& password, const dbc::crypting::RawData key, const dbc::crypting::RawData iv, std::istream& in)
+	{
+		std::ostringstream ostream;
+		dbc::crypting::AesDecryptor decryptor(key, iv);
+		uint64_t decryptedLen = decryptor.Decrypt(in, ostream, password.length());
+		ostream.flush();
+		std::string decrypted = ostream.str();
+
+		if (!in.good() || decryptedLen != password.size())
+		{
+			throw dbc::ContainerException(dbc::ERR_DATA, dbc::CANT_READ);
+		}
+		return (s_testExpression == decrypted);
 	}
 }
 
@@ -68,17 +75,11 @@ void dbc::DataStorageBinaryFile::Open(const std::string& db_path, const std::str
 
 	OpenFileStream(false);
 
-	std::string key = GetKeyFromPassword(password);
-	std::string iv = GetIvFromPassword(password);
-	std::ostringstream ostream;
-	uint64_t decryptedLen = crypto::AES_Decrypt(key, iv, m_stream, ostream, password.length());
-	ostream.flush();
-	std::string decrypted = ostream.str();
-	if (!m_stream.good() || decryptedLen != password.length())
-	{
-		throw ContainerException(ERR_DATA, CANT_READ);
-	}
-	if (decrypted != password)
+	dbc::crypting::RawData key;
+	dbc::crypting::RawData iv;
+	GetKeyAndIvFromPassword(password, key, iv);
+
+	if (!PasswordIsCorrect(password, key, iv, m_stream))
 	{
 		throw ContainerException(INVALID_PASSWORD);
 	}
@@ -92,7 +93,14 @@ void dbc::DataStorageBinaryFile::Create(const std::string& db_path, const std::s
 	m_bin_file = GetBinFilePath(db_path);
 	ClearFile();
 	OpenFileStream(true);
-	FillHeader(password, m_stream);
+
+	dbc::crypting::RawData key;
+	dbc::crypting::RawData iv;
+	GetKeyAndIvFromPassword(password, key, iv);
+	FillHeader(password, key, iv, m_stream);
+
+	m_key.swap(key);
+	m_iv.swap(iv);
 }
 
 void dbc::DataStorageBinaryFile::ResetPassword(const std::string& newPassword)
@@ -105,9 +113,6 @@ void dbc::DataStorageBinaryFile::ResetPassword(const std::string& newPassword)
 void dbc::DataStorageBinaryFile::ClearData()
 {
 	CheckInitialized();
-
-	dbc::MutexLock readGuard(m_mutexRead);
-	dbc::MutexLock writeGuard(m_mutexWrite);
 
 	m_stream.seekg(0);
 	std::string header(BIN_HEADER_LEN, '\0');
@@ -141,28 +146,23 @@ uint64_t dbc::DataStorageBinaryFile::Write(std::istream& data, uint64_t begin, u
 {
 	CheckInitialized();
 
-	dbc::MutexLock writeGuard(m_mutexWrite);
-
 	m_stream.seekp(begin, std::ios::beg);
-	return crypto::AES_Encrypt(m_key, m_iv, data, m_stream, end - begin);
+	crypting::AesEncryptor encryptor(m_key, m_iv);
+	return encryptor.Encrypt(data, m_stream, end - begin);
 }
 
 uint64_t dbc::DataStorageBinaryFile::Read(std::ostream& data, uint64_t begin, uint64_t end, dbc::IProgressObserver* observer)
 {
 	CheckInitialized();
 
-	dbc::MutexLock readGuard(m_mutexRead);
-
 	m_stream.seekg(begin, std::ios::beg);
-	return crypto::AES_Decrypt(m_key, m_iv, m_stream, data, end - begin);
+	crypting::AesDecryptor decryptor(m_key, m_iv);
+	return decryptor.Decrypt(m_stream, data, end - begin);
 }
 
 uint64_t dbc::DataStorageBinaryFile::Copy(std::istream& src, std::ostream& dest, uint64_t beginSrc, uint64_t endSrc, uint64_t beginDest, dbc::IProgressObserver* observer)
 {
 	CheckInitialized();
-
-	dbc::MutexLock readGuard(m_mutexRead);
-	dbc::MutexLock writeGuard(m_mutexWrite);
 
 	m_stream.seekg(beginSrc, std::ios::beg);
 	m_stream.seekp(beginDest, std::ios::beg);
@@ -178,8 +178,6 @@ uint64_t dbc::DataStorageBinaryFile::Erace(uint64_t begin, uint64_t end, dbc::IP
 	{
 		throw ContainerException(ERR_INTERNAL, WRONG_PARAMETERS);
 	}
-
-	dbc::MutexLock writeGuard(m_mutexWrite);
 
 	const unsigned int buf_size = 20480; // 20K
 	char buf[buf_size];
@@ -214,9 +212,6 @@ uint64_t dbc::DataStorageBinaryFile::Append(uint64_t size, uint64_t& begin, dbc:
 
 void dbc::DataStorageBinaryFile::OpenFileStream(bool truncate)
 {
-	dbc::MutexLock readGuard(m_mutexRead);
-	dbc::MutexLock writeGuard(m_mutexWrite);
-
 	if (m_stream.is_open())
 	{
 		m_stream.close();

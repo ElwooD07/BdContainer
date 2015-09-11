@@ -82,6 +82,8 @@ namespace
 			return "is empty";
 		case IS_DAMAGED:
 			return "is damaged";
+		case IS_LOCKED:
+			return "is locked";
 		case NO_ACCESS:
 			return "- no access";
 		case INCIDENT_INTERNAL:

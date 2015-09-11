@@ -1,0 +1,17 @@
+1) Extract openssl-1.0.1p.tar.gz to "c:\"
+2) Install Perl
+3) Open MS VS Command Prompt and do the next:
+	cd c:\openssl-1.0.1p
+
+	- For Debug build:
+		perl Configure VC-WIN32 --prefix=C:\openssl_debug
+		ms\do_ms
+		Open ms/nt.mak and replase all "/Zi" entries to "/Z7". There is should be 3 replacements.
+	- For Release build:
+		perl Configure VC-WIN32 --prefix=C:\openssl_release
+		ms\do_ms
+		
+	nmake -f ms\nt.mak 
+	nmake -f ms\nt.mak install
+
+Binaries and insludes will be in C:\openssl_debug and C:\openssl_release folders

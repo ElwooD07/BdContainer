@@ -1,6 +1,6 @@
 #pragma once
-#include <mutex>
 #include "IDataStorage.h"
+#include "Crypto.h"
 
 namespace dbc
 {
@@ -29,11 +29,9 @@ namespace dbc
 		void ClearFile();
 
 	private:
-		std::string m_key;
-		std::string m_iv;
+		crypting::RawData m_key; // AES key
+		crypting::RawData m_iv; // AES IV
 		std::string m_bin_file;
 		std::fstream m_stream;
-		std::mutex m_mutexWrite;
-		std::mutex m_mutexRead;
 	};
 }

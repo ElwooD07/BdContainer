@@ -7,4 +7,6 @@
 #include <algorithm>
 #include <fstream>
 
-#include "gtest.h"
+#include <openssl/evp.h>
+
+#include <gtest.h>

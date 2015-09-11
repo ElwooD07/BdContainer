@@ -36,10 +36,16 @@ void dbc::ContainerFile::Open(ReadWriteAccess access)
 	{
 		throw ContainerException(ERR_DB_FS, CANT_OPEN, WRONG_PARAMETERS);
 	}
-	if (m_access != NoAccess || // Already opened by this object
-		(access == WriteAccess && !m_resources->GetSync().SetWriteLock(m_id))) // Opened in another object for writing
+	// Already opened by this object
+	if (m_access != NoAccess)
 	{
 		throw ContainerException(ERR_DB_FS_ALREADY_OPENED);
+	}
+	// Opened in another object for writing
+	if ((access == WriteAccess && !m_resources->GetSync().SetWriteLock(m_id)) ||
+		(access == ReadAccess && !m_resources->GetSync().SetReadLock(m_id)))
+	{
+		throw ContainerException(ERR_DB_FS, IS_LOCKED);
 	}
 	m_access = access;
 	m_streamsManager.reset(new FileStreamsManager(m_id, m_resources));
@@ -60,6 +66,10 @@ void dbc::ContainerFile::Close()
 	if (m_access == WriteAccess)
 	{
 		m_resources->GetSync().ReleaseWriteLock(m_id);
+	}
+	else if (m_access == ReadAccess)
+	{
+		m_resources->GetSync().ReleaseReadLock(m_id);
 	}
 	m_access = NoAccess;
 	m_streamsManager.reset();
@@ -93,13 +103,12 @@ uint64_t dbc::ContainerFile::Read(std::ostream& out, uint64_t size, IProgressObs
 	StreamsChain_vt::const_iterator end = streams.end();
 	for (StreamsChain_vt::const_iterator it = streams.begin(); it != end; ++it)
 	{
-		// TODO: calculate progress
 		if (it->used == 0)
 		{
 			continue;
 		}
 
-		uint64_t read = m_resources->Storage().Read(out, it->start, it->start + it->used);
+		uint64_t read = m_resources->Storage().Read(out, it->start, it->start + it->used, observer);
 		if (read != it->used)
 		{
 			throw ContainerException(ERR_DATA, CANT_READ);
@@ -121,7 +130,6 @@ uint64_t dbc::ContainerFile::Write(std::istream& in, uint64_t size, IProgressObs
 	}
 
 	TransactionGuard transaction = m_resources->GetConnection().StartTransaction();
-	
 	uint64_t writtenTotal = 0;
 	if (m_resources->DataUsagePrefs().TransactionalWrite())
 	{
@@ -209,12 +217,10 @@ uint64_t dbc::ContainerFile::WriteImpl(std::istream& in, StreamsChain_vt::const_
 	uint64_t writtenTotal = 0;
 	for (begin; begin != end && writtenTotal < size; ++begin)
 	{
-		// TODO: calculate progress
-
 		uint64_t sizeLeftToWrite(size - writtenTotal);
 		uint64_t sizeToWriteNow = (sizeLeftToWrite < begin->size) ? sizeLeftToWrite : begin->size;
 
-		uint64_t written = m_resources->Storage().Write(in, begin->start, begin->start + sizeToWriteNow);
+		uint64_t written = m_resources->Storage().Write(in, begin->start, begin->start + sizeToWriteNow, observer);
 		if (written != sizeToWriteNow)
 		{
 			Clear();

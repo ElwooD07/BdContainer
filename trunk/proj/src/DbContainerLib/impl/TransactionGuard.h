@@ -27,9 +27,9 @@ namespace dbc
 
 	class TransactionGuardImpl
 	{
-	public:
 		NONCOPYABLE(TransactionGuardImpl);
 
+	public:
 		explicit TransactionGuardImpl(TransactionsResourcesGuard resources);
 		~TransactionGuardImpl();
 		void Commit();

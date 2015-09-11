@@ -154,33 +154,35 @@ TEST(E_FileSystemTest, Files_Read)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
-	const std::string baseContent("0123456789");
-	const size_t dataSize(contentRepeats * baseContent.size());
-	std::stringstream str_stream;
-	for (size_t i = 0; i < contentRepeats; ++i)
-	{
-		str_stream << baseContent;
-	}
-	std::ofstream tfile_ostream(fname, std::ios::binary | std::ios::trunc);
-	ASSERT_TRUE(tfile_ostream.is_open());
-
-	// Write database test file. This action performed in previous test
+	std::string origContent;
+	size_t dataSize = 0;
 	ContainerFileGuard cfile = cont->GetRoot()->CreateFile(fname);
-	cfile->Open(WriteAccess);
-	cfile->Write(str_stream, dataSize);
+	{
+		const std::string baseContent("0123456789");
+		dataSize = contentRepeats * baseContent.size();
+		std::stringstream streamOrigContent;
+		for (size_t i = 0; i < contentRepeats; ++i)
+		{
+			streamOrigContent << baseContent;
+		}
+		// Write database test file. This action performed in previous test
+		cfile->Open(WriteAccess);
+		cfile->Write(streamOrigContent, dataSize);
+		cfile->Close();
+		streamOrigContent.seekg(0);
+		origContent = streamOrigContent.str();
+	}
 
-	cfile->Close();
 	ASSERT_NO_THROW(cfile->Open(ReadAccess));
-	uint64_t read(0);
-	EXPECT_NO_THROW(read = cfile->Read(tfile_ostream, dataSize));
+	uint64_t read = 0;
+	std::fstream streamSavedContent(fname, std::ios::binary | std::ios::trunc | std::ios::in | std::ios::out);
+	ASSERT_TRUE(streamSavedContent.is_open());
+	EXPECT_NO_THROW(read = cfile->Read(streamSavedContent, dataSize));
 	EXPECT_EQ(dataSize, read);
-
-	str_stream.seekg(0);
-	std::string origContent = str_stream.str();
-	tfile_ostream.close();
-	std::ifstream tfile_istream(fname, std::ios::binary);
+	
+	streamSavedContent.seekg(0);
 	std::string savedContent(dataSize, '\0');
-	tfile_istream.get(&savedContent[0], dataSize);
-	EXPECT_TRUE(tfile_istream.eof());
+	streamSavedContent.get(&savedContent[0], dataSize);
+	EXPECT_EQ(origContent.size(), savedContent.size());
 	EXPECT_EQ(origContent, savedContent);
 }

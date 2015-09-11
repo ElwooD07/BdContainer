@@ -19,3 +19,13 @@ void dbc::utils::SplitSavingDelim(const std::string &str, char delim, std::vecto
 		out.push_back(std::string(last, end));
 	}
 }
+
+std::string dbc::utils::BinaryToHexString(const void* data, size_t data_len)
+{
+	std::string result(data_len * 2, '\0');
+	for (size_t i = 0; i < data_len; ++i)
+	{
+		sprintf_s(&result[0] + (i * 2), result.size(), "%02x", *(static_cast<const unsigned char*>(data) + i));
+	}
+	return result;
+}

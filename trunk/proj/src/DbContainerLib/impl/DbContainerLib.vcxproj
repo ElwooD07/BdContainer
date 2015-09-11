@@ -59,7 +59,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(DbcLib);$(DbcLib)\impl\Utils\;$(sqlite_inc);$(crypto_inc);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(DbcLib);$(DbcLib)\impl\Utils\;$(sqlite_inc);$(openssl_inc);</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -76,7 +76,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(DbcLib);$(DbcLib)\impl\Utils\;$(sqlite_inc);$(crypto_inc);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(DbcLib);$(DbcLib)\impl\Utils\;$(sqlite_inc);$(openssl_inc);</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
