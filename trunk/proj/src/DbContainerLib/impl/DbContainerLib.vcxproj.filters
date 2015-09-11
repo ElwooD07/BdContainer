@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Файлы исходного кода">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Заголовочные файлы">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Заголовочные файлы\impl">
+      <UniqueIdentifier>{302639e8-0a22-4e2e-84ce-2ba0a9559eb8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ContainerAPI.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ContainerException.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DataUsagePreferences.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ElementProperties.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ErrorCodes.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\IContainer.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\IContainerElement.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\IContainerFile.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\IContainerFolder.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\IContainerInfo.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\IDataStorage.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\IProgressObserver.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Iterator.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Types.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="Connection.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="Container.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerElement.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerFile.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerFolder.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerInfoImpl.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerResources.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="Crypto.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="DataStorageBinaryFile.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementsIterator.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementsSyncKeeper.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="FileStreamsManager.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="IContainnerResources.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="SQLQuery.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="TransactionGuard.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\CommonUtils.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\FsUtils.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Logging.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommonUtils.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\FsUtils.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Logging.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="Connection.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="Container.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerAPI.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerElement.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerException.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerFile.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerFolder.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerInfoImpl.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerResources.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="Crypto.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="DataStorageBinaryFile.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="DataUsagePreferences.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementProperties.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementsIterator.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementsSyncKeeper.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ErrorCodes.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="FileStreamsManager.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="SQLQuery.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="TransactionGuard.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

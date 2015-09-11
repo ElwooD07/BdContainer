@@ -1,0 +1,6 @@
+Transactional write - is the rule for Container's files to do writing in the binary storage with preservation of the principles of the transaction.
+It means that each write operation will be done if only the database and the binary storage will be in consistent state.
+If database will be corrupted while writing operation, the program will do rollback of this operation. In this case the binary storage will always in consistent state because of dependency from the database.
+See dbc::DataUsagePreferences interface.
+If transactional write is ON, the data will be written to the free space. After that, the space which was allocated for that data before, will unused and other files can use this available space in binary storage.
+If transactional write is OFF, the data will be written to the allocated places at once. It means, that if the write process will be terminated, the existing data will be corrupted. Non-transactional write mode is recommended only for optimized storages with minimum single data sizes. In other cases I recommend to use transactional write, which is ON by default.

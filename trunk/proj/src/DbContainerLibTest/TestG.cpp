@@ -1,0 +1,93 @@
+#include "stdafx.h"
+#include "ContainerAPI.h"
+#include "Utils.h"
+
+using namespace dbc;
+
+extern ContainerGuard cont;
+
+TEST(G_ContainerInfoTests, IsEmpty)
+{
+	ASSERT_TRUE(DatabasePrepare());
+	
+	ContainerInfo info = cont->GetInfo();
+	cont->Clear();
+	EXPECT_TRUE(info->IsEmpty());
+
+	ContainerFolderGuard root = cont->GetRoot();
+	ContainerElementGuard ce = root->CreateChild("folder", ElementTypeFolder);
+	EXPECT_FALSE(info->IsEmpty());
+
+	ce->Remove();
+	EXPECT_TRUE(info->IsEmpty());
+}
+
+TEST(G_ContainerInfoTests, TotalElements)
+{
+	ASSERT_TRUE(DatabasePrepare());
+	cont->Clear();
+	ContainerInfo info = cont->GetInfo();
+
+	EXPECT_EQ(1, info->TotalElements()); // root should necessarily be in the empty container
+	EXPECT_EQ(1, info->TotalElements(ElementTypeFolder));
+	EXPECT_EQ(0, info->TotalElements(ElementTypeFile));
+	ContainerFolderGuard root = cont->GetRoot();
+	ContainerFolderGuard cfold = root->CreateFolder("folder1");
+	EXPECT_EQ(2, info->TotalElements());
+
+	cfold->CreateChild("file1", ElementTypeFile);
+	EXPECT_EQ(3, info->TotalElements());
+
+	EXPECT_EQ(2, info->TotalElements(ElementTypeFolder));
+	EXPECT_EQ(1, info->TotalElements(ElementTypeFile));
+
+	root->CreateFolder("folder2")->CreateFile("file2");
+
+	EXPECT_EQ(5, info->TotalElements());
+	EXPECT_EQ(3, info->TotalElements(ElementTypeFolder));
+	EXPECT_EQ(2, info->TotalElements(ElementTypeFile));
+
+	cfold->Remove();
+	ASSERT_FALSE(cfold->Exists());
+
+	EXPECT_EQ(3, info->TotalElements());
+	EXPECT_EQ(2, info->TotalElements(ElementTypeFolder));
+	EXPECT_EQ(1, info->TotalElements(ElementTypeFile));
+
+	cont->Clear();
+	EXPECT_EQ(1, info->TotalElements());
+	EXPECT_EQ(1, info->TotalElements(ElementTypeFolder));
+}
+/*
+TEST(G_ContainerInfoTests, TotalDataSize)
+{
+	ASSERT_TRUE(DatabasePrepare());
+	cont->Clear();
+	ContainerInfo info = cont->GetInfo();
+	
+	ContainerFolderGuard root = cont->GetRoot();
+
+	std::vector<std::string> data;
+	data.push_back("0123456789");
+	data.push_back("01234567890123456789");
+	data.push_back("01234567890123456789");
+	data.push_back("012345678901234");
+	data.push_back("01234");
+	unsigned totalSize(0);
+	const std::string fileBaseName("file");
+	for (size_t i = 0; i < data.size(); ++i)
+	{
+		ContainerFileGuard cf = root->CreateFile(fileBaseName + std::string(1, i + 97));
+		EXPECT_EQ(0, cf->Size());
+		
+		totalSize += data[i].size();
+		EXPECT_EQ(totalSize, info->TotalDataSize());
+	}
+	for (size_t i = 0; i < data.size(); ++i)
+	{
+		ASSERT_NO_THROW(cf->RemoveBinaryStream(streamBaseName + std::string(1, i + 97)));
+		totalSize -= dataSizes[i];
+		EXPECT_EQ(totalSize, info->TotalDataSize());
+	}
+	EXPECT_EQ(0, info->TotalDataSize());
+	}*/
