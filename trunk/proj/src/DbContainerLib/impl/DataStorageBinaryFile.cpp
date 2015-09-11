@@ -50,15 +50,15 @@ namespace
 		}
 	}
 
-	bool PasswordIsCorrect(const std::string& password, const dbc::crypting::RawData key, const dbc::crypting::RawData iv, std::istream& in)
+	bool KeyAndIvAreCorrect(const dbc::crypting::RawData key, const dbc::crypting::RawData iv, std::istream& in)
 	{
 		std::ostringstream ostream;
 		dbc::crypting::AesDecryptor decryptor(key, iv);
-		uint64_t decryptedLen = decryptor.Decrypt(in, ostream, password.length());
+		uint64_t decryptedLen = decryptor.Decrypt(in, ostream, s_testExpression.size());
 		ostream.flush();
 		std::string decrypted = ostream.str();
 
-		if (!in.good() || decryptedLen != password.size())
+		if (!in.good() || decryptedLen != s_testExpression.size())
 		{
 			throw dbc::ContainerException(dbc::ERR_DATA, dbc::CANT_READ);
 		}
@@ -79,7 +79,7 @@ void dbc::DataStorageBinaryFile::Open(const std::string& db_path, const std::str
 	dbc::crypting::RawData iv;
 	GetKeyAndIvFromPassword(password, key, iv);
 
-	if (!PasswordIsCorrect(password, key, iv, m_stream))
+	if (!KeyAndIvAreCorrect(key, iv, m_stream))
 	{
 		throw ContainerException(INVALID_PASSWORD);
 	}

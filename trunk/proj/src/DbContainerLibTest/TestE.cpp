@@ -182,7 +182,7 @@ TEST(E_FileSystemTest, Files_Read)
 	
 	streamSavedContent.seekg(0);
 	std::string savedContent(dataSize, '\0');
-	streamSavedContent.get(&savedContent[0], dataSize);
+	streamSavedContent.read(&savedContent[0], dataSize);
 	EXPECT_EQ(origContent.size(), savedContent.size());
 	EXPECT_EQ(origContent, savedContent);
 }

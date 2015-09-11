@@ -29,7 +29,7 @@ uint64_t dbc::ContainerInfoImpl::TotalElements(ElementType type)
 
 uint64_t dbc::ContainerInfoImpl::TotalDataSize()
 {
-	SQLQuery query(m_resources->GetConnection(), "SELECT SUM(size) FROM FileStreams;");
+	SQLQuery query(m_resources->GetConnection(), "SELECT SUM(used) FROM FileStreams;");
 	query.Step();
 	return query.ColumnInt64(0);
 }
