@@ -58,7 +58,7 @@ TEST(G_ContainerInfoTests, TotalElements)
 	EXPECT_EQ(1, info->TotalElements());
 	EXPECT_EQ(1, info->TotalElements(ElementTypeFolder));
 }
-/*
+
 TEST(G_ContainerInfoTests, TotalDataSize)
 {
 	ASSERT_TRUE(DatabasePrepare());
@@ -79,15 +79,20 @@ TEST(G_ContainerInfoTests, TotalDataSize)
 	{
 		ContainerFileGuard cf = root->CreateFile(fileBaseName + std::string(1, i + 97));
 		EXPECT_EQ(0, cf->Size());
+		std::stringstream strm;
+		strm << data[i];
+		cf->Write(strm, data[i].size());
 		
 		totalSize += data[i].size();
 		EXPECT_EQ(totalSize, info->TotalDataSize());
 	}
 	for (size_t i = 0; i < data.size(); ++i)
 	{
-		ASSERT_NO_THROW(cf->RemoveBinaryStream(streamBaseName + std::string(1, i + 97)));
-		totalSize -= dataSizes[i];
+		ContainerElementGuard ce = root->GetChild(fileBaseName + std::string(1, i + 97));
+		EXPECT_EQ(data[i].size(), ce->AsFile()->Size());
+		ASSERT_NO_THROW(ce->Remove());
+		totalSize -= data[i].size();
 		EXPECT_EQ(totalSize, info->TotalDataSize());
 	}
 	EXPECT_EQ(0, info->TotalDataSize());
-	}*/
+}

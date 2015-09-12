@@ -51,12 +51,12 @@ void dbc::ContainerFile::Open(ReadWriteAccess access)
 	m_streamsManager.reset(new FileStreamsManager(m_id, m_resources));
 }
 
-bool dbc::ContainerFile::IsOpened()
+bool dbc::ContainerFile::IsOpened() const
 {
 	return m_access != NoAccess;
 }
 
-dbc::ReadWriteAccess dbc::ContainerFile::Access()
+dbc::ReadWriteAccess dbc::ContainerFile::Access() const
 {
 	return m_access;
 }
@@ -82,14 +82,25 @@ bool dbc::ContainerFile::IsEmpty() const
 
 uint64_t dbc::ContainerFile::Size() const
 {
-	CheckIsOpened();
-	return m_streamsManager->GetSizeUsed();
+	if (IsOpened())
+	{
+		return m_streamsManager->GetSizeUsed();
+	}
+	else
+	{
+		SQLQuery query(m_resources->GetConnection(), "SELECT SUM(used) from FileStreams WHERE file_id = ?;");
+		query.BindInt64(1, m_id);
+		query.Step();
+		return query.ColumnInt64(0);
+	}
 }
 
 uint64_t dbc::ContainerFile::Read(std::ostream& out, uint64_t size, IProgressObserver* observer)
 {
-	CheckIsOpened();
-	CheckAccess(ReadAccess);
+	if (!IsOpened())
+	{
+		Open(ReadAccess);
+	}
 
 	if (!out)
 	{
@@ -98,18 +109,33 @@ uint64_t dbc::ContainerFile::Read(std::ostream& out, uint64_t size, IProgressObs
 
 	m_streamsManager->ReloadStreamsInfo();
 
+	if (size == 0)
+	{
+		size = Size();
+	}
+
 	uint64_t readTotal(0);
 	const StreamsChain_vt& streams = m_streamsManager->GetAllStreams();
 	StreamsChain_vt::const_iterator end = streams.end();
-	for (StreamsChain_vt::const_iterator it = streams.begin(); it != end; ++it)
+	for (StreamsChain_vt::const_iterator it = streams.begin(); it != end, readTotal < size; ++it)
 	{
 		if (it->used == 0)
 		{
 			continue;
 		}
 
-		uint64_t read = m_resources->Storage().Read(out, it->start, it->start + it->used, observer);
-		if (read != it->used)
+		uint64_t sizeToReadNow = size - readTotal;
+		if (sizeToReadNow == 0)
+		{
+			break;
+		}
+		else if (it->used < sizeToReadNow)
+		{
+			sizeToReadNow = it->used;
+		}
+
+		uint64_t read = m_resources->Storage().Read(out, it->start, it->start + sizeToReadNow, observer);
+		if (read != sizeToReadNow)
 		{
 			throw ContainerException(ERR_DATA, CANT_READ);
 		}
@@ -121,8 +147,10 @@ uint64_t dbc::ContainerFile::Read(std::ostream& out, uint64_t size, IProgressObs
 
 uint64_t dbc::ContainerFile::Write(std::istream& in, uint64_t size, IProgressObserver* observer)
 {
-	CheckIsOpened();
-	CheckAccess(WriteAccess);
+	if (!IsOpened())
+	{
+		Open(WriteAccess);
+	}
 
 	if (!in)
 	{
@@ -146,30 +174,16 @@ uint64_t dbc::ContainerFile::Write(std::istream& in, uint64_t size, IProgressObs
 
 void dbc::ContainerFile::Clear()
 {
-	CheckIsOpened();
-	CheckAccess(WriteAccess);
+	if (!IsOpened())
+	{
+		Open(WriteAccess);
+	}
 
 	SQLQuery query(m_resources->GetConnection(), "UPDATE FileStreams SET used = 0 WHERE file_id = ?;");
 	query.BindInt64(1, m_id);
 	query.Step();
 
 	m_streamsManager->ReloadStreamsInfo();
-}
-
-void dbc::ContainerFile::CheckIsOpened() const
-{
-	if (m_access == NoAccess)
-	{
-		throw ContainerException(ERR_DB_FS_NOT_OPENED);
-	}
-}
-
-void dbc::ContainerFile::CheckAccess(ReadWriteAccess access) const
-{
-	if (!(m_access & access))
-	{
-		throw ContainerException(ERR_DB_FS, NO_ACCESS);
-	}
 }
 
 uint64_t dbc::ContainerFile::DirectWrite(std::istream& in, uint64_t size, IProgressObserver* observer)
