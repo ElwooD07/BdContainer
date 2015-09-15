@@ -2,8 +2,42 @@
 #include "ContainerFile.h"
 #include "FileStreamsManager.h"
 #include "SQLQuery.h"
+#include "StreamProxyProgressObserver.h"
 #include "ContainerException.h"
 #include "Logging.h"
+
+namespace
+{
+	class TemporarilyFileOpener
+	{
+	public:
+		TemporarilyFileOpener(dbc::ContainerFile* file, dbc::ReadWriteAccess access)
+			: m_file(file)
+			, m_wasTemporarilyOpened(false)
+		{
+			if (!file->IsOpened())
+			{
+				file->Open(access);
+				m_wasTemporarilyOpened = true;
+			}
+			else if (file->Access() != dbc::AllAccess && file->Access() != access) // File is already opened in another mode
+			{
+				throw dbc::ContainerException(dbc::ERR_DB_FS_ALREADY_OPENED);
+			}
+		}
+		~TemporarilyFileOpener()
+		{
+			if (m_wasTemporarilyOpened)
+			{
+				m_file->Close();
+			}
+		}
+
+	private:
+		dbc::ContainerFile* m_file;
+		bool m_wasTemporarilyOpened;
+	};
+}
 
 dbc::ContainerFile::ContainerFile(ContainerResources resources, int64_t id) :
 ContainerElement(resources, id), m_access(NoAccess)
@@ -42,8 +76,7 @@ void dbc::ContainerFile::Open(ReadWriteAccess access)
 		throw ContainerException(ERR_DB_FS_ALREADY_OPENED);
 	}
 	// Opened in another object for writing
-	if ((access == WriteAccess && !m_resources->GetSync().SetWriteLock(m_id)) ||
-		(access == ReadAccess && !m_resources->GetSync().SetReadLock(m_id)))
+	if (!m_resources->GetSync().SetFileLock(m_id, access))
 	{
 		throw ContainerException(ERR_DB_FS, IS_LOCKED);
 	}
@@ -63,14 +96,7 @@ dbc::ReadWriteAccess dbc::ContainerFile::Access() const
 
 void dbc::ContainerFile::Close()
 {
-	if (m_access == WriteAccess)
-	{
-		m_resources->GetSync().ReleaseWriteLock(m_id);
-	}
-	else if (m_access == ReadAccess)
-	{
-		m_resources->GetSync().ReleaseReadLock(m_id);
-	}
+	m_resources->GetSync().ReleaseFileLock(m_id, m_access);
 	m_access = NoAccess;
 	m_streamsManager.reset();
 }
@@ -97,27 +123,24 @@ uint64_t dbc::ContainerFile::Size() const
 
 uint64_t dbc::ContainerFile::Read(std::ostream& out, uint64_t size, IProgressObserver* observer)
 {
-	if (!IsOpened())
-	{
-		Open(ReadAccess);
-	}
-
 	if (!out)
 	{
 		throw ContainerException(ERR_DATA_CANT_OPEN_DEST);
 	}
 
+	TemporarilyFileOpener openGuard(this, ReadAccess);
 	m_streamsManager->ReloadStreamsInfo();
 
 	if (size == 0)
 	{
-		size = Size();
+		size = m_streamsManager->GetSizeUsed();
 	}
 
+	StreamProxyProgressObserver proxyObserver(observer);
 	uint64_t readTotal(0);
 	const StreamsChain_vt& streams = m_streamsManager->GetAllStreams();
 	StreamsChain_vt::const_iterator end = streams.end();
-	for (StreamsChain_vt::const_iterator it = streams.begin(); it != end, readTotal < size; ++it)
+	for (StreamsChain_vt::const_iterator it = streams.begin(); it != end && readTotal < size; ++it)
 	{
 		if (it->used == 0)
 		{
@@ -134,7 +157,9 @@ uint64_t dbc::ContainerFile::Read(std::ostream& out, uint64_t size, IProgressObs
 			sizeToReadNow = it->used;
 		}
 
-		uint64_t read = m_resources->Storage().Read(out, it->start, it->start + sizeToReadNow, observer);
+		proxyObserver.SetRange(readTotal / size, (readTotal + sizeToReadNow) / size);
+		proxyObserver.OnProgressUpdated(0);
+		uint64_t read = m_resources->Storage().Read(out, it->start, it->start + sizeToReadNow, &proxyObserver);
 		if (read != sizeToReadNow)
 		{
 			throw ContainerException(ERR_DATA, CANT_READ);
@@ -147,15 +172,13 @@ uint64_t dbc::ContainerFile::Read(std::ostream& out, uint64_t size, IProgressObs
 
 uint64_t dbc::ContainerFile::Write(std::istream& in, uint64_t size, IProgressObserver* observer)
 {
-	if (!IsOpened())
-	{
-		Open(WriteAccess);
-	}
-
 	if (!in)
 	{
 		throw ContainerException(ERR_DATA_CANT_OPEN_SRC);
 	}
+
+	TemporarilyFileOpener openGuard(this, WriteAccess);
+	m_streamsManager->ReloadStreamsInfo();
 
 	TransactionGuard transaction = m_resources->GetConnection().StartTransaction();
 	uint64_t writtenTotal = 0;
@@ -174,16 +197,32 @@ uint64_t dbc::ContainerFile::Write(std::istream& in, uint64_t size, IProgressObs
 
 void dbc::ContainerFile::Clear()
 {
-	if (!IsOpened())
-	{
-		Open(WriteAccess);
-	}
+	TemporarilyFileOpener openGuard(this, WriteAccess);
+	m_streamsManager->ReloadStreamsInfo();
 
 	SQLQuery query(m_resources->GetConnection(), "UPDATE FileStreams SET used = 0 WHERE file_id = ?;");
 	query.BindInt64(1, m_id);
 	query.Step();
 
 	m_streamsManager->ReloadStreamsInfo();
+}
+
+dbc::IContainerFile::SpaceUsageInfo dbc::ContainerFile::GetSpaceUsageInfo()
+{
+	IContainerFile::SpaceUsageInfo info;
+	if (IsOpened())
+	{
+		m_streamsManager->ReloadStreamsInfo();
+		GetSpaceUsageInfoImpl(m_streamsManager.get(), info);
+	}
+	else
+	{
+		FileStreamsManager streamsManager(m_id, m_resources);
+		streamsManager.ReloadStreamsInfo();
+		GetSpaceUsageInfoImpl(&streamsManager, info);
+	}
+
+	return std::move(info);
 }
 
 uint64_t dbc::ContainerFile::DirectWrite(std::istream& in, uint64_t size, IProgressObserver* observer)
@@ -205,7 +244,7 @@ uint64_t dbc::ContainerFile::DirectWrite(std::istream& in, uint64_t size, IProgr
 
 uint64_t dbc::ContainerFile::TransactionalWrite(std::istream& in, uint64_t size, IProgressObserver* observer)
 {
-	uint64_t firstUnusedStreamIndex = 0;
+	long firstUnusedStreamIndex = 0;
 	try
 	{
 		firstUnusedStreamIndex = m_streamsManager->AllocatePlaceForTransactionalWrite(size);
@@ -219,7 +258,8 @@ uint64_t dbc::ContainerFile::TransactionalWrite(std::istream& in, uint64_t size,
 	StreamsChain_vt::const_iterator firstUnusedStream = m_streamsManager->GetAllStreams().begin();
 	StreamsChain_vt::const_iterator end = m_streamsManager->GetAllStreams().end();
 	std::advance(firstUnusedStream, firstUnusedStreamIndex);
-	
+	assert(firstUnusedStream != end);
+
 	uint64_t writtenTotal = WriteImpl(in, firstUnusedStream, end, size, observer);
 	m_streamsManager->MarkStreamsAsUnused(m_streamsManager->GetAllStreams().begin(), firstUnusedStream);
 
@@ -228,20 +268,33 @@ uint64_t dbc::ContainerFile::TransactionalWrite(std::istream& in, uint64_t size,
 
 uint64_t dbc::ContainerFile::WriteImpl(std::istream& in, StreamsChain_vt::const_iterator begin, StreamsChain_vt::const_iterator end, uint64_t size, IProgressObserver* observer)
 {
+	StreamProxyProgressObserver proxyObserver(observer);
 	uint64_t writtenTotal = 0;
-	for (begin; begin != end && writtenTotal < size; ++begin)
+	for (; begin != end && writtenTotal < size; ++begin)
 	{
 		uint64_t sizeLeftToWrite(size - writtenTotal);
 		uint64_t sizeToWriteNow = (sizeLeftToWrite < begin->size) ? sizeLeftToWrite : begin->size;
 
+		proxyObserver.SetRange(writtenTotal / size, (writtenTotal + sizeToWriteNow) / size);
+		proxyObserver.OnProgressUpdated(0);
 		uint64_t written = m_resources->Storage().Write(in, begin->start, begin->start + sizeToWriteNow, observer);
-		if (written != sizeToWriteNow)
-		{
-			Clear();
-			throw ContainerException(ERR_DATA, CANT_WRITE);
-		}
 		writtenTotal += written;
 	}
 
 	return writtenTotal;
+}
+
+void dbc::ContainerFile::GetSpaceUsageInfoImpl(FileStreamsManager* streamsManager, SpaceUsageInfo& info)
+{
+	const StreamsChain_vt& streams = streamsManager->GetAllStreams();
+	info.streamsTotal = streams.size();
+	for (const StreamInfo& stream : streams)
+	{
+		info.spaceAvailable += stream.size;
+		if (stream.used > 0)
+		{
+			++info.streamsUsed;
+			info.spaceUsed += stream.used;
+		}
+	}
 }

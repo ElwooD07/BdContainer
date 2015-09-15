@@ -60,7 +60,7 @@ void dbc::FileStreamsManager::AllocatePlaceForDirectWrite(uint64_t size)
 	{
 		return;
 	}
-	AllocatePlaceForTransactionalWrite(size);
+	AllocateUnusedAndNewStreams(size - m_sizeAvailable);
 }
 
 size_t dbc::FileStreamsManager::AllocatePlaceForTransactionalWrite(uint64_t size)
@@ -82,7 +82,7 @@ size_t dbc::FileStreamsManager::AllocatePlaceForTransactionalWrite(uint64_t size
 
 void dbc::FileStreamsManager::MarkStreamsAsUnused(StreamsChain_vt::const_iterator begin, StreamsChain_vt::const_iterator end)
 {
-	if (begin != end && begin != m_streams.end() && std::distance(begin, end) > 1)
+	if (begin != end && begin != m_streams.end())
 	{
 		SQLQuery query(m_resources->GetConnection(), "UPDATE FileStreams SET used = 0 WHERE file_id = ? AND stream_order >= ? AND stream_order <= ?;");
 		query.BindInt64(1, m_fileId);
@@ -153,11 +153,10 @@ void dbc::FileStreamsManager::ReserveExistingStreams(uint64_t requestedSize)
 
 void dbc::FileStreamsManager::AllocateUnusedAndNewStreams(uint64_t sizeRequested)
 {
-	uint64_t sizeNeeded = sizeRequested - m_sizeAvailable;
-	uint64_t allocated = AllocateUnusedStreams(sizeNeeded);
-	if (allocated < sizeNeeded)
+	uint64_t allocated = AllocateUnusedStreams(sizeRequested);
+	if (allocated < sizeRequested)
 	{
-		uint64_t sizeAppended = sizeNeeded - allocated;
+		uint64_t sizeAppended = sizeRequested - allocated;
 		AllocateNewStream(sizeAppended);
 	}
 }

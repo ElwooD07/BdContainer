@@ -3,6 +3,8 @@
 
 namespace dbc
 {
+	class IProgressObserver;
+
 	namespace crypting
 	{
 		typedef unsigned char RawDataType;
@@ -22,7 +24,7 @@ namespace dbc
 		protected:
 			void ErrorHandler(int ret);
 			typedef int(*CryptUpdateFn)(::EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl, const unsigned char *in, int inl);
-			uint64_t CryptBetweenStreams(std::istream &in, std::ostream& out, uint64_t size, CryptUpdateFn updateFn);
+			uint64_t CryptBetweenStreams(std::istream &in, std::ostream& out, uint64_t size, CryptUpdateFn updateFn, dbc::IProgressObserver* observer = nullptr);
 
 		protected:
 			RawData m_key;
@@ -41,7 +43,7 @@ namespace dbc
 		public:
 			AesEncryptor(const RawData& key, const RawData& iv);
 			void Encrypt(const RawData& data, RawData& result);
-			uint64_t Encrypt(std::istream& in, std::ostream& out, uint64_t size);
+			uint64_t Encrypt(std::istream& in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer = nullptr);
 		};
 
 		class AesDecryptor : public AesCryptorBase
@@ -49,7 +51,7 @@ namespace dbc
 		public:
 			AesDecryptor(const RawData& key, const RawData& iv);
 			void Decrypt(const RawData& data, RawData& result);
-			uint64_t Decrypt(std::istream& in, std::ostream& out, uint64_t size);
+			uint64_t Decrypt(std::istream& in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer = nullptr);
 		};
 
 		namespace utils

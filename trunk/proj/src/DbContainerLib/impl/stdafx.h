@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <mutex>
+#include <atomic>
 
 #include <openssl/aes.h>
 #include <openssl/evp.h>

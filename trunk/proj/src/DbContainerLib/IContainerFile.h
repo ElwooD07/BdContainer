@@ -29,5 +29,19 @@ namespace dbc
 		virtual uint64_t Read(std::ostream& out, uint64_t size = 0, IProgressObserver* observer = nullptr) = 0; // size = 0 means Read/Write all data
 		virtual uint64_t Write(std::istream& in, uint64_t size, IProgressObserver* observer = nullptr) = 0;
 		virtual void Clear() = 0;
+
+		struct SpaceUsageInfo
+		{
+			SpaceUsageInfo(uint64_t streamsTotal = 0, uint64_t streamsUsed = 0, uint64_t spaceAvailable = 0, uint64_t spaceUsed = 0)
+				: streamsTotal(streamsTotal), streamsUsed(streamsUsed), spaceAvailable(spaceAvailable), spaceUsed(spaceUsed)
+			{ }
+
+			uint64_t streamsTotal;
+			uint64_t streamsUsed;
+			uint64_t spaceAvailable;
+			uint64_t spaceUsed;
+		};
+
+		virtual SpaceUsageInfo GetSpaceUsageInfo() = 0;
 	};
 }

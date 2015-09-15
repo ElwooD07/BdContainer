@@ -27,6 +27,10 @@ namespace dbc
 		DataFragmentationLevel FragmentationLevel() const;
 		bool TransactionalWrite() const;
 
+		void SetClusterSizeLevel(unsigned short level);
+		void SetFragmentationLevel(DataFragmentationLevel level);
+		void SetTransactionalWrite(bool enabled);
+
 		static unsigned int GetRealClusterSize(unsigned short level);
 
 	private:

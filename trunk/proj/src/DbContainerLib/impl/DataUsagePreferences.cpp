@@ -43,6 +43,22 @@ bool dbc::DataUsagePreferences::TransactionalWrite() const
 	return m_transactionalWrite;
 }
 
+void dbc::DataUsagePreferences::SetClusterSizeLevel(unsigned short level)
+{
+	m_clusterSizeLevel = NormalizeClusterSizeLevel(level);
+	m_clusterSize = GetRealClusterSize(m_clusterSizeLevel);
+}
+
+void dbc::DataUsagePreferences::SetFragmentationLevel(DataFragmentationLevel level)
+{
+	m_fragmentationLevel = level;
+}
+
+void dbc::DataUsagePreferences::SetTransactionalWrite(bool enabled)
+{
+	m_transactionalWrite = enabled;
+}
+
 unsigned int dbc::DataUsagePreferences::GetRealClusterSize(unsigned short level)
 {
 	level = NormalizeClusterSizeLevel(level);

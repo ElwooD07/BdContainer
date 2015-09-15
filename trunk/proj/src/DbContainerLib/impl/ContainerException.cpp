@@ -41,7 +41,7 @@ dbc::ContainerException::ContainerException(ErrBase base, ErrIncident incident, 
 
 std::string dbc::ContainerException::Message() const
 {
-	return std::string(this->what());
+	return std::move(std::string(this->what()));
 }
 
 std::string dbc::ContainerException::Reason() const
@@ -55,7 +55,7 @@ std::string dbc::ContainerException::FullMessage() const
 	stream << "Exception: " << what();
 	if (m_reason_type != SUCCESS && m_reason_type != ERR_UNDEFINED)
 		stream << "; reason: " << m_reason;
-	return stream.str();
+	return std::move(stream.str());
 }
 
 dbc::Error dbc::ContainerException::ErrType() const

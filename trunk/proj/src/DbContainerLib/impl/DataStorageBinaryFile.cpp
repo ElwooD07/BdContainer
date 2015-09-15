@@ -179,16 +179,14 @@ uint64_t dbc::DataStorageBinaryFile::Erace(uint64_t begin, uint64_t end, dbc::IP
 		throw ContainerException(ERR_INTERNAL, WRONG_PARAMETERS);
 	}
 
-	const unsigned int buf_size = 20480; // 20K
-	char buf[buf_size];
-	memset(buf, 0, buf_size);
+	std::vector<char> buf(20480); // 20K
 	m_stream.seekp(begin, std::ios::beg);
 	const uint64_t origAreaSize = end - begin;
 	uint64_t areaSize = origAreaSize;
 	while (areaSize > 0 && m_stream.good())
 	{
-		uint64_t cur_size = (areaSize < buf_size) ? areaSize : buf_size;
-		m_stream.write(buf, cur_size);
+		uint64_t cur_size = (areaSize < buf.size()) ? areaSize : buf.size();
+		m_stream.write(buf.data(), cur_size);
 		areaSize -= cur_size;
 
 		if (observer != nullptr)

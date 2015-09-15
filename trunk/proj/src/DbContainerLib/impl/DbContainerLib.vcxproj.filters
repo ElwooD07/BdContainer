@@ -120,6 +120,9 @@
     <ClInclude Include="Utils\Logging.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
+    <ClInclude Include="StreamProxyProgressObserver.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -190,6 +193,9 @@
     </ClCompile>
     <ClCompile Include="TransactionGuard.cpp">
       <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="StreamProxyProgressObserver.cpp">
+      <Filter>Заголовочные файлы\impl</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

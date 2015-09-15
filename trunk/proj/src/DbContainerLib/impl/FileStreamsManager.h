@@ -42,7 +42,7 @@ namespace dbc
 		void AllocatePlaceForDirectWrite(uint64_t sizeRequested);
 		// Used for space allocation in transactional write.
 		// Reserves unused streams of current file and other files and allocates new stream if necessary.
-		// Returns the index of first unused stream. All reserved streams with index < then then returned value are used by previous file content,
+		// Returns the index of first unused stream. All reserved streams with index < then returned value are used by previous file content,
 		// i.e. only streams with index >= then returned value must be used for writing.
 		// The streams with index < then returned value must be erased after successfull transactional write.
 		size_t AllocatePlaceForTransactionalWrite(uint64_t sizeRequested);

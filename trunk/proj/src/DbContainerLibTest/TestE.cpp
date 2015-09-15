@@ -95,23 +95,24 @@ TEST(E_FileSystemTest,  Files_Open)
 
 	EXPECT_FALSE(cfile->IsOpened());
 	EXPECT_EQ(NoAccess, cfile->Access());
-	EXPECT_THROW(cfile->Size(), ContainerException);
-	EXPECT_THROW(cfile->Read(ostrstream, istr.size()), ContainerException);
-	EXPECT_THROW(cfile->Write(istrstream, istr.size()), ContainerException);
+	EXPECT_NO_THROW(cfile->Size());
+	EXPECT_NO_THROW(cfile->Write(istrstream, istr.size())); // Temporarily opened for writing
+	EXPECT_NO_THROW(cfile->Read(ostrstream, istr.size())); // Temporarily opened for reading
 
-	EXPECT_NO_THROW(cfile->Open(WriteAccess));
+	EXPECT_NO_THROW(cfile->Open(WriteAccess), ContainerException);
 	EXPECT_TRUE(cfile->IsOpened());
 	EXPECT_EQ(WriteAccess, cfile->Access());
-	EXPECT_THROW(cfile->Read(ostrstream, istr.size()), ContainerException);
+	EXPECT_THROW(cfile->Read(ostrstream, istr.size()), ContainerException); // Already opened for writing
+	istrstream.seekg(0);
 	EXPECT_NO_THROW(cfile->Write(istrstream, istr.size()));
-	EXPECT_THROW(cfile->Open(AllAccess), ContainerException); // already opened
+	EXPECT_THROW(cfile->Open(AllAccess), ContainerException); // Already opened
 	EXPECT_NO_THROW(cfile->Size());
 	ASSERT_NO_THROW(cfile->Close());
 
 	EXPECT_NO_THROW(cfile->Open(ReadAccess));
 	EXPECT_TRUE(cfile->IsOpened());
 	EXPECT_EQ(ReadAccess, cfile->Access());
-	EXPECT_THROW(cfile->Write(istrstream, istr.size()), ContainerException);
+	EXPECT_THROW(cfile->Write(istrstream, istr.size()), ContainerException); // Already opened for reading
 	EXPECT_NO_THROW(cfile->Read(ostrstream, istr.size()));
 	EXPECT_NO_THROW(cfile->Size());
 
@@ -141,7 +142,6 @@ TEST(E_FileSystemTest,  Files_Write)
 	ASSERT_TRUE(tfile_istream.is_open());
 
 	ContainerFileGuard cfile = cont->GetRoot()->CreateFile(fname);
-	EXPECT_THROW(cfile->Size(), ContainerException);
 
 	ASSERT_NO_THROW(cfile->Open(WriteAccess));
 	EXPECT_EQ(0, cfile->Size());

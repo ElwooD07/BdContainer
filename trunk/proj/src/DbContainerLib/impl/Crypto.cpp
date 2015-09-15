@@ -2,12 +2,31 @@
 #include "Crypto.h"
 #include "FsUtils.h"
 #include "ContainerException.h"
+#include "IProgressObserver.h"
 
 namespace
 {
 	const unsigned long int DEF_IO_BLOCK_SIZE = 65536; // 64K
 	const unsigned long int MIN_IO_BLOCK_SIZE = 256; // 256b
 	const unsigned long int MAX_IO_BLOCK_SIZE = 67108864; // 64M
+
+	template<class T>
+	inline dbc::ProgressState CheckStream(T& strm, dbc::IProgressObserver* observer, dbc::ErrIncident errIncident, const char* errMsg)
+	{
+		dbc::Error errCode(dbc::ERR_DATA, errIncident);
+		if (strm.fail())
+		{
+			if (observer != nullptr)
+			{
+				return observer->OnError(errCode);
+			}
+			else
+			{
+				throw dbc::ContainerException(errMsg, errCode);
+			}
+		}
+		return dbc::Continue;
+	}
 }
 
 static const EVP_CIPHER* s_cryptCipher = EVP_aes_128_ofb();
@@ -84,7 +103,7 @@ void dbc::crypting::AesCryptorBase::ErrorHandler(int ret)
 	}
 }
 
-uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, std::ostream& out, uint64_t size, CryptUpdateFn updateFn)
+uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, std::ostream& out, uint64_t size, CryptUpdateFn updateFn, dbc::IProgressObserver* observer)
 {
 	// Only for binary streams! Using text streams here is forbidden!
 	uint64_t block_size = m_IoBlockSize;
@@ -105,20 +124,25 @@ uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, st
 			max_size -= m_IoBlockSize;
 		}
 		in.read(reinterpret_cast<char*>(&bufIn[0]), block_size);
-		if (in.fail())
+		if (CheckStream(in, observer, CANT_READ, "Reading from input stream failed") != Continue)
 		{
-			throw ContainerException("Reading from input stream failed", Error(ERR_DATA, CANT_READ));
+			return ret;
 		}
 
 		long long gcount = in.gcount();
-		ret += gcount;
 		int updated = 0;
 		ErrorHandler(updateFn(m_ctx.get(), &bufOut[0], &updated, &bufIn[0], static_cast<int>(gcount)));
 
 		out.write(reinterpret_cast<const char*>(bufOut.data()), updated);
-		if (out.fail())
+		if (CheckStream(out, observer, CANT_WRITE, "Writing to output stream failed") != Continue)
 		{
-			throw ContainerException("Writing to output stream failed", Error(ERR_DATA, CANT_WRITE));
+			return ret;
+		}
+		ret += gcount;
+
+		if (observer != nullptr)
+		{
+			observer->OnProgressUpdated(ret / static_cast<float>(size));
 		}
 	}
 	
@@ -144,9 +168,9 @@ void dbc::crypting::AesEncryptor::Encrypt(const RawData& data, RawData& result)
 	std::swap(result, resultTmp);
 }
 
-uint64_t dbc::crypting::AesEncryptor::Encrypt(std::istream& in, std::ostream& out, uint64_t size)
+uint64_t dbc::crypting::AesEncryptor::Encrypt(std::istream& in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer)
 {
-	return CryptBetweenStreams(in, out, size, EVP_EncryptUpdate);
+	return CryptBetweenStreams(in, out, size, EVP_EncryptUpdate, observer);
 }
 
 dbc::crypting::AesDecryptor::AesDecryptor(const RawData& key, const RawData& iv)
@@ -168,9 +192,9 @@ void dbc::crypting::AesDecryptor::Decrypt(const RawData& data, RawData& result)
 	std::swap(result, resultTmp);
 }
 
-uint64_t dbc::crypting::AesDecryptor::Decrypt(std::istream& in, std::ostream& out, uint64_t size)
+uint64_t dbc::crypting::AesDecryptor::Decrypt(std::istream& in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer)
 {
-	return CryptBetweenStreams(in, out, size, &EVP_DecryptUpdate);
+	return CryptBetweenStreams(in, out, size, &EVP_DecryptUpdate, observer);
 }
 
 void dbc::crypting::utils::RawDataAppend(const RawData& src, RawData& dest)

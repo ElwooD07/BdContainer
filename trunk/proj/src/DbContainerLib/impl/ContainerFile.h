@@ -29,10 +29,13 @@ namespace dbc
 		virtual uint64_t Write(std::istream& in, uint64_t size, IProgressObserver* observer = nullptr);
 		virtual void Clear();
 
+		virtual SpaceUsageInfo GetSpaceUsageInfo();
+
 	private:
 		uint64_t DirectWrite(std::istream& in, uint64_t size, IProgressObserver* observer);
 		uint64_t TransactionalWrite(std::istream& in, uint64_t size, IProgressObserver* observer);
 		uint64_t WriteImpl(std::istream& in, StreamsChain_vt::const_iterator begin, StreamsChain_vt::const_iterator end, uint64_t size, IProgressObserver* observer);
+		void GetSpaceUsageInfoImpl(FileStreamsManager* streamsManager, SpaceUsageInfo& info);
 
 	private:
 		std::auto_ptr<FileStreamsManager> m_streamsManager;
