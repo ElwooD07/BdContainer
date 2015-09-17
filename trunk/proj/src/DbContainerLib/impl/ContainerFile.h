@@ -34,7 +34,7 @@ namespace dbc
 	private:
 		uint64_t DirectWrite(std::istream& in, uint64_t size, IProgressObserver* observer);
 		uint64_t TransactionalWrite(std::istream& in, uint64_t size, IProgressObserver* observer);
-		uint64_t WriteImpl(std::istream& in, StreamsChain_vt::const_iterator begin, StreamsChain_vt::const_iterator end, uint64_t size, IProgressObserver* observer);
+		uint64_t WriteImpl(std::istream& in, uint64_t size, bool writeOnlyToUnusedStreams, IProgressObserver* observer);
 		void GetSpaceUsageInfoImpl(FileStreamsManager* streamsManager, SpaceUsageInfo& info);
 
 	private:

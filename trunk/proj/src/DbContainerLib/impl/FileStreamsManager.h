@@ -24,6 +24,7 @@ namespace dbc
 	};
 
 	typedef std::vector<StreamInfo> StreamsChain_vt;
+	typedef std::set<uint64_t> StreamsIds_st;
 
 	class FileStreamsManager
 	{
@@ -32,6 +33,7 @@ namespace dbc
 
 		void ReloadStreamsInfo();
 		const StreamsChain_vt& GetAllStreams() const;
+		const StreamsIds_st& GetUsedStreams() const;
 		void ClearStreamsInfo();
 
 		uint64_t GetSizeAvailable() const;
@@ -41,16 +43,20 @@ namespace dbc
 		// Reserves all available streams of current file, unused streams of other files and allocates new stream if necessary.
 		void AllocatePlaceForDirectWrite(uint64_t sizeRequested);
 		// Used for space allocation in transactional write.
-		// Reserves unused streams of current file and other files and allocates new stream if necessary.
-		// Returns the index of first unused stream. All reserved streams with index < then returned value are used by previous file content,
-		// i.e. only streams with index >= then returned value must be used for writing.
-		// The streams with index < then returned value must be erased after successfull transactional write.
-		size_t AllocatePlaceForTransactionalWrite(uint64_t sizeRequested);
-		// Used before finishing transactional write for deallocating previously used streams.
-		void MarkStreamsAsUnused(StreamsChain_vt::const_iterator begin, StreamsChain_vt::const_iterator end);
+		// 1. Saves previously used streams of current file
+		// 2. Allocates unused streams of current file and other files and allocates new stream if necessary.
+		// All unused streams in m_allStreams will be prepared for writing after running ths function.
+		// All previously used streams will be saved to the m_usedStreams. Run DeallocatePlaceAfterTransactionalWrite() to free previously used streams.
+		void AllocatePlaceForTransactionalWrite(uint64_t sizeRequested);
+		// Used before finishing transactional write for deallocating previously used streams in m_usedStreams.
+		void DeallocatePlaceAfterTransactionalWrite();
 
 	private:
+		// Reserve all available streams for writing to m_allStreams
 		void ReserveExistingStreams(uint64_t requestedSize);
+		// Used for transactional write.
+		// Save all currently used streams to m_usedStreams
+		void SaveUsedStreams();
 
 		void AllocateUnusedAndNewStreams(uint64_t sizeRequested);
 		// ### Space allocation
@@ -79,7 +85,8 @@ namespace dbc
 		const int64_t m_fileId;
 		ContainerResources m_resources;
 
-		StreamsChain_vt m_streams;
+		StreamsChain_vt m_allStreams;
+		StreamsIds_st m_usedStreams;
 		uint64_t m_sizeAvailable;
 		uint64_t m_sizeUsed;
 	};

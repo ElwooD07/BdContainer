@@ -22,7 +22,8 @@ dbc::FileStreamsManager::FileStreamsManager(int64_t fileId, ContainerResources r
 
 void dbc::FileStreamsManager::ReloadStreamsInfo()
 {
-	m_streams.clear();
+	m_allStreams.clear();
+	m_usedStreams.clear();
 	m_sizeAvailable = 0;
 	m_sizeUsed = 0;
 
@@ -31,7 +32,7 @@ void dbc::FileStreamsManager::ReloadStreamsInfo()
 	while (query.Step())
 	{
 		StreamInfo info(query.ColumnInt64(0), m_fileId, query.ColumnInt64(1), query.ColumnInt64(2), query.ColumnInt64(3), query.ColumnInt64(4));
-		m_streams.push_back(info);
+		m_allStreams.push_back(info);
 		m_sizeAvailable += info.size;
 		m_sizeUsed += info.used;
 	}
@@ -39,7 +40,12 @@ void dbc::FileStreamsManager::ReloadStreamsInfo()
 
 const dbc::StreamsChain_vt& dbc::FileStreamsManager::GetAllStreams() const
 {
-	return m_streams;
+	return m_allStreams;
+}
+
+const dbc::StreamsIds_st& dbc::FileStreamsManager::GetUsedStreams() const
+{
+	return m_usedStreams;
 }
 
 uint64_t dbc::FileStreamsManager::GetSizeAvailable() const
@@ -63,32 +69,23 @@ void dbc::FileStreamsManager::AllocatePlaceForDirectWrite(uint64_t size)
 	AllocateUnusedAndNewStreams(size - m_sizeAvailable);
 }
 
-size_t dbc::FileStreamsManager::AllocatePlaceForTransactionalWrite(uint64_t size)
+void dbc::FileStreamsManager::AllocatePlaceForTransactionalWrite(uint64_t size)
 {
-	size_t firstUnusedStreamIndex = 0;
-	for (const StreamInfo& info : m_streams)
-	{
-		if (info.used == 0)
-		{
-			break;
-		}
-		++firstUnusedStreamIndex;
-	}
-
+	SaveUsedStreams();
 	AllocateUnusedAndNewStreams(size);
-
-	return firstUnusedStreamIndex;
 }
 
-void dbc::FileStreamsManager::MarkStreamsAsUnused(StreamsChain_vt::const_iterator begin, StreamsChain_vt::const_iterator end)
+void dbc::FileStreamsManager::DeallocatePlaceAfterTransactionalWrite()
 {
-	if (begin != end && begin != m_streams.end())
+	if (!m_usedStreams.empty())
 	{
-		SQLQuery query(m_resources->GetConnection(), "UPDATE FileStreams SET used = 0 WHERE file_id = ? AND stream_order >= ? AND stream_order <= ?;");
-		query.BindInt64(1, m_fileId);
-		query.BindInt64(2, begin->order);
-		query.BindInt64(3, (--end)->order);
-		query.Step();
+		SQLQuery query(m_resources->GetConnection());
+		for (auto streamId : m_usedStreams)
+		{
+			query.Prepare("UPDATE FileStreams SET used = 0 WHERE id = ?;");
+			query.BindInt64(1, streamId);
+			query.Step();
+		}
 		// TODO: Merge unused streams due to fragmentation level requirements
 	}
 }
@@ -96,7 +93,7 @@ void dbc::FileStreamsManager::MarkStreamsAsUnused(StreamsChain_vt::const_iterato
 void dbc::FileStreamsManager::ReserveExistingStreams(uint64_t requestedSize)
 {
 	// it is so difficult because of optimization for Database
-	if (m_streams.empty())
+	if (m_allStreams.empty())
 	{
 		return;
 	}
@@ -106,8 +103,8 @@ void dbc::FileStreamsManager::ReserveExistingStreams(uint64_t requestedSize)
 	uint64_t orderMaxUsed(0); // max size was used for all streams with the order less or equal than this one
 	StreamInfo* streamWithCustomUsedSpace = nullptr;
 
-	StreamsChain_vt::const_iterator end = m_streams.end();
-	for (StreamsChain_vt::iterator it = m_streams.begin(); it != end; ++it)
+	StreamsChain_vt::const_iterator end = m_allStreams.end();
+	for (StreamsChain_vt::iterator it = m_allStreams.begin(); it != end; ++it)
 	{
 		uint64_t reserve = 0;
 		uint64_t leftToReserve = requestedSize - reservedTotal;
@@ -148,6 +145,18 @@ void dbc::FileStreamsManager::ReserveExistingStreams(uint64_t requestedSize)
 		query.BindInt64(1, streamWithCustomUsedSpace->used);
 		query.BindInt64(2, streamWithCustomUsedSpace->id);
 		query.Step();
+	}
+}
+
+void dbc::FileStreamsManager::SaveUsedStreams()
+{
+	m_usedStreams.clear();
+	for (auto stream : m_allStreams)
+	{
+		if (stream.used != 0)
+		{
+			m_usedStreams.insert(stream.id);
+		}
 	}
 }
 
@@ -249,7 +258,7 @@ uint64_t dbc::FileStreamsManager::AllocateManyUnusedStreams(uint64_t sizeRequest
 		{
 			UpdateStream(newInfo); // change old stream size to size requested
 		}
-		m_streams.push_back(newInfo);
+		m_allStreams.push_back(newInfo);
 	}
 
 	return allocated;
@@ -264,7 +273,7 @@ void dbc::FileStreamsManager::AllocateNewStream(uint64_t sizeRequested)
 	{
 		throw ContainerException(ERR_DATA_CANT_ALLOCATE_SPACE);
 	}
-	StreamInfo info(0, m_fileId, MaxOrder() + 1, begin, CalculateClusterMultipleSize(sizeRequested), sizeRequested);
+	StreamInfo info(0, m_fileId, MaxOrder(), begin, CalculateClusterMultipleSize(sizeRequested), sizeRequested);
 
 	AppendStream(info);
 }
@@ -306,7 +315,7 @@ void dbc::FileStreamsManager::AppendStream(const StreamInfo& info)
 	query.Step();
 	newAppendedStream.id = query.LastRowId();
 
-	m_streams.push_back(newAppendedStream);
+	m_allStreams.push_back(newAppendedStream);
 }
 
 void dbc::FileStreamsManager::UpdateStream(const dbc::StreamInfo& info)
@@ -323,13 +332,13 @@ void dbc::FileStreamsManager::UpdateStream(const dbc::StreamInfo& info)
 
 uint64_t dbc::FileStreamsManager::MaxOrder()
 {
-	if (m_streams.empty())
+	if (m_allStreams.empty())
 	{
 		return s_minStreamOrder;
 	}
 	else
 	{
-		return m_streams.back().order;
+		return m_allStreams.back().order;
 	}
 }
 

@@ -237,17 +237,14 @@ uint64_t dbc::ContainerFile::DirectWrite(std::istream& in, uint64_t size, IProgr
 		throw ContainerException(ERR_DATA, CANT_WRITE, ex.ErrType());
 	}
 
-	StreamsChain_vt::const_iterator begin = m_streamsManager->GetAllStreams().begin();
-	StreamsChain_vt::const_iterator end = m_streamsManager->GetAllStreams().end();
-	return WriteImpl(in, begin, end, size, observer);
+	return WriteImpl(in, size, false, observer);
 }
 
 uint64_t dbc::ContainerFile::TransactionalWrite(std::istream& in, uint64_t size, IProgressObserver* observer)
 {
-	long firstUnusedStreamIndex = 0;
 	try
 	{
-		firstUnusedStreamIndex = m_streamsManager->AllocatePlaceForTransactionalWrite(size);
+		m_streamsManager->AllocatePlaceForTransactionalWrite(size);
 	}
 	catch (const ContainerException& ex)
 	{
@@ -255,29 +252,31 @@ uint64_t dbc::ContainerFile::TransactionalWrite(std::istream& in, uint64_t size,
 		throw ContainerException(ERR_DATA, CANT_WRITE, ex.ErrType());
 	}
 
-	StreamsChain_vt::const_iterator firstUnusedStream = m_streamsManager->GetAllStreams().begin();
-	StreamsChain_vt::const_iterator end = m_streamsManager->GetAllStreams().end();
-	std::advance(firstUnusedStream, firstUnusedStreamIndex);
-	assert(firstUnusedStream != end);
-
-	uint64_t writtenTotal = WriteImpl(in, firstUnusedStream, end, size, observer);
-	m_streamsManager->MarkStreamsAsUnused(m_streamsManager->GetAllStreams().begin(), firstUnusedStream);
+	uint64_t writtenTotal = WriteImpl(in, size, true, observer);
+	m_streamsManager->DeallocatePlaceAfterTransactionalWrite();
 
 	return writtenTotal;
 }
 
-uint64_t dbc::ContainerFile::WriteImpl(std::istream& in, StreamsChain_vt::const_iterator begin, StreamsChain_vt::const_iterator end, uint64_t size, IProgressObserver* observer)
+uint64_t dbc::ContainerFile::WriteImpl(std::istream& in, uint64_t size, bool writeOnlyToUnusedStreams, IProgressObserver* observer)
 {
 	StreamProxyProgressObserver proxyObserver(observer);
 	uint64_t writtenTotal = 0;
-	for (; begin != end && writtenTotal < size; ++begin)
+	const StreamsChain_vt& allStreams = m_streamsManager->GetAllStreams();
+	const StreamsIds_st& usedStreams = m_streamsManager->GetUsedStreams();
+	for (auto stream = allStreams.begin(); stream != allStreams.end() && writtenTotal < size; ++stream)
 	{
+		if (writeOnlyToUnusedStreams && usedStreams.find(stream->id) != usedStreams.end())
+		{
+			continue;
+		}
+
 		uint64_t sizeLeftToWrite(size - writtenTotal);
-		uint64_t sizeToWriteNow = (sizeLeftToWrite < begin->size) ? sizeLeftToWrite : begin->size;
+		uint64_t sizeToWriteNow = (sizeLeftToWrite < stream->size) ? sizeLeftToWrite : stream->size;
 
 		proxyObserver.SetRange(writtenTotal / size, (writtenTotal + sizeToWriteNow) / size);
 		proxyObserver.OnProgressUpdated(0);
-		uint64_t written = m_resources->Storage().Write(in, begin->start, begin->start + sizeToWriteNow, observer);
+		uint64_t written = m_resources->Storage().Write(in, stream->start, stream->start + sizeToWriteNow, observer);
 		writtenTotal += written;
 	}
 

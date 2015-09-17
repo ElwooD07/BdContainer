@@ -103,7 +103,7 @@ TEST(CryptingTest, DecryptStream)
 
 	std::stringstream strmDecrypted;
 	AesDecryptor decryptor(keyNormal, ivNormal);
-	size_t decryptedSize = 0;
+	uint64_t decryptedSize = 0;
 	ASSERT_NO_THROW(decryptedSize = decryptor.Decrypt(strmEncrypted, strmDecrypted, expression.size()));
 	ASSERT_EQ(decryptedSize, expression.size());
 

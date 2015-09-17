@@ -12,6 +12,7 @@
 #include <list>
 #include <set>
 #include <map>
+#include <algorithm>
 #include <assert.h>
 #include <sys/stat.h>
 #include <mutex>

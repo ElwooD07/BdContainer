@@ -11,10 +11,10 @@ namespace
 	public:
 		virtual ProgressState OnProgressUpdated(float progress)
 		{
-			if (progress > 0.1)
-			{
+			//if (progress > 0.1)
+			//{
 				throw std::runtime_error("Unexpected error");
-			}
+			//}
 		}
 
 		virtual ProgressState OnWarning(Error errCode)
