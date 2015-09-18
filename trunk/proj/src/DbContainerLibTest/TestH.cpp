@@ -282,7 +282,6 @@ TEST(H_FilesPartialWrite, Transactional_Fragmented)
 
 		AppendData(strm2, dataPortion2Size / 2);
 		RewindStream(strm2);
-		ASSERT_EQ(0, strm2.tellg());
 		file2->Write(strm2, dataPortion2Size);
 		EXPECT_EQ(dataPortion2Size, file2->Size());
 
@@ -321,5 +320,102 @@ TEST(H_FilesPartialWrite, Transactional_Fragmented)
 		EXPECT_EQ(3, info.streamsTotal); // 2 streams from first write, 1 stream of 4 clusters from second one
 		EXPECT_EQ(1, info.streamsUsed); // Used only new allocated stream
 		EXPECT_EQ(clusterSize * 6, info.spaceAvailable); // 1 cluster + 1 cluster + 4 clusters
+	}
+}
+
+TEST(H_FilesPartialWrite, NonTransactional_Fragmented_StreamsTruncating)
+{
+	ASSERT_TRUE(DatabasePrepare());
+	unsigned int clusterSize = PrepareContainerForThisTest(cont, false);
+	ContainerFileGuard file1 = cont->GetRoot()->CreateFile("file1");
+	ContainerFileGuard file2 = cont->GetRoot()->CreateFile("file2");
+
+	size_t dataPortion1Size = clusterSize * 10 - 20; // 10 clusters total
+	size_t dataPortion1CuttedSize = clusterSize + 50; // 2 clusters total
+	{
+		std::fstream strm1(CreateData(dataPortion1Size));
+		file1->Write(strm1, dataPortion1Size);
+		RewindStream(strm1);
+		file1->Write(strm1, dataPortion1CuttedSize);
+		IContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
+		EXPECT_EQ(dataPortion1CuttedSize, info.spaceUsed);
+		EXPECT_EQ(clusterSize * 10, info.spaceAvailable);
+		EXPECT_EQ(1, info.streamsTotal);
+		// Now file1 has 1 stream with available space > clusterSize * 8.
+		// This should be enough for writing small portion of data for another file.
+		// See dbc::FileStreamsManager::FreeSpaceMeetsFragmentationLevelRequirements for details
+	}
+
+	size_t dataPortion2Size = clusterSize * 4 - 20; // 4 clusters total
+	{
+		std::fstream strm1(CreateData(dataPortion2Size));
+		file2->Write(strm1, dataPortion2Size);
+		IContainerFile::SpaceUsageInfo info = file2->GetSpaceUsageInfo();
+		EXPECT_EQ(dataPortion2Size, info.spaceUsed); // < clusterSize * 4
+		EXPECT_EQ(clusterSize * 8, info.spaceAvailable);
+		EXPECT_EQ(1, info.streamsTotal);
+		// file2 content should be placed in the cutted free space in large stream of file1.
+		// Now the part of file1's big stream is the one stream for file2
+	}
+
+	// Check first file
+	IContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
+	EXPECT_EQ(dataPortion1CuttedSize, info.spaceUsed);
+	EXPECT_EQ(clusterSize * 2, info.spaceAvailable);
+	EXPECT_EQ(1, info.streamsTotal);
+}
+
+TEST(H_FilesPartialWrite, Transactional_Fragmented_StreamsTruncating)
+{
+	ASSERT_TRUE(DatabasePrepare());
+	unsigned int clusterSize = PrepareContainerForThisTest(cont, true);
+	ContainerFileGuard file1 = cont->GetRoot()->CreateFile("file1");
+	ContainerFileGuard file2 = cont->GetRoot()->CreateFile("file2");
+	ContainerFileGuard file3 = cont->GetRoot()->CreateFile("file3");
+
+	size_t dataPortion1Size = clusterSize * 10 - 20; // 10 clusters total
+	size_t dataPortion1CuttedSize = clusterSize + 50; // 2 clusters total
+	{
+		std::fstream strm1(CreateData(dataPortion1Size));
+		file1->Write(strm1, dataPortion1Size);
+		RewindStream(strm1);
+		file1->Write(strm1, dataPortion1CuttedSize); // This operation shoud allocate new small stream and free first large stream
+		IContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
+		EXPECT_EQ(dataPortion1CuttedSize, info.spaceUsed);
+		EXPECT_EQ(clusterSize * 12, info.spaceAvailable);
+		EXPECT_EQ(2, info.streamsTotal);
+		EXPECT_EQ(1, info.streamsUsed);
+	}
+
+	size_t dataPortion2Size = clusterSize * 2 - 20; // 2 clusters total
+	{
+		std::fstream strm2(CreateData(dataPortion2Size));
+		RewindStream(strm2);
+		uint64_t written = file2->Write(strm2, dataPortion2Size);
+		ASSERT_EQ(written, dataPortion2Size);
+		// This operation shoul allocate first unused stream of file1 for file2
+	}
+
+	size_t dataPortion3Size = clusterSize * 4 - 40; // 4 clusters total
+	{
+		std::fstream strm3(CreateData(dataPortion3Size));
+		RewindStream(strm3);
+		uint64_t written = file3->Write(strm3, dataPortion3Size);
+		ASSERT_EQ(written, dataPortion3Size);
+		// If allocated stream is large enough to meet fragmentation level requirements
+		// (see dbc::FileStreamsManager::FreeSpaceMeetsFragmentationLevelRequirements), the new stream is cutted from file2's stream.
+		// Cutted stream shoul be free and should be owned by file, which is cut this stream
+		IContainerFile::SpaceUsageInfo info = file3->GetSpaceUsageInfo();
+		EXPECT_EQ(dataPortion3Size, info.spaceUsed);
+		EXPECT_EQ(clusterSize * 8, info.spaceAvailable);
+		EXPECT_EQ(1, info.streamsTotal);
+		EXPECT_EQ(1, info.streamsUsed);
+
+		// Check file2
+		info = file2->GetSpaceUsageInfo();
+		EXPECT_EQ(dataPortion2Size, info.spaceUsed);
+		EXPECT_EQ(clusterSize * 2, info.spaceAvailable); // Now first stream consists only from 2 clusters - the other part was cutted off by file3
+		EXPECT_EQ(1, info.streamsTotal);
+		EXPECT_EQ(1, info.streamsUsed);
 	}
 }

@@ -121,6 +121,8 @@ namespace
 			return "can not be processed: source stream marked as bad";
 		case ERR_DATA_CANT_OPEN_DEST:
 			return "can not be processed: destination stream marked as bad";
+		case ERR_DATA_SHORT_SRC:
+			return "can not be fully read: source stream is too short";
 		case ERR_DATA_CANT_ALLOCATE_SPACE:
 			return "storage can't provide enough space for the new data";
 		case ERR_DATA_NOT_INITIALIZED:

@@ -1,8 +1,7 @@
 #include "stdafx.h"
 #include "TransactionGuard.h"
-#include "Connection.h"
+#include "SQLQuery.h"
 #include "ContainerException.h"
-#include "sqlite3.h"
 #include "Logging.h"
 #include "Types.h"
 
@@ -91,18 +90,4 @@ void dbc::TransactionGuardImpl::TransactionQueryImpl(const std::string& queryStr
 {
 	SQLQuery query(*m_resources->GetConnection(), queryStr);
 	query.Step();
-	/*
-	char* errStr = 0;
-	sqlite3* db_ptr = m_resources->GetConnection()->GetDB();
-	if (db_ptr == nullptr)
-	{
-		throw ContainerException(ERR_DB, CANT_WRITE, SQL_DISCONNECTED);
-	}
-	
-	int retCode = sqlite3_exec(db_ptr, query.c_str(), 0, 0, &errStr);
-
-	if (retCode != SQLITE_OK)
-	{	
-		throw ContainerException(ErrorString(ERR_SQL, CANT_EXEC), errStr);
-	}*/
 }

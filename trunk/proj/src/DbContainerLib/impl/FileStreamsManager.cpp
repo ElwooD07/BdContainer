@@ -205,12 +205,10 @@ bool dbc::FileStreamsManager::AllocateOneUnusedStream(uint64_t sizeRequested)
 	}
 	else // It will be fully reserved
 	{
-		AppendStream(oldStreamInfo);
-		StreamInfo cuttedStream;
-		if (CutOffPartOfUsedStream(oldStreamInfo, sizeRequested, cuttedStream))
-		{
-			AppendStream(cuttedStream);
-		}
+		oldStreamInfo.fileId = m_fileId;
+		oldStreamInfo.used = sizeRequested;
+		UpdateStream(oldStreamInfo);
+		m_allStreams.push_back(oldStreamInfo);
 	}
 	return true;
 }
@@ -290,7 +288,7 @@ bool dbc::FileStreamsManager::CutOffPartOfUsedStream(const StreamInfo& originalS
 	uint64_t dataFree = originalStream.size - dataUsedClusterMultiple;
 	if (FreeSpaceMeetsFragmentationLevelRequirements(dataFree))
 	{
-		StreamInfo newStreamInfo1(originalStream.id, m_fileId, originalStream.order, originalStream.start, dataUsedClusterMultiple, originalStream.used);
+		StreamInfo newStreamInfo1(originalStream.id, originalStream.fileId, originalStream.order, originalStream.start, dataUsedClusterMultiple, originalStream.used);
 		StreamInfo newStreamInfo2(originalStream.id, m_fileId, originalStream.order + 1, originalStream.start + dataUsedClusterMultiple, dataFree, sizeRequested);
 
 		UpdateStream(newStreamInfo1);
@@ -346,7 +344,7 @@ uint64_t dbc::FileStreamsManager::CalculateClusterMultipleSize(uint64_t sizeRequ
 {
 	uint64_t clusterSize = m_resources->DataUsagePrefs().ClusterSize();
 	uint64_t ratio = sizeRequested / clusterSize;
-	if (sizeRequested % clusterSize > 0)
+	if (ratio == 0 || sizeRequested % clusterSize > 0)
 	{
 		++ratio;
 	}

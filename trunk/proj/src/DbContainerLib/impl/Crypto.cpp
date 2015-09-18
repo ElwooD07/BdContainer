@@ -112,6 +112,11 @@ uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, st
 	std::streamoff ret = 0;
 
 	uint64_t max_size = dbc::utils::TellMaxAvailable(in, size);
+	if (observer && max_size < size)
+	{
+		observer->OnWarning(ERR_DATA_SHORT_SRC);
+	}
+
 	while (max_size > 0 && !in.eof())
 	{
 		if (max_size < m_IoBlockSize)
