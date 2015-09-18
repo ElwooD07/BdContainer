@@ -220,7 +220,7 @@ uint64_t dbc::FileStreamsManager::AllocateManyUnusedStreams(uint64_t sizeRequest
 	uint64_t freeSpaceFound(0);
 	StreamsChain_vt streamsToChange;
 	SQLQuery query(m_resources->GetConnection(), "SELECT id, file_id, stream_order, start, size FROM FileStreams WHERE used = 0;");
-	while (query.Step() && freeSpaceFound < sizeRequested);
+	while (query.Step() && freeSpaceFound < sizeRequested)
 	{
 		StreamInfo foundStream(query.ColumnInt64(0), query.ColumnInt64(1), query.ColumnInt64(2), query.ColumnInt64(3), query.ColumnInt64(4), 0);
 		streamsToChange.push_back(foundStream);
@@ -235,7 +235,7 @@ uint64_t dbc::FileStreamsManager::AllocateManyUnusedStreams(uint64_t sizeRequest
 	uint64_t maxOrder = MaxOrder();
 
 	StreamsChain_vt::const_iterator end = streamsToChange.end();
-	for (StreamsChain_vt::const_iterator it = streamsToChange.begin(); it != end || allocated < sizeRequested; ++it, ++maxOrder)
+	for (StreamsChain_vt::const_iterator it = streamsToChange.begin(); it != end && allocated < sizeRequested; ++it, ++maxOrder)
 	{
 		uint64_t newUsed = (sizeRequested - allocated < it->size) ? sizeRequested - allocated : it->size;
 		StreamInfo newInfo(*it);
