@@ -131,7 +131,7 @@ TEST(E_FileSystemTest,  Files_Open)
 	EXPECT_NO_THROW(cfile->Remove());
 }
 
-TEST(E_FileSystemTest,  Files_Write)
+TEST(E_FileSystemTest,  Files_SimpleWrite)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
@@ -150,7 +150,7 @@ TEST(E_FileSystemTest,  Files_Write)
 	EXPECT_EQ(dataSize, writen);
 }
 
-TEST(E_FileSystemTest, Files_Read)
+TEST(E_FileSystemTest, Files_SimpleRead)
 {
 	ASSERT_TRUE(DatabasePrepare());
 

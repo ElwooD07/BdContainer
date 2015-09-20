@@ -96,3 +96,25 @@ TEST(G_ContainerInfoTests, TotalDataSize)
 	}
 	EXPECT_EQ(0, info->UsedSpace());
 }
+
+TEST(H_FilesInfoTest, SpaceUsageInfo)
+{
+	ASSERT_TRUE(DatabasePrepare());
+	unsigned int clusterSize = cont->GetDataUsagePreferences().ClusterSize();
+
+	size_t dataPortion1Size = clusterSize + clusterSize / 2;
+	std::fstream strm(CreateStream(dataPortion1Size));
+	ContainerFileGuard file = cont->GetRoot()->CreateFile("file1");
+
+	IContainerFile::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
+	EXPECT_EQ(0, fileUsage.streamsTotal);
+	EXPECT_EQ(0, fileUsage.streamsUsed);
+	EXPECT_EQ(0, fileUsage.spaceAvailable);
+	EXPECT_EQ(0, fileUsage.spaceUsed);
+	file->Write(strm, dataPortion1Size);
+	fileUsage = file->GetSpaceUsageInfo();
+	EXPECT_EQ(1, fileUsage.streamsTotal);
+	EXPECT_EQ(1, fileUsage.streamsUsed);
+	EXPECT_EQ(clusterSize * 2, fileUsage.spaceAvailable);
+	EXPECT_EQ(dataPortion1Size, fileUsage.spaceUsed);
+}

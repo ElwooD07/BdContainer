@@ -7,13 +7,6 @@
 namespace
 {
 	static const unsigned short s_minStreamOrder = 0;
-
-	uint64_t GetTotalUnusedSize(dbc::Connection& connection)
-	{
-		dbc::SQLQuery query(connection, "SELECT SUM(size) FROM FileStreams WHERE used = 0;");
-		query.Step();
-		return query.ColumnInt64(0);
-	}
 }
 
 dbc::FileStreamsManager::FileStreamsManager(int64_t fileId, ContainerResources resources)
@@ -68,6 +61,7 @@ void dbc::FileStreamsManager::AllocatePlaceForDirectWrite(uint64_t size)
 	}
 	AllocateUnusedAndNewStreams(size - m_sizeAvailable);
 	UpdateSizes();
+	MergeFreeSpace();
 }
 
 void dbc::FileStreamsManager::AllocatePlaceForTransactionalWrite(uint64_t size)

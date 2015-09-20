@@ -96,6 +96,53 @@ bool DatabasePrepare()
 	return false;
 }
 
+void AppendStream(std::ostream& strm, size_t size)
+{
+	const std::string s_smallExpression("0123456789abcdefghijklmnopqrstuvwxyz!");
+	strm.seekp(0, std::ios::end);
+	for (size_t i = 0; i < size;)
+	{
+		size_t appended = 0;
+		if (i + s_smallExpression.size() > size)
+		{
+			appended = size - i;
+		}
+		else
+		{
+			appended = s_smallExpression.size();
+		}
+		strm.write(s_smallExpression.data(), appended);
+
+		i += appended;
+	}
+	strm.flush();
+}
+
+std::fstream CreateStream(size_t size)
+{
+	std::fstream strm("testfile.txt", std::ios::trunc | std::ios::in | std::ios::out | std::ios::binary);
+	AppendStream(strm, size);
+	return std::move(strm);
+}
+
+void RewindStream(std::istream& strm)
+{
+	strm.clear();
+	strm.seekg(0);
+	ASSERT_EQ(strm.tellg(), std::streamoff(0));
+	ASSERT_FALSE(strm.bad());
+}
+
+unsigned int PrepareContainerForPartialWriteTest(dbc::ContainerGuard container, bool transactionalWrite) // returns cluster size
+{
+	DataUsagePreferences& prefs = container->GetDataUsagePreferences();
+	prefs.SetTransactionalWrite(transactionalWrite);
+	prefs.SetClusterSizeLevel(DataUsagePreferences::CLUSTER_SIZE_MIN);
+	unsigned int clusterSize = prefs.ClusterSize();
+	container->SetDataUsagePreferences(prefs);
+	return clusterSize;
+}
+
 void ShowExceptionMessages()
 {
 	std::cout << "\nContainerException Error messages:\n\n";
