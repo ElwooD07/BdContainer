@@ -15,7 +15,10 @@ namespace dbc
 		virtual bool IsEmpty();
 		virtual uint64_t TotalElements();
 		virtual uint64_t TotalElements(ElementType type);
-		virtual uint64_t TotalDataSize();
+		virtual uint64_t UsedSpace();
+		virtual uint64_t FreeSpace();
+		virtual uint64_t TotalStreams();
+		virtual uint64_t UsedStreams();
 
 	private:
 		ContainerResources m_resources;

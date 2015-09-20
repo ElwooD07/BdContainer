@@ -115,10 +115,13 @@
     <ClInclude Include="DataStorageBinaryFile.h" />
     <ClInclude Include="ElementsIterator.h" />
     <ClInclude Include="ElementsSyncKeeper.h" />
+    <ClInclude Include="FileStreamsAllocator.h" />
+    <ClInclude Include="FileStreamsDefragmenter.h" />
     <ClInclude Include="FileStreamsManager.h" />
     <ClInclude Include="IContainnerResources.h" />
     <ClInclude Include="SQLQuery.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="StreamInfo.h" />
     <ClInclude Include="StreamProxyProgressObserver.h" />
     <ClInclude Include="TransactionGuard.h" />
     <ClInclude Include="Utils\CommonUtils.h" />
@@ -142,6 +145,8 @@
     <ClCompile Include="ElementsIterator.cpp" />
     <ClCompile Include="ElementsSyncKeeper.cpp" />
     <ClCompile Include="ErrorCodes.cpp" />
+    <ClCompile Include="FileStreamsAllocator.cpp" />
+    <ClCompile Include="FileStreamsDefragmenter.cpp" />
     <ClCompile Include="FileStreamsManager.cpp" />
     <ClCompile Include="SQLQuery.cpp" />
     <ClCompile Include="stdafx.cpp">

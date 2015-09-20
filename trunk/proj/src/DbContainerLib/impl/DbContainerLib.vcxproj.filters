@@ -123,6 +123,15 @@
     <ClInclude Include="StreamProxyProgressObserver.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
+    <ClInclude Include="FileStreamsDefragmenter.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="FileStreamsAllocator.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="StreamInfo.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -196,6 +205,12 @@
     </ClCompile>
     <ClCompile Include="StreamProxyProgressObserver.cpp">
       <Filter>Заголовочные файлы\impl</Filter>
+    </ClCompile>
+    <ClCompile Include="FileStreamsDefragmenter.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="FileStreamsAllocator.cpp">
+      <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

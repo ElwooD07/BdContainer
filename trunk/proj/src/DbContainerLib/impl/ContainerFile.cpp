@@ -263,7 +263,7 @@ uint64_t dbc::ContainerFile::WriteImpl(std::istream& in, uint64_t size, bool wri
 	StreamProxyProgressObserver proxyObserver(observer);
 	uint64_t writtenTotal = 0;
 	const StreamsChain_vt& allStreams = m_streamsManager->GetAllStreams();
-	const StreamsIds_st& usedStreams = m_streamsManager->GetUsedStreams();
+	const StreamsIds_st& usedStreams = m_streamsManager->GetSavedStreams();
 	for (auto stream = allStreams.begin(); stream != allStreams.end() && writtenTotal < size; ++stream)
 	{
 		if (writeOnlyToUnusedStreams && usedStreams.find(stream->id) != usedStreams.end())
