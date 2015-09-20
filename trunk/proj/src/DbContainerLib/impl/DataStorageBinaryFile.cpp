@@ -148,7 +148,7 @@ uint64_t dbc::DataStorageBinaryFile::Write(std::istream& data, uint64_t begin, u
 
 	m_stream.seekp(begin, std::ios::beg);
 	crypting::AesEncryptor encryptor(m_key, m_iv);
-	return encryptor.Encrypt(data, m_stream, end - begin);
+	return encryptor.Encrypt(data, m_stream, end - begin, observer);
 }
 
 uint64_t dbc::DataStorageBinaryFile::Read(std::ostream& data, uint64_t begin, uint64_t end, dbc::IProgressObserver* observer)
@@ -157,7 +157,7 @@ uint64_t dbc::DataStorageBinaryFile::Read(std::ostream& data, uint64_t begin, ui
 
 	m_stream.seekg(begin, std::ios::beg);
 	crypting::AesDecryptor decryptor(m_key, m_iv);
-	return decryptor.Decrypt(m_stream, data, end - begin);
+	return decryptor.Decrypt(m_stream, data, end - begin, observer);
 }
 
 uint64_t dbc::DataStorageBinaryFile::Copy(std::istream& src, std::ostream& dest, uint64_t beginSrc, uint64_t endSrc, uint64_t beginDest, dbc::IProgressObserver* observer)

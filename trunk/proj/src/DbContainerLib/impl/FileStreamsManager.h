@@ -64,14 +64,22 @@ namespace dbc
 
 		// Allocates available unused space in container. Result is the total size of allocated space.
 		uint64_t AllocateUnusedStreams(uint64_t sizeRequested);
+
 		// Gets any first large unused stream from DB and allocates it for current file.
 		// Returns true if the single stream with requested size was found. Resulted stream will be the last in the private streams list.
 		bool AllocateOneUnusedStream(uint64_t sizeRequested);
+
 		// Gets all unused streams from DB. Allocates found unused streams to current file, which summary size is >= sizeRequested.
 		// The rest of found unused streams will be untouched.
-		uint64_t AllocateManyUnusedStreams(uint64_t sizeRequested);
+		uint64_t AllocateUnusedStreamsFromThisFile(uint64_t sizeRequested);
+		uint64_t AllocateUnusedStreamsFromAnotherFiles(uint64_t sizeRequested);
+
 		// Creates new big stream and allocates it for current file.
 		void AllocateNewStream(uint64_t sizeRequested);
+
+		// Used after unused streams deallocation. See its call in DeallocatePlaceAfterTransactionalWrite()
+		void MergeFreeSpace();
+		StreamsChain_vt::iterator MergeNextNeighbors(StreamsChain_vt::iterator start, StreamsIds_st& mergedStreamsIds);
 
 		bool CutOffPartOfUsedStream(const StreamInfo& originalStream, uint64_t sizeRequested, StreamInfo& cuttedPart);
 		void AppendStream(const StreamInfo& info);
@@ -80,6 +88,8 @@ namespace dbc
 		uint64_t MaxOrder();
 		uint64_t CalculateClusterMultipleSize(uint64_t sizeRequested);
 		bool FreeSpaceMeetsFragmentationLevelRequirements(uint64_t freeSpace);
+		// Updates m_sizeUsed and m_sizeAvailable according to m_allStreams content
+		void UpdateSizes();
 
 	private:
 		const int64_t m_fileId;

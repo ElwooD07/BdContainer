@@ -84,7 +84,7 @@ TEST(G_ContainerInfoTests, TotalDataSize)
 		cf->Write(strm, data[i].size());
 		
 		totalSize += data[i].size();
-		EXPECT_EQ(totalSize, info->TotalDataSize());
+		EXPECT_EQ(totalSize, info->UsedSpace());
 	}
 	for (size_t i = 0; i < data.size(); ++i)
 	{
@@ -92,7 +92,7 @@ TEST(G_ContainerInfoTests, TotalDataSize)
 		EXPECT_EQ(data[i].size(), ce->AsFile()->Size());
 		ASSERT_NO_THROW(ce->Remove());
 		totalSize -= data[i].size();
-		EXPECT_EQ(totalSize, info->TotalDataSize());
+		EXPECT_EQ(totalSize, info->UsedSpace());
 	}
-	EXPECT_EQ(0, info->TotalDataSize());
+	EXPECT_EQ(0, info->UsedSpace());
 }

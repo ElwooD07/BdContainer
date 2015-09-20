@@ -44,6 +44,7 @@ extern ContainerGuard cont;
 void AppendData(std::ostream& strm, size_t size)
 {
 	const std::string s_smallExpression("0123456789abcdefghijklmnopqrstuvwxyz!");
+	strm.seekp(0, std::ios::end);
 	for (size_t i = 0; i < size;)
 	{
 		size_t appended = 0;
@@ -418,4 +419,65 @@ TEST(H_FilesPartialWrite, Transactional_Fragmented_StreamsTruncating)
 		EXPECT_EQ(1, info.streamsTotal);
 		EXPECT_EQ(1, info.streamsUsed);
 	}
+}
+
+TEST(H_FilesPartialWrite, Transactional_Fragmented_FreeSpaceMerge)
+{
+	ASSERT_TRUE(DatabasePrepare());
+	unsigned int clusterSize = PrepareContainerForThisTest(cont, true);
+	ContainerFileGuard file1 = cont->GetRoot()->CreateFile("file1");
+
+	size_t dataPortion1Size = clusterSize * 10 - 20; // 10 clusters total
+	size_t totalSize = 0;
+	std::fstream strm1(CreateData(dataPortion1Size));
+	// First stream will very big
+	for (int i = 0; i < 10; ++i)
+	{
+		AppendData(strm1, clusterSize);
+		RewindStream(strm1);
+		size_t sizeToWriteNow = dataPortion1Size + clusterSize * i - 10 * i;
+		uint64_t written = file1->Write(strm1, sizeToWriteNow);
+		EXPECT_EQ(sizeToWriteNow, written);
+		totalSize = sizeToWriteNow;
+	}
+
+	std::fstream strm2("testfile2.txt", std::ios::trunc | std::ios::binary | std::ios::in | std::ios::out);
+	ASSERT_TRUE(strm2.is_open());
+	uint64_t read = file1->Read(strm2, totalSize);
+	EXPECT_EQ(totalSize, read);
+
+	// Ensure, that the content is OK
+	std::string expectedContent(totalSize, '\0');
+	RewindStream(strm1);
+	strm1.read(&expectedContent[0], totalSize);
+	std::string actualContent(totalSize, '\0');
+	RewindStream(strm2);
+	strm2.read(&actualContent[0], totalSize);
+	EXPECT_EQ(expectedContent, actualContent);
+
+	// Check file1 fragmentation
+	// There is should be 3 streams allocated for file1:
+	// 1 empty stream with previous content
+	// 1 fully occupied stream with the main portion of data
+	// 1 small partly occupied stream with the last appended portion of data
+	IContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
+	EXPECT_EQ(totalSize, info.spaceUsed);
+	uint64_t oldSpaceAvailable = info.spaceAvailable;
+	EXPECT_EQ(3, info.streamsTotal);
+	EXPECT_EQ(2, info.streamsUsed);
+
+	// Rewrite all file with much smaller content
+	// All unusd streams should be merged or deleted after this operation
+	RewindStream(strm1);
+	size_t dataPortion2Size = clusterSize + 200; // 2 clusters total
+	file1->Write(strm1, dataPortion2Size);
+	info = file1->GetSpaceUsageInfo();
+	EXPECT_EQ(dataPortion2Size, info.spaceUsed);
+	EXPECT_EQ(oldSpaceAvailable, info.spaceAvailable);
+	EXPECT_EQ(2, info.streamsTotal);
+	EXPECT_EQ(1, info.streamsUsed);
+
+	strm2.seekp(0);
+	read = file1->Read(strm2);
+	EXPECT_EQ(dataPortion2Size, read);
 }

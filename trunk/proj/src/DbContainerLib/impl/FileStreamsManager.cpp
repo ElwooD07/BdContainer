@@ -67,6 +67,7 @@ void dbc::FileStreamsManager::AllocatePlaceForDirectWrite(uint64_t size)
 		return;
 	}
 	AllocateUnusedAndNewStreams(size - m_sizeAvailable);
+	UpdateSizes();
 }
 
 void dbc::FileStreamsManager::AllocatePlaceForTransactionalWrite(uint64_t size)
@@ -80,13 +81,19 @@ void dbc::FileStreamsManager::DeallocatePlaceAfterTransactionalWrite()
 	if (!m_usedStreams.empty())
 	{
 		SQLQuery query(m_resources->GetConnection());
-		for (auto streamId : m_usedStreams)
+		auto allStreamsEnd = m_allStreams.end();
+		for (auto stream = m_allStreams.begin(); stream != allStreamsEnd; ++stream)
 		{
-			query.Prepare("UPDATE FileStreams SET used = 0 WHERE id = ?;");
-			query.BindInt64(1, streamId);
-			query.Step();
+			if (m_usedStreams.find(stream->id) != m_usedStreams.end())
+			{
+				query.Prepare("UPDATE FileStreams SET used = 0 WHERE id = ?;");
+				query.BindInt64(1, stream->id);
+				query.Step();
+				stream->used = 0;
+			}
 		}
-		// TODO: Merge unused streams due to fragmentation level requirements
+		UpdateSizes();
+		MergeFreeSpace();
 	}
 }
 
@@ -172,14 +179,19 @@ void dbc::FileStreamsManager::AllocateUnusedAndNewStreams(uint64_t sizeRequested
 
 uint64_t dbc::FileStreamsManager::AllocateUnusedStreams(uint64_t sizeRequested)
 {
-	if (AllocateOneUnusedStream(sizeRequested))
+	uint64_t allocated = AllocateUnusedStreamsFromThisFile(sizeRequested);
+	if (allocated < sizeRequested)
 	{
-		return sizeRequested;
+		if (AllocateOneUnusedStream(sizeRequested - allocated))
+		{
+			return sizeRequested;
+		}
+		else
+		{
+			allocated += AllocateUnusedStreamsFromAnotherFiles(sizeRequested - allocated);
+		}
 	}
-	else
-	{
-		return AllocateManyUnusedStreams(sizeRequested);
-	}
+	return allocated;
 }
 
 bool dbc::FileStreamsManager::AllocateOneUnusedStream(uint64_t sizeRequested)
@@ -213,11 +225,31 @@ bool dbc::FileStreamsManager::AllocateOneUnusedStream(uint64_t sizeRequested)
 	return true;
 }
 
-uint64_t dbc::FileStreamsManager::AllocateManyUnusedStreams(uint64_t sizeRequested)
+
+uint64_t dbc::FileStreamsManager::AllocateUnusedStreamsFromThisFile(uint64_t sizeRequested)
+{
+	uint64_t allocated = 0;
+	auto end = m_allStreams.end();
+	for (auto stream = m_allStreams.begin(); stream != end && allocated < sizeRequested; ++stream)
+	{
+		if (stream->used == 0)
+		{
+			uint64_t leftToAllocate = sizeRequested - allocated;
+			uint64_t allocateNow = stream->size < leftToAllocate ? stream->size : leftToAllocate;
+			stream->used = allocateNow;
+			UpdateStream(*stream);
+			allocated += allocateNow;
+		}
+	}
+	return allocated;
+}
+
+uint64_t dbc::FileStreamsManager::AllocateUnusedStreamsFromAnotherFiles(uint64_t sizeRequested)
 {
 	uint64_t freeSpaceFound(0);
 	StreamsChain_vt streamsToChange;
-	SQLQuery query(m_resources->GetConnection(), "SELECT id, file_id, stream_order, start, size FROM FileStreams WHERE used = 0;");
+	SQLQuery query(m_resources->GetConnection(), "SELECT id, file_id, stream_order, start, size FROM FileStreams WHERE used = 0 AND file_id != ?;");
+	query.BindInt64(1, m_fileId);
 	while (query.Step() && freeSpaceFound < sizeRequested)
 	{
 		StreamInfo foundStream(query.ColumnInt64(0), query.ColumnInt64(1), query.ColumnInt64(2), query.ColumnInt64(3), query.ColumnInt64(4), 0);
@@ -230,32 +262,18 @@ uint64_t dbc::FileStreamsManager::AllocateManyUnusedStreams(uint64_t sizeRequest
 	}
 
 	uint64_t allocated = 0;
-	uint64_t maxOrder = MaxOrder();
 
 	StreamsChain_vt::const_iterator end = streamsToChange.end();
-	for (StreamsChain_vt::const_iterator it = streamsToChange.begin(); it != end && allocated < sizeRequested; ++it, ++maxOrder)
+	for (StreamsChain_vt::const_iterator it = streamsToChange.begin(); it != end && allocated < sizeRequested; ++it)
 	{
 		uint64_t newUsed = (sizeRequested - allocated < it->size) ? sizeRequested - allocated : it->size;
 		StreamInfo newInfo(*it);
 		newInfo.fileId = m_fileId;
-		newInfo.order = maxOrder;
+		newInfo.order = MaxOrder() + 1;
 		newInfo.used = newUsed;
 		allocated += newUsed;
-		
-		bool newInfoAlreadyUpdated = false;
-		if (newUsed < newInfo.size)
-		{
-			StreamInfo cuttedStream;
-			if (CutOffPartOfUsedStream(newInfo, 0, cuttedStream)) // Updates first part of cutted stream if second part is large enough
-			{
-				newInfoAlreadyUpdated = true;
-				AppendStream(cuttedStream);
-			}
-		}
-		if (!newInfoAlreadyUpdated)
-		{
-			UpdateStream(newInfo); // change old stream size to size requested
-		}
+
+		UpdateStream(newInfo); // change old stream size to size requested
 		m_allStreams.push_back(newInfo);
 	}
 
@@ -274,6 +292,76 @@ void dbc::FileStreamsManager::AllocateNewStream(uint64_t sizeRequested)
 	StreamInfo info(0, m_fileId, MaxOrder(), begin, CalculateClusterMultipleSize(sizeRequested), sizeRequested);
 
 	AppendStream(info);
+}
+
+void dbc::FileStreamsManager::MergeFreeSpace()
+{
+	assert(m_sizeUsed <= m_sizeAvailable);
+	uint64_t freeSpace = m_sizeAvailable - m_sizeUsed;
+	if (!FreeSpaceMeetsFragmentationLevelRequirements(freeSpace))
+	{
+		return;
+	}
+
+	StreamsIds_st mergedStreamsIds;
+	auto nextStream = m_allStreams.begin();
+	auto allStreamsEnd = m_allStreams.end();
+	do	{
+		nextStream = MergeNextNeighbors(nextStream, mergedStreamsIds);
+	} while (nextStream != allStreamsEnd);
+
+	if (mergedStreamsIds.empty())
+	{
+		return;
+	}
+
+	// Update merged streams
+	auto mergedStreamsIdsEnd = mergedStreamsIds.end();
+	for (auto stream : m_allStreams)
+	{
+		if (mergedStreamsIds.find(stream.id) == mergedStreamsIdsEnd)
+		{
+			continue;
+		}
+
+		if (stream.size == 0)
+		{
+			SQLQuery query(m_resources->GetConnection(), "DELETE FROM FileStreams WHERE id = ?;");
+			query.BindInt64(1, stream.id);
+			query.Step();
+		}
+		else
+		{
+			UpdateStream(stream);
+		}
+	}
+}
+
+dbc::StreamsChain_vt::iterator dbc::FileStreamsManager::MergeNextNeighbors(StreamsChain_vt::iterator start, StreamsIds_st& mergedStreamsIds)
+{
+	if (start->used != 0)
+	{
+		return start + 1;
+	}
+
+	bool startWasAdded = false;
+	auto allStreamsEnd = m_allStreams.end();
+	auto neighbor = start + 1;
+	for (; neighbor != allStreamsEnd; ++neighbor)
+	{
+		if (neighbor != allStreamsEnd && neighbor->used == 0)
+		{
+			start->size += neighbor->size;
+			neighbor->size = 0;
+			if (!startWasAdded)
+			{
+				mergedStreamsIds.insert(start->id);
+				startWasAdded = true;
+			}
+			mergedStreamsIds.insert(neighbor->id);
+		}
+	}
+	return neighbor;
 }
 
 bool dbc::FileStreamsManager::CutOffPartOfUsedStream(const StreamInfo& originalStream, uint64_t sizeRequested, StreamInfo& cuttedPart)
@@ -358,4 +446,15 @@ bool dbc::FileStreamsManager::FreeSpaceMeetsFragmentationLevelRequirements(uint6
 	return ((prefferedFragmentationLevel == DataFragmentationLevelLarge && freeSpace >= clusterSize) ||
 			(prefferedFragmentationLevel == DataFragmentationLevelNormal && freeSpace >= clusterSize * 4) ||
 			(prefferedFragmentationLevel == DataFragmentationLevelMin && freeSpace >= clusterSize * 8));
+}
+
+void dbc::FileStreamsManager::UpdateSizes()
+{
+	m_sizeUsed = 0;
+	m_sizeAvailable = 0;
+	for (auto stream : m_allStreams)
+	{
+		m_sizeUsed += stream.used;
+		m_sizeAvailable += stream.size;
+	}
 }
