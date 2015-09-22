@@ -6,9 +6,9 @@
 
 namespace
 {
-	const unsigned long int DEF_IO_BLOCK_SIZE = 65536; // 64K
-	const unsigned long int MIN_IO_BLOCK_SIZE = 256; // 256b
-	const unsigned long int MAX_IO_BLOCK_SIZE = 67108864; // 64M
+	const unsigned long int DEF_IO_BLOCK_SIZE = 512;
+	const unsigned long int MIN_IO_BLOCK_SIZE = 128;
+	const unsigned long int MAX_IO_BLOCK_SIZE = 65536; // 64K
 
 	template<class T>
 	inline dbc::ProgressState CheckStream(T& strm, dbc::IProgressObserver* observer, dbc::ErrIncident errIncident, const char* errMsg)
@@ -32,17 +32,6 @@ namespace
 static const EVP_CIPHER* s_cryptCipher = EVP_aes_128_ofb();
 static const unsigned short s_cryptKeyLen = EVP_CIPHER_key_length(s_cryptCipher);
 
-namespace
-{
-	inline void CheckResultLen(size_t origLen, int resLen)
-	{
-		if (origLen != resLen)
-		{
-			throw dbc::ContainerException("Encryption/Decryption error", dbc::ERR_INTERNAL);
-		}
-	}
-}
-
 struct dbc::crypting::AesCryptorBase::InitCrypt
 {
 	InitCrypt()
@@ -60,9 +49,11 @@ struct dbc::crypting::AesCryptorBase::InitCrypt
 
 dbc::crypting::AesCryptorBase::InitCrypt dbc::crypting::AesCryptorBase::s_init = dbc::crypting::AesCryptorBase::InitCrypt();
 
-dbc::crypting::AesCryptorBase::AesCryptorBase(const RawData& key, const RawData& iv)
+dbc::crypting::AesCryptorBase::AesCryptorBase(const RawData& key, const RawData& iv, CryptInitFn initFn, CryptUpdateFn updateFn)
 	: m_key(key)
 	, m_iv(iv)
+	, m_cryptInitFn(initFn)
+	, m_cryptUpdateFn(updateFn)
 	, m_ctx(EVP_CIPHER_CTX_new(), ::EVP_CIPHER_CTX_free)
 	, m_IoBlockSize(DEF_IO_BLOCK_SIZE)
 {
@@ -103,7 +94,32 @@ void dbc::crypting::AesCryptorBase::ErrorHandler(int ret)
 	}
 }
 
-uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, std::ostream& out, uint64_t size, CryptUpdateFn updateFn, dbc::IProgressObserver* observer)
+void dbc::crypting::AesCryptorBase::CryptRawData(const RawData& src, RawData& dest, dbc::IProgressObserver* observer)
+{
+	size_t srcSize = src.size();
+	size_t processed = 0;
+	RawData srcBlockTmp(m_IoBlockSize);
+	RawData destBlockTmp(m_IoBlockSize);
+	RawData resultTmp;
+	if (!src.empty())
+	{
+		for (size_t offset = 0; processed < srcSize;)
+		{
+			if (observer != nullptr)
+			{
+				observer->OnProgressUpdated(static_cast<float>(offset) / srcSize);
+			}
+			size_t processNow = offset + m_IoBlockSize > srcSize ? srcSize - offset : m_IoBlockSize;
+			srcBlockTmp.assign(src.begin() + offset, src.begin() + offset + processNow);
+			processed += CryptPortion(srcBlockTmp, destBlockTmp, processNow, observer);
+			resultTmp.insert(resultTmp.begin() + offset, destBlockTmp.begin(), destBlockTmp.begin() + processNow);
+		}
+	}
+
+	std::swap(dest, resultTmp);
+}
+
+uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer)
 {
 	// Only for binary streams! Using text streams here is forbidden!
 	uint64_t block_size = m_IoBlockSize;
@@ -134,16 +150,18 @@ uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, st
 			return ret;
 		}
 
-		long long gcount = in.gcount();
-		int updated = 0;
-		ErrorHandler(updateFn(m_ctx.get(), &bufOut[0], &updated, &bufIn[0], static_cast<int>(gcount)));
+		size_t updated = CryptPortion(bufIn, bufOut, static_cast<size_t>(in.gcount()), observer);
+		if (updated < in.gcount())
+		{
+			throw ContainerException("Encryption/Decryption error", ERR_INTERNAL);
+		}
 
 		out.write(reinterpret_cast<const char*>(bufOut.data()), updated);
 		if (CheckStream(out, observer, CANT_WRITE, "Writing to output stream failed") != Continue)
 		{
 			return ret;
 		}
-		ret += gcount;
+		ret += updated;
 
 		if (observer != nullptr)
 		{
@@ -154,59 +172,75 @@ uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, st
 	return ret;
 }
 
-dbc::crypting::AesEncryptor::AesEncryptor(const RawData& key, const RawData& iv)
-	: AesCryptorBase(key, iv)
+size_t dbc::crypting::AesCryptorBase::CryptPortion(const RawData& src, RawData& dest, size_t size, dbc::IProgressObserver* observer)
 {
-	EVP_EncryptInit_ex(m_ctx.get(), s_cryptCipher, 0, &m_key[0], &m_iv[0]);
+	InitCtx(observer);
+	if (size > src.size())
+	{
+		size = src.size();
+	}
+	int updated = 0;
+	ErrorHandler(m_cryptUpdateFn(m_ctx.get(), &dest[0], &updated, &src[0], static_cast<int>(size)));
+	ClearCtx(observer);
+	return static_cast<size_t>(updated);
 }
 
-void dbc::crypting::AesEncryptor::Encrypt(const RawData& data, RawData& result)
+void dbc::crypting::AesCryptorBase::InitCtx(dbc::IProgressObserver* observer)
 {
-	RawData resultTmp(data.size());
-	if (!data.empty())
+	if (!m_cryptInitFn(m_ctx.get(), s_cryptCipher, 0, &m_key[0], &m_iv[0]))
 	{
-		int len(0);
-		ErrorHandler(EVP_EncryptUpdate(m_ctx.get(), &resultTmp[0], &len, &data[0], data.size()));
-		CheckResultLen(data.size(), len);
+		if (observer != nullptr && observer->OnWarning(ERR_INTERNAL) == dbc::Continue)
+		{
+			return;
+		}
+		throw ContainerException("Encryption/Decryption error", ERR_INTERNAL);
 	}
+}
 
-	std::swap(result, resultTmp);
+void dbc::crypting::AesCryptorBase::ClearCtx(dbc::IProgressObserver* observer)
+{
+	if (!::EVP_CIPHER_CTX_cleanup(m_ctx.get()))
+	{
+		if (observer != nullptr && observer->OnWarning(ERR_INTERNAL) == dbc::Continue)
+		{
+			return;
+		}
+		throw ContainerException("Encryption/Decryption error", ERR_INTERNAL);
+	}
+}
+
+dbc::crypting::AesEncryptor::AesEncryptor(const RawData& key, const RawData& iv)
+	: AesCryptorBase(key, iv, &::EVP_EncryptInit_ex, &::EVP_EncryptUpdate)
+{ }
+
+void dbc::crypting::AesEncryptor::Encrypt(const RawData& data, RawData& result, dbc::IProgressObserver* observer)
+{
+	CryptRawData(data, result, observer);
 }
 
 uint64_t dbc::crypting::AesEncryptor::Encrypt(std::istream& in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer)
 {
-	return CryptBetweenStreams(in, out, size, EVP_EncryptUpdate, observer);
+	return CryptBetweenStreams(in, out, size, observer);
 }
 
 dbc::crypting::AesDecryptor::AesDecryptor(const RawData& key, const RawData& iv)
-	: AesCryptorBase(key, iv)
-{
-	EVP_DecryptInit_ex(m_ctx.get(), s_cryptCipher, 0, &m_key[0], &m_iv[0]);
-}
+	: AesCryptorBase(key, iv, &::EVP_DecryptInit_ex, &::EVP_DecryptUpdate)
+{ }
 
-void dbc::crypting::AesDecryptor::Decrypt(const RawData& data, RawData& result)
+void dbc::crypting::AesDecryptor::Decrypt(const RawData& data, RawData& result, dbc::IProgressObserver* observer)
 {
-	RawData resultTmp(data.size());
-	if (!data.empty())
-	{
-		int len(0);
-		ErrorHandler(EVP_DecryptUpdate(m_ctx.get(), &resultTmp[0], &len, &data[0], data.size()));
-		CheckResultLen(data.size(), len);
-	}
-
-	std::swap(result, resultTmp);
+	CryptRawData(data, result, observer);
 }
 
 uint64_t dbc::crypting::AesDecryptor::Decrypt(std::istream& in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer)
 {
-	return CryptBetweenStreams(in, out, size, &EVP_DecryptUpdate, observer);
+	return CryptBetweenStreams(in, out, size, observer);
 }
 
 void dbc::crypting::utils::RawDataAppend(const RawData& src, RawData& dest)
 {
 	dest.insert(dest.end(), src.begin(), src.end());
 }
-
 
 dbc::crypting::RawData dbc::crypting::utils::StringToRawData(const std::string& str)
 {

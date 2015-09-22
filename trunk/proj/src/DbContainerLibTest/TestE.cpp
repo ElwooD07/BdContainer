@@ -99,7 +99,7 @@ TEST(E_FileSystemTest,  Files_Open)
 	EXPECT_NO_THROW(cfile->Write(istrstream, istr.size())); // Temporarily opened for writing
 	EXPECT_NO_THROW(cfile->Read(ostrstream, istr.size())); // Temporarily opened for reading
 
-	EXPECT_NO_THROW(cfile->Open(WriteAccess), ContainerException);
+	EXPECT_NO_THROW(cfile->Open(WriteAccess));
 	EXPECT_TRUE(cfile->IsOpened());
 	EXPECT_EQ(WriteAccess, cfile->Access());
 	EXPECT_THROW(cfile->Read(ostrstream, istr.size()), ContainerException); // Already opened for writing
