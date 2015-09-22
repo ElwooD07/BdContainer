@@ -33,5 +33,6 @@ namespace dbc
 		crypting::RawData m_iv; // AES IV
 		std::string m_bin_file;
 		std::fstream m_stream;
+		unsigned long m_cryptBlockSize;
 	};
 }

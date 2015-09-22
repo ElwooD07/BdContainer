@@ -67,6 +67,7 @@ namespace
 }
 
 dbc::DataStorageBinaryFile::DataStorageBinaryFile()
+	: m_cryptBlockSize(crypting::AesCryptorBase::GetDefIoBlockSize())
 { }
 
 void dbc::DataStorageBinaryFile::Open(const std::string& db_path, const std::string& password, const RawData& savedData)
@@ -166,8 +167,48 @@ uint64_t dbc::DataStorageBinaryFile::Copy(std::istream& src, std::ostream& dest,
 
 	m_stream.seekg(beginSrc, std::ios::beg);
 	m_stream.seekp(beginDest, std::ios::beg);
-	// TODO: Implement this!!!
-	return 0;
+	size_t maxRead = utils::TellMaxAvailable(src, endSrc - beginSrc);
+	if (maxRead < endSrc - beginSrc && observer != nullptr && observer->OnWarning(ERR_DATA_SHORT_SRC) != dbc::Continue)
+	{
+		throw ContainerException(ERR_DATA_SHORT_SRC);
+	}
+
+	uint64_t ret = 0;
+	RawData blockSrc(m_cryptBlockSize);
+	RawData blockDest(m_cryptBlockSize);
+	while (maxRead > 0 && !src.eof())
+	{
+		size_t copyNow = m_cryptBlockSize;
+		if (maxRead < m_cryptBlockSize)
+		{
+			copyNow = maxRead;
+			maxRead = 0;
+		}
+		else
+		{
+			maxRead -= m_cryptBlockSize;
+		}
+		src.read(reinterpret_cast<char*>(&blockSrc[0]), copyNow);
+		if (utils::CheckStream(src, observer, CANT_READ, "Reading from input stream failed") != Continue)
+		{
+			return ret;
+		}
+
+		int gcount = src.gcount();
+		dest.write(reinterpret_cast<const char*>(blockDest.data()), gcount);
+		if (utils::CheckStream(dest, observer, CANT_WRITE, "Writing to output stream failed") != Continue)
+		{
+			return ret;
+		}
+		ret += gcount;
+
+		if (observer != nullptr)
+		{
+			observer->OnProgressUpdated(ret / static_cast<float>(maxRead));
+		}
+	}
+
+	return ret;
 }
 
 uint64_t dbc::DataStorageBinaryFile::Erace(uint64_t begin, uint64_t end, dbc::IProgressObserver* observer)

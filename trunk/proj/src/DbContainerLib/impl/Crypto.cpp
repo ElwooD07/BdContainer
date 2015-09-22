@@ -2,31 +2,12 @@
 #include "Crypto.h"
 #include "FsUtils.h"
 #include "ContainerException.h"
-#include "IProgressObserver.h"
 
 namespace
 {
 	const unsigned long int DEF_IO_BLOCK_SIZE = 512;
 	const unsigned long int MIN_IO_BLOCK_SIZE = 128;
 	const unsigned long int MAX_IO_BLOCK_SIZE = 65536; // 64K
-
-	template<class T>
-	inline dbc::ProgressState CheckStream(T& strm, dbc::IProgressObserver* observer, dbc::ErrIncident errIncident, const char* errMsg)
-	{
-		dbc::Error errCode(dbc::ERR_DATA, errIncident);
-		if (strm.fail())
-		{
-			if (observer != nullptr)
-			{
-				return observer->OnError(errCode);
-			}
-			else
-			{
-				throw dbc::ContainerException(errMsg, errCode);
-			}
-		}
-		return dbc::Continue;
-	}
 }
 
 static const EVP_CIPHER* s_cryptCipher = EVP_aes_128_ofb();
@@ -68,6 +49,11 @@ dbc::crypting::AesCryptorBase::~AesCryptorBase()
 	// To avoid warning from "std::auto_ptr<CtxImpl> m_ctx" in private members of this class
 }
 
+unsigned long dbc::crypting::AesCryptorBase::GetIoBlockSize()
+{
+	return m_IoBlockSize;
+}
+
 void dbc::crypting::AesCryptorBase::SetIoBlockSize(unsigned long blockSize)
 {
 	if (blockSize < MIN_IO_BLOCK_SIZE || blockSize > MAX_IO_BLOCK_SIZE)
@@ -75,6 +61,11 @@ void dbc::crypting::AesCryptorBase::SetIoBlockSize(unsigned long blockSize)
 		throw ContainerException("IO block size is out of range", WRONG_PARAMETERS);
 	}
 	m_IoBlockSize = blockSize;
+}
+
+unsigned long dbc::crypting::AesCryptorBase::GetDefIoBlockSize()
+{
+	return DEF_IO_BLOCK_SIZE;
 }
 
 unsigned short dbc::crypting::AesCryptorBase::GetKeyAndIvLen()
@@ -145,7 +136,7 @@ uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, st
 			max_size -= m_IoBlockSize;
 		}
 		in.read(reinterpret_cast<char*>(&bufIn[0]), block_size);
-		if (CheckStream(in, observer, CANT_READ, "Reading from input stream failed") != Continue)
+		if (dbc::utils::CheckStream(in, observer, CANT_READ, "Reading from input stream failed") != Continue)
 		{
 			return ret;
 		}
@@ -157,7 +148,7 @@ uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, st
 		}
 
 		out.write(reinterpret_cast<const char*>(bufOut.data()), updated);
-		if (CheckStream(out, observer, CANT_WRITE, "Writing to output stream failed") != Continue)
+		if (dbc::utils::CheckStream(out, observer, CANT_WRITE, "Writing to output stream failed") != Continue)
 		{
 			return ret;
 		}

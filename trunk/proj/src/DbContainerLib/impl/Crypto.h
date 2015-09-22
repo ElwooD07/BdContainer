@@ -20,9 +20,11 @@ namespace dbc
 
 			AesCryptorBase(const RawData& key, const RawData& iv, CryptInitFn initFn, CryptUpdateFn updateFn);
 			~AesCryptorBase();
+			unsigned long GetIoBlockSize();
 			void SetIoBlockSize(unsigned long blockSize);
 
 			static unsigned short GetKeyAndIvLen();
+			static unsigned long GetDefIoBlockSize();
 
 		protected:
 			void ErrorHandler(int ret);
