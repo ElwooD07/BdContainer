@@ -13,7 +13,6 @@ dbc::FileStreamsManager::FileStreamsManager(int64_t fileId, ContainerResources r
 	: m_fileId(fileId)
 	, m_resources(resources)
 	, m_allocator(*this, resources, fileId)
-	, m_defragmenter(*this, resources, fileId)
 	, m_sizeAvailable(0)
 	, m_sizeUsed(0)
 { }
@@ -150,7 +149,6 @@ void dbc::FileStreamsManager::AllocatePlaceForDirectWrite(uint64_t size)
 	}
 	m_allocator.AllocateUnusedAndNewStreams(size - m_sizeAvailable);
 	UpdateSizes();
-	m_defragmenter.MergeFreeSpace();
 }
 
 void dbc::FileStreamsManager::AllocatePlaceForTransactionalWrite(uint64_t size)
@@ -176,7 +174,6 @@ void dbc::FileStreamsManager::DeallocatePlaceAfterTransactionalWrite()
 			}
 		}
 		UpdateSizes();
-		m_defragmenter.MergeFreeSpace();
 	}
 }
 

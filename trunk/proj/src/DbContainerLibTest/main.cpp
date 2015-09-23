@@ -18,6 +18,15 @@ void ExceptionMessages();
 
 int main(int argc, char* argv[])
 {
+	const char workingFolderName[] = "./test_folder";
+#ifdef WIN32
+	_mkdir(workingFolderName);
+	_chdir(workingFolderName);
+#else
+	mkdir(workingFolderName);
+	chdir(workingFolderName);
+#endif
+
 	RefreshLog();
 	DatabaseRemove();
 

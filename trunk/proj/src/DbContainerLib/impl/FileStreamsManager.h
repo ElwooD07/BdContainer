@@ -2,7 +2,6 @@
 #include "IContainnerResources.h"
 #include "StreamInfo.h"
 #include "FileStreamsAllocator.h"
-#include "FileStreamsDefragmenter.h"
 
 namespace dbc
 {
@@ -49,8 +48,7 @@ namespace dbc
 		const int64_t m_fileId;
 		ContainerResources m_resources;
 		FileStreamsAllocator m_allocator;
-		FileStreamsDefragmenter m_defragmenter;
-
+		
 		StreamsChain_vt m_allStreams;
 		StreamsIds_st m_usedStreams;
 		uint64_t m_sizeAvailable;

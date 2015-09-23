@@ -12,7 +12,7 @@ void DatabaseDisconnect();
 bool DatabasePrepare(); // create + connect + clear
 
 void AppendStream(std::ostream& strm, size_t size);
-std::fstream CreateStream(size_t size);
+std::fstream CreateStream(size_t size, const std::string& fileName = "testfile.txt");
 void RewindStream(std::istream& strm);
 
 unsigned int PrepareContainerForPartialWriteTest(dbc::ContainerGuard container, bool transactionalWrite); // returns cluster size

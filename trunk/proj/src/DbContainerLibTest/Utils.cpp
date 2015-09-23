@@ -118,9 +118,9 @@ void AppendStream(std::ostream& strm, size_t size)
 	strm.flush();
 }
 
-std::fstream CreateStream(size_t size)
+std::fstream CreateStream(size_t size, const std::string& fileName /*= "testfile.txt"*/)
 {
-	std::fstream strm("testfile.txt", std::ios::trunc | std::ios::in | std::ios::out | std::ios::binary);
+	std::fstream strm(fileName, std::ios::trunc | std::ios::in | std::ios::out | std::ios::binary);
 	AppendStream(strm, size);
 	return std::move(strm);
 }

@@ -23,4 +23,5 @@ namespace dbc
 
 	typedef std::vector<StreamInfo> StreamsChain_vt;
 	typedef std::set<uint64_t> StreamsIds_st;
+	typedef std::map<uint64_t, StreamsIds_st> StreamsIdsSets_mp;
 }
