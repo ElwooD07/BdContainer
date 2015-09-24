@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "StreamProxyProgressObserver.h"
+#include "ProxyProgressObserver.h"
 
 namespace
 {
@@ -20,13 +20,13 @@ namespace
 	}
 }
 
-dbc::StreamProxyProgressObserver::StreamProxyProgressObserver(IProgressObserver* higherObserver)
+dbc::ProxyProgressObserver::ProxyProgressObserver(IProgressObserver* higherObserver)
 	: m_higherObserver(higherObserver)
 	, m_rangeLower(0.0)
 	, m_rangeUpper(1.0)
 { }
 
-void dbc::StreamProxyProgressObserver::SetRange(float lower, float upper)
+void dbc::ProxyProgressObserver::SetRange(float lower, float upper)
 {
 	m_rangeLower = AdjustRange(lower);
 	m_rangeUpper = AdjustRange(upper);
@@ -36,7 +36,7 @@ void dbc::StreamProxyProgressObserver::SetRange(float lower, float upper)
 	}
 }
 
-dbc::ProgressState dbc::StreamProxyProgressObserver::OnProgressUpdated(float progress)
+dbc::ProgressState dbc::ProxyProgressObserver::OnProgressUpdated(float progress)
 {
 	if (m_higherObserver != nullptr)
 	{
@@ -45,7 +45,16 @@ dbc::ProgressState dbc::StreamProxyProgressObserver::OnProgressUpdated(float pro
 	return Continue;
 }
 
-dbc::ProgressState dbc::StreamProxyProgressObserver::OnWarning(Error errCode)
+dbc::ProgressState dbc::ProxyProgressObserver::OnInfo(const std::string& info)
+{
+	if (m_higherObserver != nullptr)
+	{
+		return m_higherObserver->OnInfo(info);
+	}
+	return dbc::Continue;
+}
+
+dbc::ProgressState dbc::ProxyProgressObserver::OnWarning(Error errCode)
 {
 	if (m_higherObserver != nullptr)
 	{
@@ -54,7 +63,7 @@ dbc::ProgressState dbc::StreamProxyProgressObserver::OnWarning(Error errCode)
 	return Stop;
 }
 
-dbc::ProgressState dbc::StreamProxyProgressObserver::OnError(Error errCode)
+dbc::ProgressState dbc::ProxyProgressObserver::OnError(Error errCode)
 {
 	if (m_higherObserver != nullptr)
 	{

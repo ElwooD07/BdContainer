@@ -5,6 +5,7 @@ class ShittyProgressObserver : public dbc::IProgressObserver
 {
 public:
 	virtual dbc::ProgressState OnProgressUpdated(float progress);
+	virtual dbc::ProgressState OnInfo(const std::string& info);
 	virtual dbc::ProgressState OnWarning(dbc::Error errCode);
 	virtual dbc::ProgressState OnError(dbc::Error errCode);
 };

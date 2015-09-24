@@ -3,13 +3,14 @@
 
 namespace dbc
 {
-	class StreamProxyProgressObserver : public IProgressObserver
+	class ProxyProgressObserver : public IProgressObserver
 	{
 	public:
-		StreamProxyProgressObserver(IProgressObserver* higherObserver);
+		ProxyProgressObserver(IProgressObserver* higherObserver);
 		void SetRange(float lower, float upper);
 
 		virtual ProgressState OnProgressUpdated(float progress);
+		virtual ProgressState OnInfo(const std::string& info);
 		virtual ProgressState OnWarning(Error errCode);
 		virtual ProgressState OnError(Error errCode);
 

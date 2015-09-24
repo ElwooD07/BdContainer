@@ -167,7 +167,7 @@ uint64_t dbc::DataStorageBinaryFile::Copy(std::istream& src, std::ostream& dest,
 
 	m_stream.seekg(beginSrc, std::ios::beg);
 	m_stream.seekp(beginDest, std::ios::beg);
-	size_t maxRead = utils::TellMaxAvailable(src, endSrc - beginSrc);
+	uint64_t maxRead = utils::TellMaxAvailable(src, endSrc - beginSrc);
 	if (maxRead < endSrc - beginSrc && observer != nullptr && observer->OnWarning(ERR_DATA_SHORT_SRC) != dbc::Continue)
 	{
 		throw ContainerException(ERR_DATA_SHORT_SRC);
@@ -178,7 +178,7 @@ uint64_t dbc::DataStorageBinaryFile::Copy(std::istream& src, std::ostream& dest,
 	RawData blockDest(m_cryptBlockSize);
 	while (maxRead > 0 && !src.eof())
 	{
-		size_t copyNow = m_cryptBlockSize;
+		uint64_t copyNow = m_cryptBlockSize;
 		if (maxRead < m_cryptBlockSize)
 		{
 			copyNow = maxRead;
@@ -194,7 +194,7 @@ uint64_t dbc::DataStorageBinaryFile::Copy(std::istream& src, std::ostream& dest,
 			return ret;
 		}
 
-		int gcount = src.gcount();
+		std::streamsize gcount = src.gcount();
 		dest.write(reinterpret_cast<const char*>(blockDest.data()), gcount);
 		if (utils::CheckStream(dest, observer, CANT_WRITE, "Writing to output stream failed") != Continue)
 		{

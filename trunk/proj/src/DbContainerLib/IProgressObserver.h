@@ -18,6 +18,7 @@ namespace dbc
 	public:
 		virtual ~IProgressObserver() { }
 		virtual ProgressState OnProgressUpdated(float progress) = 0; // from 0 to 1
+		virtual ProgressState OnInfo(const std::string& info) = 0;
 		virtual ProgressState OnWarning(Error errCode) = 0;
 		virtual ProgressState OnError(Error errCode) = 0;
 	};

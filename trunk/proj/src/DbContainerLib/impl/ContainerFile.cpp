@@ -2,7 +2,7 @@
 #include "ContainerFile.h"
 #include "FileStreamsManager.h"
 #include "SQLQuery.h"
-#include "StreamProxyProgressObserver.h"
+#include "ProxyProgressObserver.h"
 #include "ContainerException.h"
 #include "Logging.h"
 
@@ -136,7 +136,7 @@ uint64_t dbc::ContainerFile::Read(std::ostream& out, uint64_t size, IProgressObs
 		size = m_streamsManager->GetSizeUsed();
 	}
 
-	StreamProxyProgressObserver proxyObserver(observer);
+	ProxyProgressObserver proxyObserver(observer);
 	uint64_t readTotal(0);
 	const StreamsChain_vt& streams = m_streamsManager->GetAllStreams();
 	StreamsChain_vt::const_iterator end = streams.end();
@@ -157,7 +157,7 @@ uint64_t dbc::ContainerFile::Read(std::ostream& out, uint64_t size, IProgressObs
 			sizeToReadNow = it->used;
 		}
 
-		proxyObserver.SetRange(readTotal / size, (readTotal + sizeToReadNow) / size);
+		proxyObserver.SetRange(static_cast<float>(readTotal) / size, static_cast<float>(readTotal + sizeToReadNow) / size);
 		proxyObserver.OnProgressUpdated(0);
 		uint64_t read = m_resources->Storage().Read(out, it->start, it->start + sizeToReadNow, &proxyObserver);
 		if (read != sizeToReadNow)
@@ -260,7 +260,7 @@ uint64_t dbc::ContainerFile::TransactionalWrite(std::istream& in, uint64_t size,
 
 uint64_t dbc::ContainerFile::WriteImpl(std::istream& in, uint64_t size, bool writeOnlyToUnusedStreams, IProgressObserver* observer)
 {
-	StreamProxyProgressObserver proxyObserver(observer);
+	ProxyProgressObserver proxyObserver(observer);
 	uint64_t writtenTotal = 0;
 	const StreamsChain_vt& allStreams = m_streamsManager->GetAllStreams();
 	const StreamsIds_st& usedStreams = m_streamsManager->GetSavedStreams();
@@ -274,7 +274,7 @@ uint64_t dbc::ContainerFile::WriteImpl(std::istream& in, uint64_t size, bool wri
 		uint64_t sizeLeftToWrite(size - writtenTotal);
 		uint64_t sizeToWriteNow = (sizeLeftToWrite < stream->size) ? sizeLeftToWrite : stream->size;
 
-		proxyObserver.SetRange(writtenTotal / size, (writtenTotal + sizeToWriteNow) / size);
+		proxyObserver.SetRange(static_cast<float>(writtenTotal) / size, static_cast<float>(writtenTotal + sizeToWriteNow) / size);
 		proxyObserver.OnProgressUpdated(0);
 		uint64_t written = m_resources->Storage().Write(in, stream->start, stream->start + sizeToWriteNow, observer);
 		writtenTotal += written;

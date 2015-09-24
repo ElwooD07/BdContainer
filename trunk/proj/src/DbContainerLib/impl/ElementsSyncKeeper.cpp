@@ -15,6 +15,7 @@ bool dbc::ElementsSyncKeeper::SetFileLock(uint64_t fileId, ReadWriteAccess acces
 		return SetReadWriteLock(fileId);
 	default:
 		assert(!"Unknown file lock type");
+		return false;
 	}
 }
 

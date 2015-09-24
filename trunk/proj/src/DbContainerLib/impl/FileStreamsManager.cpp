@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "FileStreamsManager.h"
 #include "SQLQuery.h"
+#include "FileStreamsUtils.h"
 #include "ContainerException.h"
 #include "Logging.h"
 
@@ -80,11 +81,9 @@ uint64_t dbc::FileStreamsManager::CalculateClusterMultipleSize(uint64_t sizeRequ
 
 bool dbc::FileStreamsManager::FreeSpaceMeetsFragmentationLevelRequirements(uint64_t freeSpace)
 {
-	DataFragmentationLevel prefferedFragmentationLevel = m_resources->DataUsagePrefs().FragmentationLevel();
-	unsigned int clusterSize = m_resources->DataUsagePrefs().ClusterSize();
-	return ((prefferedFragmentationLevel == DataFragmentationLevelLarge && freeSpace >= clusterSize) ||
-		(prefferedFragmentationLevel == DataFragmentationLevelNormal && freeSpace >= clusterSize * 4) ||
-		(prefferedFragmentationLevel == DataFragmentationLevelMin && freeSpace >= clusterSize * 8));
+	return utils::FreeSpaceMeetsFragmentationLevelRequirements(freeSpace,
+		m_resources->DataUsagePrefs().FragmentationLevel(),
+		m_resources->DataUsagePrefs().ClusterSize());
 }
 
 void dbc::FileStreamsManager::AppendStream(const StreamInfo& info)
