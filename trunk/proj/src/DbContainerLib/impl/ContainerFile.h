@@ -12,7 +12,7 @@ namespace dbc
 	{
 	public:
 		ContainerFile(ContainerResources resources, int64_t id);
-		ContainerFile(ContainerResources resources, int64_t parent_id, const std::string &name);
+		ContainerFile(ContainerResources resources, int64_t parentId, const std::string& name);
 
 		virtual void Remove();
 

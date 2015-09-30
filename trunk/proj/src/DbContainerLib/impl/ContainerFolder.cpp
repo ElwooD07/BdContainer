@@ -8,12 +8,12 @@
 #include "FsUtils.h"
 #include "ContainerException.h"
 
-dbc::ContainerFolder::ContainerFolder(ContainerResources resources, int64_t id) :
-ContainerElement(resources, id)
+dbc::ContainerFolder::ContainerFolder(ContainerResources resources, int64_t id)
+	: ContainerElement(resources, id)
 {	}
 
-dbc::ContainerFolder::ContainerFolder(ContainerResources resources, int64_t parent_id, const std::string &name) :
-ContainerElement(resources, parent_id, name)
+dbc::ContainerFolder::ContainerFolder(ContainerResources resources, int64_t parent_id, const std::string &name)
+	: ContainerElement(resources, parent_id, name)
 {	}
 
 std::string dbc::ContainerFolder::Name()
@@ -45,13 +45,13 @@ void dbc::ContainerFolder::Remove()
 	}
 }
 
-void dbc::ContainerFolder::Rename(const std::string &new_name)
+void dbc::ContainerFolder::Rename(const std::string& newName)
 {
 	if (!IsRoot())
 	{
-		ContainerElement::Rename(new_name);
+		ContainerElement::Rename(newName);
 
-		m_props.SetDateModified();
+		m_props.SetDateModified(::time(0));
 		WriteProps();
 	}
 	else
@@ -67,9 +67,12 @@ dbc::ContainerFolderGuard dbc::ContainerFolder::Clone() const
 
 bool dbc::ContainerFolder::IsRoot() const
 {
-	return (m_id == dbc::Container::ROOT_ID
-		&& m_name.size() == 1
-		&& m_name[0] == PATH_SEPARATOR);
+	if (m_id == dbc::Container::ROOT_ID)
+	{
+		assert(m_name.size() == 1 && m_name[0] == PATH_SEPARATOR && "Wrong root name");
+		return true;
+	}
+	return false;
 }
 
 bool dbc::ContainerFolder::HasChildren()
@@ -80,7 +83,7 @@ bool dbc::ContainerFolder::HasChildren()
 	return query.ColumnInt(0) > 0;
 }
 
-dbc::ContainerElementGuard dbc::ContainerFolder::GetChild(const std::string &name)
+dbc::ContainerElementGuard dbc::ContainerFolder::GetChild(const std::string& name)
 {
 	Refresh();
 
@@ -107,11 +110,12 @@ dbc::ContainerElementGuard dbc::ContainerFolder::GetChild(const std::string &nam
 	case ElementTypeFile:
 		return ContainerElementGuard(new ContainerFile(m_resources, id));
 	default:
+		assert(!"Unknown element type specified");
 		throw ContainerException(ERR_DB, IS_DAMAGED);
 	}
 }
 
-dbc::ContainerElementGuard dbc::ContainerFolder::CreateChild(const std::string &name, ElementType type, const std::string &tag)
+dbc::ContainerElementGuard dbc::ContainerFolder::CreateChild(const std::string& name, ElementType type, const std::string& tag)
 {
 	CreateChildEntry(name, type, tag);
 	switch (type)
@@ -121,6 +125,7 @@ dbc::ContainerElementGuard dbc::ContainerFolder::CreateChild(const std::string &
 	case ElementTypeFile:
 		return ContainerElementGuard(new ContainerFile(m_resources, m_id, name));
 	default:
+		assert(!"Unknown element type specified");
 		throw ContainerException(ERR_INTERNAL);
 	}
 }
@@ -142,9 +147,9 @@ dbc::DbcElementsIterator dbc::ContainerFolder::EnumFsEntries()
 	return DbcElementsIterator(new ElementsIterator(m_resources, m_id));
 }
 
-dbc::Error dbc::ContainerFolder::RemoveFolder(Connection& connection, int64_t folder_id)
+dbc::Error dbc::ContainerFolder::RemoveFolder(Connection& connection, int64_t folderId)
 {
-	if (folder_id <= 1)
+	if (folderId <= 1)
 	{
 		throw ContainerException(ACTION_IS_FORBIDDEN); //  Deleting is forbidden for the root;
 	}
@@ -152,9 +157,11 @@ dbc::Error dbc::ContainerFolder::RemoveFolder(Connection& connection, int64_t fo
 	Error ret = SUCCESS;
 	try
 	{
+		TransactionGuard transaction = m_resources->GetConnection().StartTransaction();
+
 		SQLQuery query(connection, "SELECT id FROM FileSystem WHERE parent_id = ?;");
 		int64_t id;
-		query.BindInt64(1, folder_id);
+		query.BindInt64(1, folderId);
 		while (query.Step())
 		{
 			id = query.ColumnInt64(0);
@@ -165,8 +172,10 @@ dbc::Error dbc::ContainerFolder::RemoveFolder(Connection& connection, int64_t fo
 			}
 		}
 		query.Prepare("DELETE FROM FileSystem WHERE id = ?;");
-		query.BindInt64(1, folder_id);
+		query.BindInt64(1, folderId);
 		query.Step();
+
+		transaction->Commit();
 	}
 	catch (const ContainerException &ex)
 	{
@@ -179,13 +188,13 @@ void dbc::ContainerFolder::CreateChildEntry(const std::string& name, ElementType
 {
 	Refresh();
 
-	if (name.empty() || !dbc::utils::FNameIsValid(name) || (type == ElementTypeUnknown))
+	if (name.empty() || !dbc::utils::FileNameIsValid(name) || (type == ElementTypeUnknown))
 	{
 		throw ContainerException(ERR_DB_FS, CANT_CREATE, WRONG_PARAMETERS);
 	}
 
 	Error tmp = Exists(m_id, name);
-	if (tmp != Error(ERR_DB_FS, NOT_FOUND))
+	if (tmp != s_errElementNotFound)
 	{
 		if (tmp == SUCCESS)
 		{
@@ -201,8 +210,8 @@ void dbc::ContainerFolder::CreateChildEntry(const std::string& name, ElementType
 	ElementProperties props;
 	ElementProperties::SetCurrentTime(props);
 	props.SetTag(tag);
-	std::string props_str;
-	ElementProperties::MakeString(props, props_str);
-	query.BindText(4, props_str);
+	std::string propsStr;
+	ElementProperties::MakeString(props, propsStr);
+	query.BindText(4, propsStr);
 	query.Step();
 }

@@ -4,7 +4,7 @@
 #include "SQLQuery.h"
 
 dbc::ContainerInfoImpl::ContainerInfoImpl(ContainerResources resources)
-: m_resources(resources)
+	: m_resources(resources)
 { }
 
 bool dbc::ContainerInfoImpl::IsEmpty()

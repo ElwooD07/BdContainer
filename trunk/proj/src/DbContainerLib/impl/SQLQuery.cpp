@@ -3,13 +3,10 @@
 #include "SQLQuery.h"
 #include "Connection.h"
 #include "ContainerException.h"
-#ifdef _DEBUG
-#include <sstream>
 #include "Logging.h"
-#endif
 
-dbc::SQLQuery::SQLQuery(Connection &conn, const std::string &query):
-m_db(conn.GetDB()), m_stmt(0), m_lastRowId(0)
+dbc::SQLQuery::SQLQuery(Connection &conn, const std::string &query)
+	: m_db(conn.GetDB()), m_stmt(0), m_lastRowId(0)
 {
 	Prepare(query);
 }
@@ -21,11 +18,10 @@ dbc::SQLQuery::~SQLQuery()
 	{
 		res = sqlite3_finalize(m_stmt);
 	}
-#ifdef _DEBUG
+
 	std::stringstream stream;
 	stream << "- SQLQuery closed; returned code - " << res << ": " << ((res != SQLITE_OK) ? sqlite3_errmsg(m_db) : "OK");
 	WriteLog(stream.str());
-#endif
 }
 
 void dbc::SQLQuery::Prepare(const std::string &query)
@@ -42,11 +38,9 @@ void dbc::SQLQuery::Prepare(const std::string &query)
 	{
 		int err = sqlite3_prepare_v2(m_db, query.c_str(), query.size(), &m_stmt, 0);
 
-#ifdef _DEBUG
 		std::stringstream stream;
 		stream << "+ SQLQuery prepared: \"" << query << "\"; returned code - " << err << ": " << ((err != SQLITE_OK) ? sqlite3_errmsg(m_db) : "OK");
 		WriteLog(stream.str());
-#endif
 
 		DecideToThrow(err);
 	}
@@ -70,7 +64,7 @@ void dbc::SQLQuery::BindInt64(int column, int64_t value)
 	DecideToThrow(sqlite3_bind_int64(m_stmt, column, value));
 }
 
-void dbc::SQLQuery::BindText(int column, const std::string &value)
+void dbc::SQLQuery::BindText(int column, const std::string& value)
 {
 	CheckSTMT();
 	DecideToThrow(sqlite3_bind_text(m_stmt, column, value.c_str(), value.length() * sizeof(char), 0));
@@ -126,10 +120,10 @@ void dbc::SQLQuery::ColumnText(int column, std::string& out)
 {
 	CheckSTMT();
 
-	const char * ch_ref = reinterpret_cast<const char*>(sqlite3_column_text(m_stmt, column));
-	if (ch_ref)
+	const char* textRef = reinterpret_cast<const char*>(sqlite3_column_text(m_stmt, column));
+	if (textRef)
 	{
-		out = ch_ref;
+		out = textRef;
 	}
 	else
 	{
@@ -141,13 +135,13 @@ void dbc::SQLQuery::ColumnBlob(int column, BlobData& data)
 {
 	CheckSTMT();
 
-	const char * ch_ref = static_cast<const char *>(sqlite3_column_blob(m_stmt, column));
+	const char* textRef = static_cast<const char *>(sqlite3_column_blob(m_stmt, column));
 	data.clear();
 	try
 	{
-		if (ch_ref != nullptr)
+		if (textRef != nullptr)
 		{
-			data.assign(ch_ref, ch_ref + sqlite3_column_bytes(m_stmt, column));
+			data.assign(textRef, textRef + sqlite3_column_bytes(m_stmt, column));
 		}
 	}
 	catch(const std::exception& ex)
@@ -174,11 +168,11 @@ void dbc::SQLQuery::DecideToThrow(int errCode)
 	if (errCode != SQLITE_OK && errCode != SQLITE_ROW && errCode != SQLITE_DONE)
 	{
 		ContainerException ex(ErrorString(Connection::ConvertToDBCErr(errCode)), sqlite3_errmsg(m_db));
-#ifdef _DEBUG
+
 		std::stringstream ss;
 		ss << "- SQLQuery throws an exception: " << ex.FullMessage();
 		WriteLog(ss.str());
-#endif
+
 		throw ex;
 	}
 }

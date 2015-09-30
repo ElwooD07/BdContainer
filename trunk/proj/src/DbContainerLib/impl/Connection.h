@@ -10,10 +10,10 @@ namespace dbc
 	{
 	public:
 		Connection();
-		explicit Connection(const std::string &db_path, bool create);
+		Connection(const std::string& dbPath, bool create);
 		~Connection();
 
-		void Reconnect(const std::string &db_path);
+		void Reconnect(const std::string& dbPath);
 		void Disconnect();
 
 		TransactionGuard StartTransaction();
@@ -22,14 +22,14 @@ namespace dbc
 
 		sqlite3* GetDB();
 
-		static Error ConvertToDBCErr(int sqlite_err_code);
+		static Error ConvertToDBCErr(int sqliteErrCode);
 
 	private:
-		void Connect(const std::string &db_path);
+		void Connect(const std::string& dbPath);
 		void CheckDB();
 
 	private:
-		sqlite3 * m_db_ptr;
+		sqlite3* m_dbPtr;
 		TransactionsResourcesGuard m_transactionResources;
 	};
 

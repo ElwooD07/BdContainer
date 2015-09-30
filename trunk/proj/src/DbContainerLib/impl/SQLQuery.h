@@ -13,14 +13,14 @@ namespace dbc
 	class SQLQuery
 	{
 	public:
-		explicit SQLQuery(Connection &conn, const std::string &query = std::string(""));
+		explicit SQLQuery(Connection& conn, const std::string& query = "");
 		~SQLQuery();
 
-		void Prepare(const std::string &query);
+		void Prepare(const std::string& query);
 		void BindBool(int column, bool value);
 		void BindInt(int column, int value);
 		void BindInt64(int column, int64_t value);
-		void BindText(int column, const std::string &value);
+		void BindText(int column, const std::string& value);
 		void BindBlob(int column, const BlobData& data);
 
 		bool Step(); // Returns true if sqlite API returns SQLITE_ROW
@@ -43,5 +43,4 @@ namespace dbc
 		::sqlite3_stmt* m_stmt;
 		int64_t m_lastRowId;
 	};
-
-} //namespace dbc
+}

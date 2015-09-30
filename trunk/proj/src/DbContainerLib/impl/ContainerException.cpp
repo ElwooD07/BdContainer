@@ -3,15 +3,14 @@
 
 const dbc::Error dbc::ContainerException::DEFAULT_ERROR = ERR_UNDEFINED;
 
-dbc::ContainerException::ContainerException(const std::string &what, Error err_type,
-const std::string &reason, Error reason_type)
+dbc::ContainerException::ContainerException(const std::string& what, Error err_type, const std::string& reason, Error reason_type)
 : std::exception((!what.empty()) ? what.c_str() : ErrorString(err_type).c_str())
 , m_err_type(err_type)
 , m_reason((!reason.empty()) ? reason : ErrorString(reason_type))
 , m_reason_type(reason_type)
 {	}
 
-dbc::ContainerException::ContainerException(const std::string &what, const std::string &reason)
+dbc::ContainerException::ContainerException(const std::string& what, const std::string& reason)
 : std::exception(what.c_str())
 , m_err_type(DEFAULT_ERROR)
 , m_reason(reason)

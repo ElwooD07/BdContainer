@@ -7,8 +7,8 @@ namespace dbc
 	{
 	public:
 		ContainerException(const std::string &what, Error err_type,
-			const std::string &reason = std::string(""), Error reason_type = DEFAULT_ERROR);
-		ContainerException(const std::string &what, const std::string &reason = std::string(""));
+			const std::string &reason = "", Error reason_type = DEFAULT_ERROR);
+		ContainerException(const std::string &what, const std::string &reason = "");
 		ContainerException(Error err_type = DEFAULT_ERROR, Error reason_type = DEFAULT_ERROR);
 		ContainerException(ErrBase base, ErrIncident incident, ErrBase reason_base, ErrIncident reason_incident);
 		ContainerException(ErrBase base, ErrIncident incident, Error reason_type = DEFAULT_ERROR);

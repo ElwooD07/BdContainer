@@ -3,7 +3,7 @@
 #include "CommonUtils.h"
 #include <sstream>
 
-dbc::ElementProperties::ElementProperties(uint64_t size, time_t date_created, time_t date_modified, std::string tag)
+dbc::ElementProperties::ElementProperties(uint64_t size, time_t date_created, time_t date_modified, const std::string& tag)
 {
 	m_size = size;
 	m_date_created = date_created;
@@ -11,12 +11,12 @@ dbc::ElementProperties::ElementProperties(uint64_t size, time_t date_created, ti
 	m_tag = tag;
 }
 
-dbc::ElementProperties::ElementProperties(const std::string &props_str)
+dbc::ElementProperties::ElementProperties(const std::string& propsStr)
 	: m_size(0)
 	, m_date_created(0)
 	, m_date_modified(0)
 {
-	ParseString(props_str, *this);
+	ParseString(propsStr, *this);
 }
 
 uint64_t dbc::ElementProperties::Size() const
@@ -55,17 +55,13 @@ void dbc::ElementProperties::SetDateModified(time_t new_date)
 	m_date_modified = new_date;
 }
 
-void dbc::ElementProperties::SetTag(const std::string &tag)
+void dbc::ElementProperties::SetTag(const std::string& tag)
 {
-	std::string::const_iterator end;
-	if (tag.length() > TAG_MAX_LEN)
-		end = tag.begin() + TAG_MAX_LEN;
-	else
-		end = tag.end();
+	std::string::const_iterator end = tag.length() > TAG_MAX_LEN ? tag.begin() + TAG_MAX_LEN : tag.end();
 	m_tag.assign(tag.cbegin(), end);
 }
 
-bool dbc::ElementProperties::operator==(const ElementProperties &obj) const
+bool dbc::ElementProperties::operator==(const ElementProperties& obj) const
 {
 	bool ret = (m_size == obj.m_size);
 	ret = ret && (m_date_created == obj.m_date_created);
@@ -74,12 +70,12 @@ bool dbc::ElementProperties::operator==(const ElementProperties &obj) const
 	return ret;
 }
 
-bool dbc::ElementProperties::operator!=(const ElementProperties &obj) const
+bool dbc::ElementProperties::operator!=(const ElementProperties& obj) const
 {
 	return !operator==(obj);
 }
 
-bool dbc::ElementProperties::ParseString(const std::string &props_str, ElementProperties &out_props)
+bool dbc::ElementProperties::ParseString(const std::string& props_str, ElementProperties& out_props)
 {
 	std::vector<std::string> lst;
 	dbc::utils::SplitSavingDelim(props_str, '|', lst);
@@ -95,8 +91,7 @@ bool dbc::ElementProperties::ParseString(const std::string &props_str, ElementPr
 
 	std::string tag;
 	size_t len = 0;
-	for (std::vector<std::string>::const_iterator i = lst.begin() + 3;
-		i != lst.cend(); ++i, len < TAG_MAX_LEN)
+	for (std::vector<std::string>::const_iterator i = lst.begin() + 3; i != lst.cend(); ++i, len < TAG_MAX_LEN)
 	{
 		tag.append((*i).begin(), (*i).end());
 		len += (*i).length();

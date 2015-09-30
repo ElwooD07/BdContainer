@@ -4,7 +4,7 @@ namespace dbc
 {
 	namespace utils
 	{
-		void SplitSavingDelim(const std::string &str, char delim, std::vector<std::string> &out);
+		void SplitSavingDelim(const std::string& str, char delim, std::vector<std::string>& out);
 
 		template<typename T>
 		void String2Number(const std::string& str, T& number, std::ios::fmtflags flags = std::ios::dec)

@@ -6,7 +6,9 @@ std::string dbc::utils::SlashedPath(const std::string& in)
 {
 	std::string out(in);
 	if (!in.empty() && in[in.length() - 1] != PATH_SEPARATOR)
+	{
 		out.push_back(PATH_SEPARATOR);
+	}
 	return out;
 
 }
@@ -25,7 +27,7 @@ std::string dbc::utils::UnslashedPath(const std::string& in)
 	return out;
 }
 
-bool dbc::utils::FNameIsValid(const std::string &fname)
+bool dbc::utils::FileNameIsValid(const std::string &fname)
 {
 	return (!fname.empty() && fname.find_first_of("\\/*?\n\r") == std::string::npos);
 }
@@ -44,8 +46,9 @@ uint64_t dbc::utils::TellMaxAvailable(std::istream &in, uint64_t required_size)
 	in.seekg(0, std::ios::end);
 	std::streamoff ret = in.tellg() - origin;
 	if (ret >= static_cast<int64_t>(required_size))
+	{
 		ret = required_size;
-
+	}
 	in.seekg(origin, std::ios::beg);
 
 	return ret;

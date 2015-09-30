@@ -12,13 +12,13 @@ namespace dbc
 		int64_t ParentID;
 		ElementType Type;
 
-		ElementInfo() :
-			ID(-1), ParentID(-1), Type(ElementTypeUnknown)
-		{	}
+		ElementInfo()
+			: ID(-1), ParentID(-1), Type(ElementTypeUnknown)
+		{ }
 
-		ElementInfo(int64_t id, int64_t parent_id, ElementType type) :
-			ID(id), ParentID(parent_id), Type(type)
-		{	}
+		ElementInfo(int64_t id, int64_t parent_id, ElementType type)
+			: ID(id), ParentID(parent_id), Type(type)
+		{ }
 	};
 
 	typedef std::vector<ElementInfo> ElementInfo_vt;
@@ -31,7 +31,7 @@ namespace dbc
 		virtual ContainerElementGuard Next();
 
 	private:
-		int64_t m_folder_id;
+		int64_t m_folderId;
 		ContainerResources m_resources;
 		ElementInfo_vt m_info;
 	};

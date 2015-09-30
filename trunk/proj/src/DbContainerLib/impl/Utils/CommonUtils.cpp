@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "CommonUtils.h"
 
-void dbc::utils::SplitSavingDelim(const std::string &str, char delim, std::vector<std::string> &out)
+void dbc::utils::SplitSavingDelim(const std::string& str, char delim, std::vector<std::string>& out)
 {
 	out.clear();
 	std::string::const_iterator last = str.begin();
@@ -20,10 +20,10 @@ void dbc::utils::SplitSavingDelim(const std::string &str, char delim, std::vecto
 	}
 }
 
-std::string dbc::utils::BinaryToHexString(const void* data, size_t data_len)
+std::string dbc::utils::BinaryToHexString(const void* data, size_t dataLen)
 {
-	std::string result(data_len * 2, '\0');
-	for (size_t i = 0; i < data_len; ++i)
+	std::string result(dataLen * 2, '\0');
+	for (size_t i = 0; i < dataLen; ++i)
 	{
 		sprintf_s(&result[0] + (i * 2), result.size(), "%02x", *(static_cast<const unsigned char*>(data) + i));
 	}

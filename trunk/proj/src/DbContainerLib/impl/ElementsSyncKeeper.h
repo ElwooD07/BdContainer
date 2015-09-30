@@ -21,6 +21,6 @@ namespace dbc
 	private:
 		std::mutex m_mutLocks;
 		std::set<uint64_t> m_writeLocks; // fileId
-		std::map<uint64_t, long int > m_readLocks; // fileId, locks count
+		std::map<uint64_t, long int> m_readLocks; // fileId, locks count
 	};
 }

@@ -8,8 +8,10 @@
 #include "ContainerException.h"
 #include "FsUtils.h"
 
-dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t id) :
-m_resources(resources), m_id(id)
+dbc::Error dbc::ContainerElement::s_errElementNotFound = dbc::Error(ERR_DB_FS, NOT_FOUND);
+
+dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t id)
+	: m_resources(resources), m_id(id)
 {
 	SQLQuery query(m_resources->GetConnection(), "SELECT parent_id, name, type, props FROM FileSystem WHERE id = ?;");
 	query.BindInt64(1, id);
@@ -17,7 +19,7 @@ m_resources(resources), m_id(id)
 	{
 		throw ContainerException(ERR_DB_FS, CANT_OPEN, ERR_DB_FS, NOT_FOUND);
 	}
-	m_parent_id = query.ColumnInt64(0);
+	m_parentId = query.ColumnInt64(0);
 	query.ColumnText(1, m_name);
 	int tmp_type = query.ColumnInt(2);
 	m_type = static_cast<ElementType>(tmp_type);
@@ -25,13 +27,13 @@ m_resources(resources), m_id(id)
 	{
 		throw ContainerException(ERR_DB_FS, CANT_OPEN, ERR_DB, IS_DAMAGED);
 	}
-	std::string props_str;
-	query.ColumnText(3, props_str);
-	ElementProperties::ParseString(props_str, m_props);
+	std::string propsStr;
+	query.ColumnText(3, propsStr);
+	ElementProperties::ParseString(propsStr, m_props);
 }
 
-dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t parent_id, const std::string &name) :
-m_resources(resources), m_parent_id(parent_id), m_name(name)
+dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t parent_id, const std::string& name)
+	: m_resources(resources), m_parentId(parent_id), m_name(name)
 {
 	SQLQuery query(m_resources->GetConnection(), "SELECT id, type, props FROM FileSystem WHERE parent_id = ? AND name = ?;");
 	query.BindInt64(1, parent_id);
@@ -54,15 +56,14 @@ m_resources(resources), m_parent_id(parent_id), m_name(name)
 
 bool dbc::ContainerElement::Exists()
 {
-	// Checks the existing of the element with the current information in the database
-	Error res = Exists(m_parent_id, m_name);
+	Error res = Exists(m_parentId, m_name);
 	if (res == SUCCESS)
 	{
 		return true;
 	}
 	else
 	{
-		if (res != Error(ERR_DB_FS, NOT_FOUND))
+		if (res != s_errElementNotFound)
 		{
 			throw ContainerException(res);
 		}
@@ -86,7 +87,7 @@ std::string dbc::ContainerElement::Path()
 
 	SQLQuery query(m_resources->GetConnection(), "SELECT count(*), name, parent_id FROM FileSystem WHERE id = ?;");
 
-	for (int64_t id = m_id, parent_id = m_parent_id; id > 0; id = parent_id, query.Reset())
+	for (int64_t id = m_id, parentId = m_parentId; id > 0; id = parentId, query.Reset())
 	{
 		std::string tmp_name;
 		query.BindInt64(1, id);
@@ -97,7 +98,7 @@ std::string dbc::ContainerElement::Path()
 			throw ContainerException(ERR_DB, NOT_VALID, ERR_DB_FS, NOT_FOUND);
 		}
 		query.ColumnText(1, tmp_name);
-		parent_id = query.ColumnInt64(2);
+		parentId = query.ColumnInt64(2);
 		tmp_name = dbc::utils::SlashedPath(tmp_name);
 		std::reverse(tmp_name.begin(), tmp_name.end());
 		out.append(tmp_name.cbegin(), tmp_name.cend());
@@ -126,66 +127,63 @@ dbc::IContainerFile* dbc::ContainerElement::AsFile()
 bool dbc::ContainerElement::IsTheSame(const IContainerElement& obj) const
 {
 	const ContainerElement& ce = dynamic_cast<const ContainerElement&>(obj);
-	return (
-		m_resources == ce.m_resources &&
-		m_id == ce.m_id
-		);
+	return (m_resources == ce.m_resources && m_id == ce.m_id);
 }
 
 bool dbc::ContainerElement::IsChildOf(const IContainerElement& obj)
 {
 	Refresh();
 
-	const ContainerElement& el_obj = dynamic_cast<const ContainerElement&>(obj);
-	if (el_obj.m_type == ElementTypeFile)
+	const ContainerElement& elementObj = dynamic_cast<const ContainerElement&>(obj);
+	if (elementObj.m_type == ElementTypeFile)
 	{
 		return false;
 	}
 
-	Error res = Exists(el_obj.m_parent_id, el_obj.m_name);
+	Error res = Exists(elementObj.m_parentId, elementObj.m_name);
 	if (res != SUCCESS)
 	{
 		throw ContainerException(res);
 	}
 
-	int64_t target_id = el_obj.m_id;
+	int64_t targetId = elementObj.m_id;
 
-	if (target_id == m_id)
+	if (targetId == m_id)
 	{
 		return false;
 	}
 
-	if (target_id == m_parent_id)
+	if (targetId == m_parentId)
 	{
 		return true;
 	}
 
 	int64_t id = m_id;
-	int64_t parent_id = m_parent_id;
+	int64_t parentId = m_parentId;
 	SQLQuery query(m_resources->GetConnection(), "SELECT parent_id FROM FileSystem WHERE id = ?;");
-	while (parent_id > 0)
+	while (parentId > 0)
 	{
 		query.Reset();
 		query.BindInt64(1, id);
 		query.Step();
-		parent_id = query.ColumnInt64(0);
-		if (parent_id == target_id)
+		parentId = query.ColumnInt64(0);
+		if (parentId == targetId)
 		{
 			return true;
 		}
-		id = parent_id;
+		id = parentId;
 	}
 	return false;
 }
 
 dbc::ContainerFolderGuard dbc::ContainerElement::GetParentEntry()
 {
-	if (m_parent_id < Container::ROOT_ID)
+	if (m_parentId < Container::ROOT_ID)
 	{
 		throw ContainerException(ERR_DB_FS, NOT_FOUND);
 	}
 
-	return ContainerFolderGuard(new ContainerFolder(m_resources, m_parent_id));
+	return ContainerFolderGuard(new ContainerFolder(m_resources, m_parentId));
 }
 
 void dbc::ContainerElement::MoveToEntry(IContainerFolder& newParent)
@@ -197,9 +195,9 @@ void dbc::ContainerElement::MoveToEntry(IContainerFolder& newParent)
 		throw ContainerException(ACTION_IS_FORBIDDEN);
 	}
 
-	ContainerElement& ce = dynamic_cast<ContainerElement&>(newParent);
-	Error res = Exists(ce.m_id, m_name);
-	if (res != Error(ERR_DB_FS, NOT_FOUND))
+	ContainerElement& elementObj = dynamic_cast<ContainerElement&>(newParent);
+	Error res = Exists(elementObj.m_id, m_name);
+	if (res != s_errElementNotFound)
 	{
 		if (res == SUCCESS)
 		{
@@ -208,8 +206,8 @@ void dbc::ContainerElement::MoveToEntry(IContainerFolder& newParent)
 		throw ContainerException(ERR_DB_FS, CANT_WRITE, res);
 	}
 
-	SQLQuery query(ce.m_resources->GetConnection(), "UPDATE FileSystem SET parent_id = ? WHERE id = ?;");
-	query.BindInt64(1, ce.m_id);
+	SQLQuery query(elementObj.m_resources->GetConnection(), "UPDATE FileSystem SET parent_id = ? WHERE id = ?;");
+	query.BindInt64(1, elementObj.m_id);
 	query.BindInt64(2, m_id);
 	query.Step();
 
@@ -224,17 +222,17 @@ void dbc::ContainerElement::Remove()
 	query.Step();
 }
 
-void dbc::ContainerElement::Rename(const std::string &new_name)
+void dbc::ContainerElement::Rename(const std::string& newName)
 {
-	if (new_name.empty() || !dbc::utils::FNameIsValid(new_name))
+	if (newName.empty() || !dbc::utils::FileNameIsValid(newName))
 	{
 		throw ContainerException(ERR_DB_FS, CANT_CREATE, WRONG_PARAMETERS);
 	}
 
 	Refresh();
 
-	Error tmp = Exists(m_parent_id, new_name);
-	if (tmp != Error(ERR_DB_FS, NOT_FOUND))
+	Error tmp = Exists(m_parentId, newName);
+	if (tmp != s_errElementNotFound)
 	{
 		if (tmp == SUCCESS)
 		{
@@ -244,31 +242,31 @@ void dbc::ContainerElement::Rename(const std::string &new_name)
 	}
 
 	SQLQuery query(m_resources->GetConnection(), "UPDATE FileSystem SET name = ? WHERE id = ?;");
-	query.BindText(1, new_name);
+	query.BindText(1, newName);
 	query.BindInt64(2, m_id);
 	query.Step();
 
 	m_props.SetDateModified();
 	WriteProps();
 
-	m_name = new_name;
+	m_name = newName;
 }
 
-void dbc::ContainerElement::GetProperties(ElementProperties &out)
+void dbc::ContainerElement::GetProperties(ElementProperties& out)
 {
 	Refresh();
 
 	out = m_props;
 }
 
-void dbc::ContainerElement::ResetProperties(const std::string &tag)
+void dbc::ContainerElement::ResetProperties(const std::string& tag)
 {
 	Refresh();
 
 	m_props.SetTag(tag);
-	m_props.SetDateModified();
-	std::string props_str;
-	ElementProperties::MakeString(m_props, props_str);
+	m_props.SetDateModified(::time(0));
+	std::string propsStr;
+	ElementProperties::MakeString(m_props, propsStr);
 
 	WriteProps();
 }
@@ -283,7 +281,7 @@ void dbc::ContainerElement::Refresh()
 	{
 		throw ContainerException(ERR_DB_FS, NOT_FOUND);
 	}
-	m_parent_id = query.ColumnInt64(1);
+	m_parentId = query.ColumnInt64(1);
 	query.ColumnText(2, m_name);
 	std::string props_str;
 	query.ColumnText(3, props_str);
@@ -292,16 +290,15 @@ void dbc::ContainerElement::Refresh()
 
 dbc::Error dbc::ContainerElement::Exists(int64_t parent_id, std::string name)
 {
-	// Returns DB_FS_NOT_FOUND as false and SUCCESS as true, or other error code if there was an error
 	int count = 0;
 	try
 	{
 		SQLQuery query(m_resources->GetConnection(), "SELECT id FROM FileSystem WHERE parent_id = ? AND name = ?;");
 		query.BindInt64(1, parent_id);
 		query.BindText(2, name);
-		return query.Step() ? SUCCESS : Error(ERR_DB_FS, NOT_FOUND);
+		return query.Step() ? SUCCESS : s_errElementNotFound;
 	}
-	catch (const ContainerException &ex)
+	catch (const ContainerException& ex)
 	{
 		return ex.ErrType();
 	}
@@ -312,9 +309,9 @@ void dbc::ContainerElement::WriteProps()
 	// Writes properties about this object to the table FileSystem in 'props' column
 	// Its exceptions is managed by calling functions
 	SQLQuery query(m_resources->GetConnection(), "UPDATE FileSystem SET props = ? WHERE id = ?;");
-	std::string props_str;
-	ElementProperties::MakeString(m_props, props_str);
-	query.BindText(1, props_str);
+	std::string propsStr;
+	ElementProperties::MakeString(m_props, propsStr);
+	query.BindText(1, propsStr);
 	query.BindInt64(2, m_id);
 	query.Step();
 }

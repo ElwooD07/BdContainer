@@ -8,7 +8,7 @@ namespace dbc
 	{
 	public:
 		ContainerElement(ContainerResources resources, int64_t id);
-		ContainerElement(ContainerResources resources, int64_t parent_id, const std::string &name);
+		ContainerElement(ContainerResources resources, int64_t parentId, const std::string& name);
 
 		// from IContainerElement
 
@@ -27,7 +27,7 @@ namespace dbc
 
 		virtual void MoveToEntry(IContainerFolder& newParent);
 		virtual void Remove();
-		virtual void Rename(const std::string& new_name);
+		virtual void Rename(const std::string& newName);
 
 		virtual void GetProperties(ElementProperties& out);
 		virtual void ResetProperties(const std::string& tag);
@@ -36,16 +36,16 @@ namespace dbc
 		ContainerResources m_resources;
 
 		int64_t m_id;
-		int64_t m_parent_id;
+		int64_t m_parentId;
 		ElementType m_type;
 		std::string m_name;
 		ElementProperties m_props;
 
+		static Error s_errElementNotFound;
+
 	protected:
-		//funcs
-		// Returns DB_FS_NOT_FOUND as false and SUCCESS as true, or other error code if there was an error
 		void Refresh();
-		Error Exists(int64_t parent_id, std::string name);
+		Error Exists(int64_t parent_id, std::string name); // Returns s_errElementNotFound (see .cpp) as false and SUCCESS as true, or other error code if there was an error
 		void WriteProps();
 	};
 }

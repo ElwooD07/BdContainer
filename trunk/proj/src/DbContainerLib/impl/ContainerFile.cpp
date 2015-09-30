@@ -39,12 +39,12 @@ namespace
 	};
 }
 
-dbc::ContainerFile::ContainerFile(ContainerResources resources, int64_t id) :
-ContainerElement(resources, id), m_access(NoAccess)
+dbc::ContainerFile::ContainerFile(ContainerResources resources, int64_t id)
+	: ContainerElement(resources, id), m_access(NoAccess)
 {	}
 
-dbc::ContainerFile::ContainerFile(ContainerResources resources, int64_t parent_id, const std::string &name) :
-ContainerElement(resources, parent_id, name), m_access(NoAccess)
+dbc::ContainerFile::ContainerFile(ContainerResources resources, int64_t parent_id, const std::string &name)
+	: ContainerElement(resources, parent_id, name), m_access(NoAccess)
 {	}
 
 void dbc::ContainerFile::Remove()

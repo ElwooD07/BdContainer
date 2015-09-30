@@ -40,7 +40,7 @@ namespace dbc
 
 		virtual void MoveToEntry(IContainerFolder& newParent) = 0;
 		virtual void Remove() = 0;
-		virtual void Rename(const std::string &new_name) = 0;
+		virtual void Rename(const std::string& new_name) = 0;
 
 		virtual void GetProperties(ElementProperties& out) = 0;
 		virtual void ResetProperties(const std::string& tag) = 0;

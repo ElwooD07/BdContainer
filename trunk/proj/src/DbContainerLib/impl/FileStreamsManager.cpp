@@ -3,7 +3,6 @@
 #include "SQLQuery.h"
 #include "FileStreamsUtils.h"
 #include "ContainerException.h"
-#include "Logging.h"
 
 namespace
 {

@@ -7,19 +7,19 @@
 #include "Logging.h"
 
 dbc::Connection::Connection()
-: m_db_ptr(nullptr)
+	: m_dbPtr(nullptr)
 {
 	m_transactionResources.reset(new TransactionsResources(this));
 }
 
-dbc::Connection::Connection(const std::string &db_path, bool create)
-: m_db_ptr(nullptr)
+dbc::Connection::Connection(const std::string& dbPath, bool create)
+	: m_dbPtr(nullptr)
 {
-	if (create && dbc::utils::FileExists(db_path))
+	if (create && dbc::utils::FileExists(dbPath))
 	{
 		throw ContainerException(ERR_DB, ALREADY_EXISTS);
 	}
-	Connect(db_path);
+	Connect(dbPath);
 
 	m_transactionResources.reset(new TransactionsResources(this));
 }
@@ -29,30 +29,28 @@ dbc::Connection::~Connection()
 	Disconnect();
 }
 
-void dbc::Connection::Reconnect(const std::string &db_path)
+void dbc::Connection::Reconnect(const std::string& dbPath)
 {
-	if (!db_path.empty())
+	if (!dbPath.empty())
 	{
 		Disconnect();
-		Connect(db_path);
+		Connect(dbPath);
 	}
 }
 
 void dbc::Connection::Disconnect()
 {
 	int retCode = SQLITE_OK;
-	if (m_db_ptr)
+	if (m_dbPtr)
 	{
-		retCode = sqlite3_close(m_db_ptr);
-		m_db_ptr = nullptr;
+		retCode = sqlite3_close(m_dbPtr);
+		m_dbPtr = nullptr;
 	}
 	m_transactionResources.reset();
 
-#ifdef _DEBUG
 	std::stringstream ss;
 	ss << "-- Connection closed: returned code = " << retCode << ": " << sqlite3_errstr(retCode);
 	WriteLog(ss.str());
-#endif
 }
 
 dbc::TransactionGuard dbc::Connection::StartTransaction()
@@ -67,7 +65,7 @@ void dbc::Connection::ExecQuery(const std::string& query)
 	CheckDB();
 
 	char* errStr = 0;
-	if (sqlite3_exec(m_db_ptr, query.c_str(), 0, 0, &errStr) != SQLITE_OK)
+	if (sqlite3_exec(m_dbPtr, query.c_str(), 0, 0, &errStr) != SQLITE_OK)
 	{	
 		throw ContainerException(ErrorString(ERR_SQL, CANT_EXEC), errStr);
 	}
@@ -84,7 +82,7 @@ sqlite3* dbc::Connection::GetDB()
 {
 	CheckDB();
 
-	return m_db_ptr;
+	return m_dbPtr;
 }
 
 dbc::Error dbc::Connection::ConvertToDBCErr(int sqlite_err_code)
@@ -124,12 +122,12 @@ dbc::Error dbc::Connection::ConvertToDBCErr(int sqlite_err_code)
 
 void dbc::Connection::Connect(const std::string &db_path)
 {
-	int retCode = sqlite3_open_v2(db_path.c_str(), &m_db_ptr, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_PRIVATECACHE, NULL);
-#ifdef _DEBUG
+	int retCode = sqlite3_open_v2(db_path.c_str(), &m_dbPtr, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_PRIVATECACHE, NULL);
+
 	std::stringstream ss;
 	ss << "\n++ Connection opened: DBfile \"" << db_path << "\", returned code = " << retCode;
 	WriteLog(ss.str());
-#endif
+
 	if (retCode != SQLITE_OK)
 	{
 		throw ContainerException(ERR_DB, CANT_OPEN, ConvertToDBCErr(retCode));
@@ -138,7 +136,7 @@ void dbc::Connection::Connect(const std::string &db_path)
 
 void dbc::Connection::CheckDB()
 {
-	if (m_db_ptr == nullptr)
+	if (m_dbPtr == nullptr)
 	{
 		throw ContainerException(SQL_DISCONNECTED);
 	}

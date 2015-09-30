@@ -1,4 +1,3 @@
-// class Container
 #include "stdafx.h"
 #include "Container.h"
 #include "ContainerAPI.h"
@@ -22,8 +21,7 @@ namespace
 	void ClearDB(Connection& connection)
 	{
 		const int tables_count = 3;
-		std::string tables[tables_count] =
-		{ "Sets", "FileSystem", "FileStreams" };
+		std::string tables[tables_count] = { "Sets", "FileSystem", "FileStreams" };
 
 		dbc::SQLQuery query = connection.CreateQuery();
 		std::string dropCommand("DROP TABLE ");
@@ -39,7 +37,7 @@ namespace
 
 	void WriteTables(Connection& connection)
 	{
-		// Creation of the database tables:
+		// Creation of the database tables
 		Error ret(SUCCESS);
 		SQLQuery query = connection.CreateQuery();
 
@@ -48,8 +46,7 @@ namespace
 		tables.push_back("CREATE TABLE FileSystem(id INTEGER PRIMARY KEY NOT NULL, parent_id INTEGER, name TEXT, type INTEGER, props TEXT);");
 		tables.push_back("CREATE TABLE FileStreams(id INTEGER PRIMARY KEY NOT NULL, file_id INTEGER NOT NULL, stream_order INTEGER, start INTEGER, size INTEGER, used INTEGER);");
 
-		for (std::list<std::string>::const_iterator itr = tables.cbegin();
-			itr != tables.cend(); ++itr)
+		for (std::list<std::string>::const_iterator itr = tables.begin(); itr != tables.end(); ++itr)
 		{
 			try
 			{
@@ -72,11 +69,11 @@ namespace
 		std::string tmp_name(1, dbc::PATH_SEPARATOR);
 		query.BindText(2, tmp_name);
 		query.BindInt(3, static_cast<int>(dbc::ElementTypeFolder));
-		ElementProperties el_props;
-		ElementProperties::SetCurrentTime(el_props);
-		std::string str_props;
-		ElementProperties::MakeString(el_props, str_props);
-		query.BindText(4, str_props);
+		ElementProperties elProps;
+		ElementProperties::SetCurrentTime(elProps);
+		std::string propsStr;
+		ElementProperties::MakeString(elProps, propsStr);
+		query.BindText(4, propsStr);
 		query.Step();
 	}
 
@@ -134,14 +131,14 @@ namespace
 	}
 }
 
-dbc::Container::Container(const std::string &path, const std::string &password, bool create)
-: m_db_file(path), m_connection(path, create), m_storage(new dbc::DataStorageBinaryFile)
+dbc::Container::Container(const std::string& path, const std::string& password, bool create)
+	: m_dbFile(path), m_connection(path, create), m_storage(new dbc::DataStorageBinaryFile)
 {
 	PrepareContainer(password, create);
 }
 
-dbc::Container::Container(const std::string &path, const std::string &password, IDataStorageGuard storage, bool create)
-: m_db_file(path), m_connection(path, create), m_storage(storage)
+dbc::Container::Container(const std::string& path, const std::string& password, IDataStorageGuard storage, bool create)
+	: m_dbFile(path), m_connection(path, create), m_storage(storage)
 {
 	PrepareContainer(password, create);
 }
@@ -149,7 +146,7 @@ dbc::Container::Container(const std::string &path, const std::string &password, 
 dbc::Container::~Container()
 {
 	ContaierResourcesImpl* resources = dynamic_cast<ContaierResourcesImpl*>(m_resources.get());
-	assert(resources != nullptr);
+	assert(resources != nullptr && "Wrong container resources implementation class is used");
 
 	resources->ReportContainerDied();
 }
@@ -186,7 +183,7 @@ dbc::ContainerFolderGuard dbc::Container::GetRoot()
 	return ContainerFolderGuard(new ContainerFolder(m_resources, ROOT_ID));
 }
 
-dbc::ContainerElementGuard dbc::Container::GetElement(const std::string &path)
+dbc::ContainerElementGuard dbc::Container::GetElement(const std::string& path)
 {
 	if (path.empty())
 	{
@@ -196,13 +193,13 @@ dbc::ContainerElementGuard dbc::Container::GetElement(const std::string &path)
 	std::vector<std::string> names;
 	dbc::utils::SplitSavingDelim(path, PATH_SEPARATOR, names);
 
-	int64_t parent_id = 0;
-	int tmp_type = ElementTypeUnknown;
+	int64_t parentId = 0;
+	int elementType = ElementTypeUnknown;
 
 	SQLQuery query(m_connection, "SELECT count(*), id, type FROM FileSystem WHERE parent_id = ? AND name = ?;");
 	for (std::vector<std::string>::iterator itr = names.begin(); itr != names.end(); ++itr, query.Reset())
 	{
-		query.BindInt64(1, parent_id);
+		query.BindInt64(1, parentId);
 		*itr = dbc::utils::UnslashedPath(*itr);
 		query.BindText(2, *itr);
 		query.Step();
@@ -215,16 +212,16 @@ dbc::ContainerElementGuard dbc::Container::GetElement(const std::string &path)
 		{
 			throw ContainerException(ERR_DB, IS_DAMAGED);
 		}
-		parent_id = query.ColumnInt64(1);
-		tmp_type = query.ColumnInt(2);
+		parentId = query.ColumnInt64(1);
+		elementType = query.ColumnInt(2);
 	}
 
-	switch (tmp_type)
+	switch (elementType)
 	{
 	case ElementTypeFolder:
-		return ContainerElementGuard(new ContainerFolder(m_resources, parent_id));
+		return ContainerElementGuard(new ContainerFolder(m_resources, parentId));
 	case ElementTypeFile:
-		return ContainerElementGuard(new ContainerFile(m_resources, parent_id));
+		return ContainerElementGuard(new ContainerFile(m_resources, parentId));
 	default:
 		throw ContainerException(ERR_INTERNAL);
 	}
@@ -245,13 +242,13 @@ void dbc::Container::SetDataUsagePreferences(const DataUsagePreferences& prefs)
 	m_dataUsagePrefs = prefs;
 }
 
-void dbc::Container::PrepareContainer(const std::string &password, bool create)
+void dbc::Container::PrepareContainer(const std::string& password, bool create)
 {
 	assert(m_storage.get() != nullptr);
 	if (create) // create DB and storage
 	{
 		BuildDB(m_connection);
-		m_storage->Create(m_db_file, password);
+		m_storage->Create(m_dbFile, password);
 	}
 	else 
 	{
@@ -262,7 +259,7 @@ void dbc::Container::PrepareContainer(const std::string &password, bool create)
 		// check Data
 		BlobData storageData;
 		ReadSets(storageData);
-		m_storage->Open(m_db_file, password, storageData);
+		m_storage->Open(m_dbFile, password, storageData);
 		// TODO: Parse storage data
 	}
 	SetDBPragma(m_connection);

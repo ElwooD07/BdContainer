@@ -104,7 +104,6 @@
     <ClInclude Include="..\IDefragProgressObserver.h" />
     <ClInclude Include="..\IProgressObserver.h" />
     <ClInclude Include="..\Iterator.h" />
-    <ClInclude Include="..\Types.h" />
     <ClInclude Include="Connection.h" />
     <ClInclude Include="Container.h" />
     <ClInclude Include="ContainerDefragmenter.h" />
@@ -115,7 +114,6 @@
     <ClInclude Include="ContainerResources.h" />
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="DataStorageBinaryFile.h" />
-    <ClInclude Include="DefragProxyProgressObserver.h" />
     <ClInclude Include="ElementsIterator.h" />
     <ClInclude Include="ElementsSyncKeeper.h" />
     <ClInclude Include="FileStreamsAllocator.h" />
@@ -126,6 +124,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StreamInfo.h" />
     <ClInclude Include="TransactionGuard.h" />
+    <ClInclude Include="Types.h" />
     <ClInclude Include="Utils\CommonUtils.h" />
     <ClInclude Include="Utils\FileStreamsUtils.h" />
     <ClInclude Include="Utils\FsUtils.h" />

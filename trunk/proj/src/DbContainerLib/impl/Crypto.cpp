@@ -13,22 +13,22 @@ namespace
 static const EVP_CIPHER* s_cryptCipher = EVP_aes_128_ofb();
 static const unsigned short s_cryptKeyLen = EVP_CIPHER_key_length(s_cryptCipher);
 
-struct dbc::crypting::AesCryptorBase::InitCrypt
+struct dbc::crypting::AesCryptorBase::CryptoResourcesGuard
 {
-	InitCrypt()
+	CryptoResourcesGuard()
 	{
 		ERR_load_crypto_strings();
 		OpenSSL_add_all_algorithms();
 	}
 
-	~InitCrypt()
+	~CryptoResourcesGuard()
 	{
 		EVP_cleanup();
 		ERR_free_strings();
 	}
 };
 
-dbc::crypting::AesCryptorBase::InitCrypt dbc::crypting::AesCryptorBase::s_init = dbc::crypting::AesCryptorBase::InitCrypt();
+dbc::crypting::AesCryptorBase::CryptoResourcesGuard dbc::crypting::AesCryptorBase::s_init = dbc::crypting::AesCryptorBase::CryptoResourcesGuard();
 
 dbc::crypting::AesCryptorBase::AesCryptorBase(const RawData& key, const RawData& iv, CryptInitFn initFn, CryptUpdateFn updateFn)
 	: m_key(key)
@@ -73,7 +73,7 @@ unsigned short dbc::crypting::AesCryptorBase::GetKeyAndIvLen()
 	return s_cryptKeyLen;
 }
 
-void dbc::crypting::AesCryptorBase::ErrorHandler(int ret)
+void dbc::crypting::AesCryptorBase::CheckUpdateFn(int ret)
 {
 	if (ret != 1)
 	{
@@ -171,7 +171,7 @@ size_t dbc::crypting::AesCryptorBase::CryptPortion(const RawData& src, RawData& 
 		size = src.size();
 	}
 	int updated = 0;
-	ErrorHandler(m_cryptUpdateFn(m_ctx.get(), &dest[0], &updated, &src[0], static_cast<int>(size)));
+	CheckUpdateFn(m_cryptUpdateFn(m_ctx.get(), &dest[0], &updated, &src[0], static_cast<int>(size)));
 	ClearCtx(observer);
 	return static_cast<size_t>(updated);
 }
@@ -228,11 +228,6 @@ uint64_t dbc::crypting::AesDecryptor::Decrypt(std::istream& in, std::ostream& ou
 	return CryptBetweenStreams(in, out, size, observer);
 }
 
-void dbc::crypting::utils::RawDataAppend(const RawData& src, RawData& dest)
-{
-	dest.insert(dest.end(), src.begin(), src.end());
-}
-
 dbc::crypting::RawData dbc::crypting::utils::StringToRawData(const std::string& str)
 {
 	const dbc::crypting::RawDataType* strPtr = reinterpret_cast<const dbc::crypting::RawDataType*>(str.c_str());
@@ -249,7 +244,7 @@ std::string dbc::crypting::utils::RawDataToString(const RawData& data)
 	return std::move(res);
 }
 
-dbc::crypting::RawData dbc::crypting::utils::SHA3_GetHash(const dbc::crypting::RawData& message)
+dbc::crypting::RawData dbc::crypting::utils::SHA256_GetHash(const dbc::crypting::RawData& message)
 {
 	RawData hash(SHA256_DIGEST_LENGTH);
 	SHA256_CTX sha256;

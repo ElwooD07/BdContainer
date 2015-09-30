@@ -126,19 +126,16 @@
     <ClInclude Include="ContainerDefragmenter.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
-    <ClInclude Include="..\Types.h">
-      <Filter>Заголовочные файлы\impl</Filter>
-    </ClInclude>
     <ClInclude Include="..\IDefragProgressObserver.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="ProxyProgressObserver.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
-    <ClInclude Include="DefragProxyProgressObserver.h">
+    <ClInclude Include="Utils\FileStreamsUtils.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\FileStreamsUtils.h">
+    <ClInclude Include="Types.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
   </ItemGroup>

@@ -5,15 +5,15 @@ using namespace dbc;
 
 namespace
 {
-	static const char s_undefinedErrorStr[]("Undefined container error");
-	static const char s_undefinedIncidentStr[](": undefined error");
+	static const char s_undefinedErrorStr[] = "Undefined container error";
+	static const char s_undefinedIncidentStr[] = ": undefined error";
 
 	const char* CommonErrorString(unsigned int code)
 	{
 		switch (code)
 		{
 		case SUCCESS:
-			return "Operation successfull";
+			return "Operation successful";
 		case WRONG_PARAMETERS:
 			return "Wrong parameters";
 		case CANT_ALLOC_MEMORY:

@@ -8,14 +8,14 @@
 
 namespace
 {
-	const size_t MAX_PASSWORD_LEN = 256;
-	const size_t BIN_HEADER_LEN = MAX_PASSWORD_LEN * 4;
-	const std::string BIN_FILE_EXT = ".bin";
+	const size_t s_maxPasswordLen = 256;
+	const size_t s_binHeaderLen = s_maxPasswordLen * 4;
+	const std::string s_binFileExt = ".bin";
 	const std::string s_testExpression = "Database Container Project";
 
-	std::string GetBinFilePath(const std::string& db_path)
+	std::string GetBinFilePath(const std::string& dbPath)
 	{
-		return db_path + BIN_FILE_EXT;
+		return dbPath + s_binFileExt;
 	}
 
 	void GetKeyAndIvFromPassword(const std::string& password, dbc::crypting::RawData& key, dbc::crypting::RawData& iv)
@@ -23,7 +23,7 @@ namespace
 		assert(key.empty() && iv.empty());
 
 		static const char s_salt[]("arbadakarba123");
-		dbc::crypting::RawData hash = dbc::crypting::utils::SHA3_GetHash(dbc::crypting::utils::StringToRawData(password + s_salt));
+		dbc::crypting::RawData hash = dbc::crypting::utils::SHA256_GetHash(dbc::crypting::utils::StringToRawData(password + s_salt));
 		const unsigned int keyAndIvLen = dbc::crypting::AesCryptorBase::GetKeyAndIvLen();
 		assert(hash.size() == keyAndIvLen * 2);
 		key.assign(hash.begin(), hash.begin() + keyAndIvLen);
@@ -36,8 +36,8 @@ namespace
 		dbc::crypting::AesEncryptor encryptor(key, iv);
 		encryptor.Encrypt(istreamPass, out, s_testExpression.size());
 
-		assert(s_testExpression.size() <= BIN_HEADER_LEN);
-		size_t trashLen = BIN_HEADER_LEN - s_testExpression.size();
+		assert(s_testExpression.size() <= s_binHeaderLen);
+		size_t trashLen = s_binHeaderLen - s_testExpression.size();
 		if (trashLen > 0)
 		{
 			dbc::crypting::RawData trash(trashLen, '\0');
@@ -116,8 +116,8 @@ void dbc::DataStorageBinaryFile::ClearData()
 	CheckInitialized();
 
 	m_stream.seekg(0);
-	std::string header(BIN_HEADER_LEN, '\0');
-	m_stream.read(&header[0], BIN_HEADER_LEN);
+	std::string header(s_binHeaderLen, '\0');
+	m_stream.read(&header[0], s_binHeaderLen);
 	if (!m_stream.good())
 	{
 		throw ContainerException(ERR_DATA, CANT_READ);
@@ -131,7 +131,7 @@ void dbc::DataStorageBinaryFile::ClearData()
 	}
 
 	m_stream.seekp(0);
-	m_stream.write(header.c_str(), BIN_HEADER_LEN);
+	m_stream.write(header.c_str(), s_binHeaderLen);
 	if (!m_stream.good())
 	{
 		throw ContainerException(ERR_DATA, CANT_WRITE);
@@ -263,7 +263,7 @@ void dbc::DataStorageBinaryFile::OpenFileStream(bool truncate)
 	{
 		throw ContainerException(ERR_DATA, CANT_OPEN);
 	}
-	if (!truncate && dbc::utils::TellMaxAvailable(stream, BIN_HEADER_LEN) < BIN_HEADER_LEN)
+	if (!truncate && dbc::utils::TellMaxAvailable(stream, s_binHeaderLen) < s_binHeaderLen)
 	{
 		throw ContainerException(ERR_DATA, IS_DAMAGED);
 	}

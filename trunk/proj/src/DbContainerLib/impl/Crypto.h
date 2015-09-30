@@ -15,8 +15,8 @@ namespace dbc
 			NONCOPYABLE(AesCryptorBase);
 
 		public:
-			typedef int(*CryptInitFn)(::EVP_CIPHER_CTX *ctx, const ::EVP_CIPHER *cipher, ::ENGINE *impl, const unsigned char *key, const unsigned char *iv);
-			typedef int(*CryptUpdateFn)(::EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl, const unsigned char *in, int inl);
+			typedef int(*CryptInitFn)(::EVP_CIPHER_CTX* ctx, const ::EVP_CIPHER* cipher, ::ENGINE* impl, const unsigned char* key, const unsigned char* iv);
+			typedef int(*CryptUpdateFn)(::EVP_CIPHER_CTX* ctx, unsigned char* out, int* outl, const unsigned char* in, int inl);
 
 			AesCryptorBase(const RawData& key, const RawData& iv, CryptInitFn initFn, CryptUpdateFn updateFn);
 			~AesCryptorBase();
@@ -27,7 +27,7 @@ namespace dbc
 			static unsigned long GetDefIoBlockSize();
 
 		protected:
-			void ErrorHandler(int ret);
+			void CheckUpdateFn(int ret);
 			void CryptRawData(const RawData& src, RawData& dest, dbc::IProgressObserver* observer);
 			uint64_t CryptBetweenStreams(std::istream &in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer = nullptr);
 
@@ -43,8 +43,8 @@ namespace dbc
 			void ClearCtx(dbc::IProgressObserver* observer);
 
 		private:
-			struct InitCrypt;
-			static InitCrypt s_init;
+			struct CryptoResourcesGuard;
+			static CryptoResourcesGuard s_init;
 			unsigned long m_IoBlockSize;
 
 			CryptInitFn m_cryptInitFn;
@@ -69,11 +69,10 @@ namespace dbc
 
 		namespace utils
 		{
-			void RawDataAppend(const RawData& src, RawData& dest);
 			RawData StringToRawData(const std::string& str);
 			std::string RawDataToString(const RawData& data);
 
-			RawData SHA3_GetHash(const RawData& message);
+			RawData SHA256_GetHash(const RawData& message);
 			void RandomSequence(unsigned int seed, RawData& sequence_out);
 			unsigned int GetSeed(const RawData& sequence);
 		}
