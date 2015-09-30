@@ -3,6 +3,7 @@
 #include "SQLQuery.h"
 #include "FileStreamsUtils.h"
 #include "DefragProxyProgressObserver.h"
+#include "StreamInfo.h"
 
 namespace
 {
@@ -11,6 +12,14 @@ namespace
 		if (observer != nullptr)
 		{
 			observer->OnProgressUpdated(progress);
+		}
+	}
+
+	inline void ReportInfo(const char* info, dbc::IProgressObserver* observer)
+	{
+		if (observer != nullptr)
+		{
+			observer->OnInfo(info);
 		}
 	}
 }
@@ -38,27 +47,9 @@ float dbc::ContainerDefragmenter::CalculateFragmentationLevel(IProgressObserver*
 
 float dbc::ContainerDefragmenter::CalculateFragmentationLevel(const FilesIds_st& files, IProgressObserver* observer)
 {
-	size_t filesTotal = files.size();
-	// Kahan summation algorithm
-	double sum = 0;
-	double running_error = 0;
-	double temp;
-	double difference;
-	size_t curFile = 0;
-	for (uint64_t fileId : files)
-	{
-		++curFile;
-		difference = CalculateSingleFileFragmentation(fileId);
-		difference -= running_error;
-		temp = sum;
-		temp += difference;
-		running_error = temp;
-		running_error -= sum;
-		running_error -= difference;
-		sum = std::move(temp);
-		UpdateProgress(static_cast<float>(curFile) / (filesTotal + 1), observer);
-	}
-	return static_cast<float>(sum) / filesTotal;
+	FilesFragmentation_mp fragmentation;
+	CreateFragmentationLevelsMap(files, fragmentation, observer);
+	return CalculateAverageFragmentation(fragmentation);
 }
 
 dbc::DataFragmentationLevel dbc::ContainerDefragmenter::InterpretFragmentationLevelValue(float fragmentation)
@@ -80,16 +71,24 @@ dbc::DataFragmentationLevel dbc::ContainerDefragmenter::InterpretFragmentationLe
 void dbc::ContainerDefragmenter::Defragment(DataFragmentationLevel targetQuality, IDefragProgressObserver* observer)
 {
 	DefragProxyProgressObserver proxyObserver(observer);
-	proxyObserver.SetRange(0.0, 0.25);
+	proxyObserver.SetRange(static_cast<float>(0.0), static_cast<float>(0.05));
+	proxyObserver.OnInfo("Collecting files info");
+
 	FilesIds_st allFiles;
 	CollectAllFileIds(allFiles);
-	proxyObserver.SetRange(0.25, 1.0);
+	proxyObserver.SetRange(static_cast<float>(0.05), static_cast<float>(1.0));
 	Defragment(allFiles, targetQuality, &proxyObserver);
 }
 
 void dbc::ContainerDefragmenter::Defragment(const FilesIds_st& files, DataFragmentationLevel targetQuality, IDefragProgressObserver* observer)
 {
-	float fragmentationRatio = CalculateFragmentationLevel(files, observer);
+	DefragProxyProgressObserver proxyObserver(observer);
+	proxyObserver.SetRange(static_cast<float>(0.0), static_cast<float>(0.1));
+	proxyObserver.OnInfo("Collecting files fragmentation info");
+
+	FilesFragmentation_mp fragmentationInfo;
+	CreateFragmentationLevelsMap(files, fragmentationInfo, observer);
+	float fragmentationRatio = CalculateAverageFragmentation(fragmentationInfo);
 	DataFragmentationLevel fragmentationLevel = InterpretFragmentationLevelValue(fragmentationRatio);
 	if (fragmentationLevel <= targetQuality)
 	{
@@ -100,7 +99,8 @@ void dbc::ContainerDefragmenter::Defragment(const FilesIds_st& files, DataFragme
 	}
 	else
 	{
-		// Do defrag
+		proxyObserver.SetRange(static_cast<float>(0.1), static_cast<float>(1.0));
+		DefragImpl(fragmentationInfo, targetQuality, &proxyObserver);
 	}
 }
 
@@ -111,6 +111,18 @@ void dbc::ContainerDefragmenter::CollectAllFileIds(FilesIds_st& files)
 	while (query.Step())
 	{
 		files.insert(query.ColumnInt64(0));
+	}
+}
+
+void dbc::ContainerDefragmenter::CreateFragmentationLevelsMap(const FilesIds_st& filesIds, FilesFragmentation_mp& fragmentation, IProgressObserver* observer)
+{
+	assert(fragmentation.empty());
+	size_t curFile = 0;
+	size_t filesTotal = filesIds.size();
+	for (uint64_t fileId : filesIds)
+	{
+		fragmentation[fileId] = CalculateSingleFileFragmentation(fileId);
+		UpdateProgress(static_cast<float>(++curFile) / filesTotal + 1, observer);
 	}
 }
 
@@ -142,5 +154,61 @@ float dbc::ContainerDefragmenter::CalculateSingleFileFragmentation(uint64_t file
 	else
 	{
 		return 0.0;
+	}
+}
+
+float dbc::ContainerDefragmenter::CalculateAverageFragmentation(const FilesFragmentation_mp& fragmentation)
+{
+	size_t filesTotal = fragmentation.size();
+	// Kahan summation algorithm
+	double sum = 0;
+	double running_error = 0;
+	double temp;
+	double difference;
+	size_t curFile = 0;
+	for (auto fileFragmentation : fragmentation)
+	{
+		++curFile;
+		difference = fileFragmentation.second;
+		difference -= running_error;
+		temp = sum;
+		temp += difference;
+		running_error = temp;
+		running_error -= sum;
+		running_error -= difference;
+		sum = std::move(temp);
+	}
+	return static_cast<float>(sum) / filesTotal;
+}
+
+void dbc::ContainerDefragmenter::DefragImpl(FilesFragmentation_mp& fragmentationInfo, DataFragmentationLevel targetQuality, IDefragProgressObserver* observer)
+{
+	ReportInfo("Starting defragmentation", observer);
+
+	FilesIds_st skippedFiles;
+	StreamsChain_vt emptyStreams;
+	SQLQuery query(m_resources->GetConnection(), "SELECT id, file_id, stream_order, start, size, used FROM FileSreams ORDER BY start");
+	while (query.Step())
+	{
+		StreamInfo stream(query.ColumnInt64(0), query.ColumnInt64(1), query.ColumnInt64(2), query.ColumnInt64(4), query.ColumnInt64(5), query.ColumnInt64(6));
+		if (stream.used == 0)
+		{
+			emptyStreams.push_back(stream);
+			continue;
+		}
+		if (skippedFiles.count(stream.fileId) > 0) // this file was skipped for some reason
+		{
+			continue;
+		}
+		if (fragmentationInfo.count(stream.fileId) == 0) // file is not present in defrag list
+		{
+			continue;
+		}
+		if (InterpretFragmentationLevelValue(fragmentationInfo[stream.fileId]) < targetQuality)
+		{
+			skippedFiles.insert(stream.fileId);
+			ReportInfo("File fragmentation level corresponds to the target fragmentation quality.", observer);
+			continue;
+		}
 	}
 }

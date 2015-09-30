@@ -55,14 +55,14 @@ TEST(FsUtilsTest, UnslashedPath)
 
 TEST(FsUtilsTest, FNameIsValid)
 {
-	EXPECT_TRUE(dbc::utils::FNameIsValid("file"));
-	EXPECT_TRUE(dbc::utils::FNameIsValid("filefilefilefile ''''filefilefilefile"));
-	EXPECT_TRUE(dbc::utils::FNameIsValid("!@#$%^&()[]{}<>+_-"));
-	EXPECT_FALSE(dbc::utils::FNameIsValid(""));
-	EXPECT_FALSE(dbc::utils::FNameIsValid("fdd\\sfsd")); // slashes are delimeters in the path
-	EXPECT_FALSE(dbc::utils::FNameIsValid("/"));
-	EXPECT_FALSE(dbc::utils::FNameIsValid("\n")); // just because it isn't look good
-	EXPECT_FALSE(dbc::utils::FNameIsValid("\r")); // same situation
-	EXPECT_FALSE(dbc::utils::FNameIsValid("*")); // These symbols are reserved for the possibility to search by name or by path
-	EXPECT_FALSE(dbc::utils::FNameIsValid("?"));
+	EXPECT_TRUE(dbc::utils::FileNameIsValid("file"));
+	EXPECT_TRUE(dbc::utils::FileNameIsValid("filefilefilefile ''''filefilefilefile"));
+	EXPECT_TRUE(dbc::utils::FileNameIsValid("!@#$%^&()[]{}<>+_-"));
+	EXPECT_FALSE(dbc::utils::FileNameIsValid(""));
+	EXPECT_FALSE(dbc::utils::FileNameIsValid("fdd\\sfsd")); // slashes are delimeters in the path
+	EXPECT_FALSE(dbc::utils::FileNameIsValid("/"));
+	EXPECT_FALSE(dbc::utils::FileNameIsValid("\n")); // just because it isn't look good
+	EXPECT_FALSE(dbc::utils::FileNameIsValid("\r")); // same situation
+	EXPECT_FALSE(dbc::utils::FileNameIsValid("*")); // These symbols are reserved for the possibility to search by name or by path
+	EXPECT_FALSE(dbc::utils::FileNameIsValid("?"));
 }

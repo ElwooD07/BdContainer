@@ -211,7 +211,7 @@ void dbc::ContainerElement::MoveToEntry(IContainerFolder& newParent)
 	query.BindInt64(2, m_id);
 	query.Step();
 
-	m_props.SetDateModified();
+	m_props.SetDateModified(::time(0));
 	WriteProps();
 }
 
@@ -246,7 +246,7 @@ void dbc::ContainerElement::Rename(const std::string& newName)
 	query.BindInt64(2, m_id);
 	query.Step();
 
-	m_props.SetDateModified();
+	m_props.SetDateModified(::time(0));
 	WriteProps();
 
 	m_name = newName;

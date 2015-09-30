@@ -12,7 +12,7 @@ extern ContainerGuard cont;
 void RandomWriteReadImpl()
 {
 	// Create data portions set
-	srand(time(0));
+	srand(static_cast<unsigned int>(::time(0)));
 	const unsigned char filesCount = 5 + (rand() % 5);
 	const unsigned char portionsCount = 5 + (rand() % 3);
 	std::map<unsigned char, std::vector<size_t> > dataPortions;

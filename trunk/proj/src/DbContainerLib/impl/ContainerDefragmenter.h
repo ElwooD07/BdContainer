@@ -1,7 +1,6 @@
 #pragma once
 #include "IDefragProgressObserver.h"
 #include "IContainnerResources.h"
-#include "StreamInfo.h"
 
 namespace dbc
 {
@@ -21,12 +20,15 @@ namespace dbc
 
 	private:
 		void CollectAllFileIds(FilesIds_st& files);
+		typedef std::map<uint64_t, float> FilesFragmentation_mp;
+		void CreateFragmentationLevelsMap(const FilesIds_st& filesIds, FilesFragmentation_mp& fragmentation, IProgressObserver* observer);
 		float CalculateSingleFileFragmentation(uint64_t fileId);
+		float CalculateAverageFragmentation(const FilesFragmentation_mp& fragmentation);
+
+		void DefragImpl(FilesFragmentation_mp& fragmentationInfo, DataFragmentationLevel targetQuality, IDefragProgressObserver* observer);
 
 	private:
 		ContainerResources m_resources;
 		IDataStorage* m_storage;
-
-		typedef std::map<uint64_t, float> m_fragmentation;
 	};
 }

@@ -114,6 +114,7 @@
     <ClInclude Include="ContainerResources.h" />
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="DataStorageBinaryFile.h" />
+    <ClInclude Include="DefragProxyProgressObserver.h" />
     <ClInclude Include="ElementsIterator.h" />
     <ClInclude Include="ElementsSyncKeeper.h" />
     <ClInclude Include="FileStreamsAllocator.h" />

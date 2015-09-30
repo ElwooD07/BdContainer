@@ -13,7 +13,7 @@ namespace dbc
 
 	class Container: public IContainer
 	{
-		NONCOPYABLE(IContainer);
+		NONCOPYABLE(Container);
 
 	public:
 		static const int ROOT_ID; // Default id for the root folder in FileSystem table
