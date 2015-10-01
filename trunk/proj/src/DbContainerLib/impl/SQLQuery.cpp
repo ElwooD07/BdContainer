@@ -5,7 +5,7 @@
 #include "ContainerException.h"
 #include "Logging.h"
 
-dbc::SQLQuery::SQLQuery(Connection &conn, const std::string &query)
+dbc::SQLQuery::SQLQuery(Connection& conn, const std::string& query)
 	: m_db(conn.GetDB()), m_stmt(0), m_lastRowId(0)
 {
 	Prepare(query);
@@ -24,7 +24,7 @@ dbc::SQLQuery::~SQLQuery()
 	WriteLog(stream.str());
 }
 
-void dbc::SQLQuery::Prepare(const std::string &query)
+void dbc::SQLQuery::Prepare(const std::string& query)
 {
 	if (!m_db)
 	{
@@ -70,7 +70,7 @@ void dbc::SQLQuery::BindText(int column, const std::string& value)
 	DecideToThrow(sqlite3_bind_text(m_stmt, column, value.c_str(), value.length() * sizeof(char), 0));
 }
 
-void dbc::SQLQuery::BindBlob(int column, const BlobData& data)
+void dbc::SQLQuery::BindBlob(int column, const RawData& data)
 {
 	CheckSTMT();
 	DecideToThrow(sqlite3_bind_blob(m_stmt, column, data.data(), data.size(), 0));
@@ -131,7 +131,7 @@ void dbc::SQLQuery::ColumnText(int column, std::string& out)
 	}
 }
 
-void dbc::SQLQuery::ColumnBlob(int column, BlobData& data)
+void dbc::SQLQuery::ColumnBlob(int column, RawData& data)
 {
 	CheckSTMT();
 

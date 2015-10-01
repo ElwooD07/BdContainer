@@ -29,8 +29,8 @@ namespace dbc
 		void ClearFile();
 
 	private:
-		crypting::RawData m_key; // AES key
-		crypting::RawData m_iv; // AES IV
+		RawData m_key; // AES key
+		RawData m_iv; // AES IV
 		std::string m_bin_file;
 		std::fstream m_stream;
 		unsigned long m_cryptBlockSize;

@@ -1,6 +1,6 @@
 #pragma once
+#include "TypesPublic.h"
 #include <mutex>
-#include <filesystem>
 
 namespace dbc
 {

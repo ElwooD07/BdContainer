@@ -36,7 +36,7 @@ namespace dbc
 
 	private:
 		void PrepareContainer(const std::string &password, bool create);
-		void ReadSets(BlobData& storageData);
+		void ReadSets(RawData& storageData);
 		void SaveStorageData();
 
 	private:
@@ -47,5 +47,4 @@ namespace dbc
 
 		ContainerResources m_resources;
 	};
-
-}  // namespace dbc
+}

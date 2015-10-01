@@ -18,30 +18,30 @@ namespace
 		return dbPath + s_binFileExt;
 	}
 
-	void GetKeyAndIvFromPassword(const std::string& password, dbc::crypting::RawData& key, dbc::crypting::RawData& iv)
+	void GetKeyAndIvFromPassword(const std::string& password, dbc::RawData& key, dbc::RawData& iv)
 	{
 		assert(key.empty() && iv.empty());
 
 		static const char s_salt[]("arbadakarba123");
-		dbc::crypting::RawData hash = dbc::crypting::utils::SHA256_GetHash(dbc::crypting::utils::StringToRawData(password + s_salt));
-		const unsigned int keyAndIvLen = dbc::crypting::AesCryptorBase::GetKeyAndIvLen();
+		dbc::RawData hash = dbc::crypto::utils::SHA256_GetHash(dbc::crypto::utils::StringToRawData(password + s_salt));
+		const unsigned int keyAndIvLen = dbc::crypto::AesCryptorBase::GetKeyAndIvLen();
 		assert(hash.size() == keyAndIvLen * 2);
 		key.assign(hash.begin(), hash.begin() + keyAndIvLen);
 		iv.assign(hash.begin() + keyAndIvLen, hash.end());
 	}
 
-	void FillHeader(const std::string password, const dbc::crypting::RawData& key, const dbc::crypting::RawData& iv, std::ostream &out)
+	void FillHeader(const std::string password, const dbc::RawData& key, const dbc::RawData& iv, std::ostream &out)
 	{
 		std::istringstream istreamPass(s_testExpression);
-		dbc::crypting::AesEncryptor encryptor(key, iv);
+		dbc::crypto::AesEncryptor encryptor(key, iv);
 		encryptor.Encrypt(istreamPass, out, s_testExpression.size());
 
 		assert(s_testExpression.size() <= s_binHeaderLen);
 		size_t trashLen = s_binHeaderLen - s_testExpression.size();
 		if (trashLen > 0)
 		{
-			dbc::crypting::RawData trash(trashLen, '\0');
-			dbc::crypting::utils::RandomSequence(dbc::crypting::utils::GetSeed(dbc::crypting::utils::StringToRawData(password)), trash);
+			dbc::RawData trash(trashLen, '\0');
+			dbc::crypto::utils::RandomSequence(dbc::crypto::utils::GetSeed(dbc::crypto::utils::StringToRawData(password)), trash);
 			out.write(reinterpret_cast<const char*>(trash.data()), trash.size());
 		}
 		if (out.rdstate() != std::ios_base::goodbit)
@@ -50,10 +50,10 @@ namespace
 		}
 	}
 
-	bool KeyAndIvAreCorrect(const dbc::crypting::RawData key, const dbc::crypting::RawData iv, std::istream& in)
+	bool KeyAndIvAreCorrect(const dbc::RawData key, const dbc::RawData iv, std::istream& in)
 	{
 		std::ostringstream ostream;
-		dbc::crypting::AesDecryptor decryptor(key, iv);
+		dbc::crypto::AesDecryptor decryptor(key, iv);
 		uint64_t decryptedLen = decryptor.Decrypt(in, ostream, s_testExpression.size());
 		ostream.flush();
 		std::string decrypted = ostream.str();
@@ -67,7 +67,7 @@ namespace
 }
 
 dbc::DataStorageBinaryFile::DataStorageBinaryFile()
-	: m_cryptBlockSize(crypting::AesCryptorBase::GetDefIoBlockSize())
+	: m_cryptBlockSize(crypto::AesCryptorBase::GetDefIoBlockSize())
 { }
 
 void dbc::DataStorageBinaryFile::Open(const std::string& db_path, const std::string& password, const RawData& savedData)
@@ -76,8 +76,8 @@ void dbc::DataStorageBinaryFile::Open(const std::string& db_path, const std::str
 
 	OpenFileStream(false);
 
-	dbc::crypting::RawData key;
-	dbc::crypting::RawData iv;
+	dbc::RawData key;
+	dbc::RawData iv;
 	GetKeyAndIvFromPassword(password, key, iv);
 
 	if (!KeyAndIvAreCorrect(key, iv, m_stream))
@@ -95,8 +95,8 @@ void dbc::DataStorageBinaryFile::Create(const std::string& db_path, const std::s
 	ClearFile();
 	OpenFileStream(true);
 
-	dbc::crypting::RawData key;
-	dbc::crypting::RawData iv;
+	dbc::RawData key;
+	dbc::RawData iv;
 	GetKeyAndIvFromPassword(password, key, iv);
 	FillHeader(password, key, iv, m_stream);
 
@@ -148,7 +148,7 @@ uint64_t dbc::DataStorageBinaryFile::Write(std::istream& data, uint64_t begin, u
 	CheckInitialized();
 
 	m_stream.seekp(begin, std::ios::beg);
-	crypting::AesEncryptor encryptor(m_key, m_iv);
+	crypto::AesEncryptor encryptor(m_key, m_iv);
 	return encryptor.Encrypt(data, m_stream, end - begin, observer);
 }
 
@@ -157,7 +157,7 @@ uint64_t dbc::DataStorageBinaryFile::Read(std::ostream& data, uint64_t begin, ui
 	CheckInitialized();
 
 	m_stream.seekg(begin, std::ios::beg);
-	crypting::AesDecryptor decryptor(m_key, m_iv);
+	crypto::AesDecryptor decryptor(m_key, m_iv);
 	return decryptor.Decrypt(m_stream, data, end - begin, observer);
 }
 
