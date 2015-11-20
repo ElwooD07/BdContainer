@@ -1,4 +1,5 @@
 #pragma once
+#include "TypesPublic.h"
 
 struct sqlite3;
 struct sqlite3_stmt;
@@ -7,8 +8,6 @@ namespace dbc
 {
 	class Connection;
 	union Error;
-
-	typedef std::vector<uint8_t> BlobData;
 
 	class SQLQuery
 	{
@@ -21,7 +20,7 @@ namespace dbc
 		void BindInt(int column, int value);
 		void BindInt64(int column, int64_t value);
 		void BindText(int column, const std::string& value);
-		void BindBlob(int column, const BlobData& data);
+		void BindBlob(int column, const RawData& data);
 
 		bool Step(); // Returns true if sqlite API returns SQLITE_ROW
 		void Reset();
@@ -29,8 +28,8 @@ namespace dbc
 		bool ColumnBool(int column);
 		int ColumnInt(int column);
 		int64_t ColumnInt64(int column);
-		void ColumnText(int column, std::string &out);
-		void ColumnBlob(int column, BlobData &data);
+		void ColumnText(int column, std::string& out);
+		void ColumnBlob(int column, RawData& data);
 
 		int64_t LastRowId();
 

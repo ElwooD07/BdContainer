@@ -257,7 +257,7 @@ void dbc::Container::PrepareContainer(const std::string& password, bool create)
 			throw ContainerException(ERR_DB, CANT_OPEN, ERR_DB, NOT_VALID);
 		}
 		// check Data
-		BlobData storageData;
+		RawData storageData;
 		ReadSets(storageData);
 		m_storage->Open(m_dbFile, password, storageData);
 		// TODO: Parse storage data
@@ -267,7 +267,7 @@ void dbc::Container::PrepareContainer(const std::string& password, bool create)
 	m_resources.reset(new ContaierResourcesImpl(m_connection, *m_storage, m_dataUsagePrefs));
 }
 
-void dbc::Container::ReadSets(BlobData& storageData)
+void dbc::Container::ReadSets(RawData& storageData)
 {
 	assert(storageData.empty());
 	SQLQuery query(m_connection, "SELECT storage_data FROM Sets WHERE id = 1;");
@@ -278,7 +278,7 @@ void dbc::Container::ReadSets(BlobData& storageData)
 void dbc::Container::SaveStorageData()
 {
 	assert(m_storage.get() != nullptr);
-	BlobData storageData;
+	RawData storageData;
 	m_storage->GetDataToSave(storageData);
 	if (storageData.size() > 0)
 	{

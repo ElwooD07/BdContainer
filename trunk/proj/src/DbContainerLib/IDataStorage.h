@@ -2,13 +2,12 @@
 #include <iosfwd>
 #include <cstdint>
 #include <string>
-#include <vector>
+#include <memory>
 #include "IProgressObserver.h"
+#include "TypesPublic.h"
 
 namespace dbc
 {
-	typedef std::vector<uint8_t> RawData;
-
 	class IDataStorage
 	{
 	public:

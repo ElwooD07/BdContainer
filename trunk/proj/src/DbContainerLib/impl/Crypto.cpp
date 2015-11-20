@@ -13,7 +13,7 @@ namespace
 static const EVP_CIPHER* s_cryptCipher = EVP_aes_128_ofb();
 static const unsigned short s_cryptKeyLen = EVP_CIPHER_key_length(s_cryptCipher);
 
-struct dbc::crypting::AesCryptorBase::CryptoResourcesGuard
+struct dbc::crypto::AesCryptorBase::CryptoResourcesGuard
 {
 	CryptoResourcesGuard()
 	{
@@ -28,9 +28,9 @@ struct dbc::crypting::AesCryptorBase::CryptoResourcesGuard
 	}
 };
 
-dbc::crypting::AesCryptorBase::CryptoResourcesGuard dbc::crypting::AesCryptorBase::s_init = dbc::crypting::AesCryptorBase::CryptoResourcesGuard();
+dbc::crypto::AesCryptorBase::CryptoResourcesGuard dbc::crypto::AesCryptorBase::s_cryptoResources = dbc::crypto::AesCryptorBase::CryptoResourcesGuard();
 
-dbc::crypting::AesCryptorBase::AesCryptorBase(const RawData& key, const RawData& iv, CryptInitFn initFn, CryptUpdateFn updateFn)
+dbc::crypto::AesCryptorBase::AesCryptorBase(const RawData& key, const RawData& iv, CryptInitFn initFn, CryptUpdateFn updateFn)
 	: m_key(key)
 	, m_iv(iv)
 	, m_cryptInitFn(initFn)
@@ -44,17 +44,17 @@ dbc::crypting::AesCryptorBase::AesCryptorBase(const RawData& key, const RawData&
 	}
 }
 
-dbc::crypting::AesCryptorBase::~AesCryptorBase()
+dbc::crypto::AesCryptorBase::~AesCryptorBase()
 {
 	// To avoid warning from "std::auto_ptr<CtxImpl> m_ctx" in private members of this class
 }
 
-unsigned long dbc::crypting::AesCryptorBase::GetIoBlockSize()
+unsigned long dbc::crypto::AesCryptorBase::GetIoBlockSize()
 {
 	return m_IoBlockSize;
 }
 
-void dbc::crypting::AesCryptorBase::SetIoBlockSize(unsigned long blockSize)
+void dbc::crypto::AesCryptorBase::SetIoBlockSize(unsigned long blockSize)
 {
 	if (blockSize < MIN_IO_BLOCK_SIZE || blockSize > MAX_IO_BLOCK_SIZE)
 	{
@@ -63,29 +63,17 @@ void dbc::crypting::AesCryptorBase::SetIoBlockSize(unsigned long blockSize)
 	m_IoBlockSize = blockSize;
 }
 
-unsigned long dbc::crypting::AesCryptorBase::GetDefIoBlockSize()
+unsigned long dbc::crypto::AesCryptorBase::GetDefIoBlockSize()
 {
 	return DEF_IO_BLOCK_SIZE;
 }
 
-unsigned short dbc::crypting::AesCryptorBase::GetKeyAndIvLen()
+unsigned short dbc::crypto::AesCryptorBase::GetKeyAndIvLen()
 {
 	return s_cryptKeyLen;
 }
 
-void dbc::crypting::AesCryptorBase::CheckUpdateFn(int ret)
-{
-	if (ret != 1)
-	{
-		std::shared_ptr<BIO> bio(BIO_new(BIO_s_mem()), ::BIO_free);
-		ERR_print_errors(bio.get());
-		char* buf = NULL;
-		BIO_get_mem_data(bio.get(), &buf);
-		throw ContainerException("Encryption/Decryption error", ERR_INTERNAL);
-	}
-}
-
-void dbc::crypting::AesCryptorBase::CryptRawData(const RawData& src, RawData& dest, dbc::IProgressObserver* observer)
+void dbc::crypto::AesCryptorBase::CryptRawData(const RawData& src, RawData& dest, dbc::IProgressObserver* observer)
 {
 	size_t srcSize = src.size();
 	size_t processed = 0;
@@ -110,7 +98,7 @@ void dbc::crypting::AesCryptorBase::CryptRawData(const RawData& src, RawData& de
 	std::swap(dest, resultTmp);
 }
 
-uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer)
+uint64_t dbc::crypto::AesCryptorBase::CryptBetweenStreams(std::istream &in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer)
 {
 	// Only for binary streams! Using text streams here is forbidden!
 	uint64_t block_size = m_IoBlockSize;
@@ -163,7 +151,19 @@ uint64_t dbc::crypting::AesCryptorBase::CryptBetweenStreams(std::istream &in, st
 	return ret;
 }
 
-size_t dbc::crypting::AesCryptorBase::CryptPortion(const RawData& src, RawData& dest, size_t size, dbc::IProgressObserver* observer)
+void dbc::crypto::AesCryptorBase::CheckUpdateFn(int ret)
+{
+	if (ret != 1)
+	{
+		std::shared_ptr<BIO> bio(BIO_new(BIO_s_mem()), ::BIO_free);
+		ERR_print_errors(bio.get());
+		char* buf = nullptr;
+		BIO_get_mem_data(bio.get(), &buf);
+		throw ContainerException(std::string("Encryption/Decryption error: ") + buf, ERR_INTERNAL);
+	}
+}
+
+size_t dbc::crypto::AesCryptorBase::CryptPortion(const RawData& src, RawData& dest, size_t size, dbc::IProgressObserver* observer)
 {
 	InitCtx(observer);
 	if (size > src.size())
@@ -176,7 +176,7 @@ size_t dbc::crypting::AesCryptorBase::CryptPortion(const RawData& src, RawData& 
 	return static_cast<size_t>(updated);
 }
 
-void dbc::crypting::AesCryptorBase::InitCtx(dbc::IProgressObserver* observer)
+void dbc::crypto::AesCryptorBase::InitCtx(dbc::IProgressObserver* observer)
 {
 	if (!m_cryptInitFn(m_ctx.get(), s_cryptCipher, 0, &m_key[0], &m_iv[0]))
 	{
@@ -188,7 +188,7 @@ void dbc::crypting::AesCryptorBase::InitCtx(dbc::IProgressObserver* observer)
 	}
 }
 
-void dbc::crypting::AesCryptorBase::ClearCtx(dbc::IProgressObserver* observer)
+void dbc::crypto::AesCryptorBase::ClearCtx(dbc::IProgressObserver* observer)
 {
 	if (!::EVP_CIPHER_CTX_cleanup(m_ctx.get()))
 	{
@@ -200,41 +200,41 @@ void dbc::crypting::AesCryptorBase::ClearCtx(dbc::IProgressObserver* observer)
 	}
 }
 
-dbc::crypting::AesEncryptor::AesEncryptor(const RawData& key, const RawData& iv)
+dbc::crypto::AesEncryptor::AesEncryptor(const RawData& key, const RawData& iv)
 	: AesCryptorBase(key, iv, &::EVP_EncryptInit_ex, &::EVP_EncryptUpdate)
 { }
 
-void dbc::crypting::AesEncryptor::Encrypt(const RawData& data, RawData& result, dbc::IProgressObserver* observer)
+void dbc::crypto::AesEncryptor::Encrypt(const RawData& data, RawData& result, dbc::IProgressObserver* observer)
 {
 	CryptRawData(data, result, observer);
 }
 
-uint64_t dbc::crypting::AesEncryptor::Encrypt(std::istream& in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer)
+uint64_t dbc::crypto::AesEncryptor::Encrypt(std::istream& in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer)
 {
 	return CryptBetweenStreams(in, out, size, observer);
 }
 
-dbc::crypting::AesDecryptor::AesDecryptor(const RawData& key, const RawData& iv)
+dbc::crypto::AesDecryptor::AesDecryptor(const RawData& key, const RawData& iv)
 	: AesCryptorBase(key, iv, &::EVP_DecryptInit_ex, &::EVP_DecryptUpdate)
 { }
 
-void dbc::crypting::AesDecryptor::Decrypt(const RawData& data, RawData& result, dbc::IProgressObserver* observer)
+void dbc::crypto::AesDecryptor::Decrypt(const RawData& data, RawData& result, dbc::IProgressObserver* observer)
 {
 	CryptRawData(data, result, observer);
 }
 
-uint64_t dbc::crypting::AesDecryptor::Decrypt(std::istream& in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer)
+uint64_t dbc::crypto::AesDecryptor::Decrypt(std::istream& in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer)
 {
 	return CryptBetweenStreams(in, out, size, observer);
 }
 
-dbc::crypting::RawData dbc::crypting::utils::StringToRawData(const std::string& str)
+dbc::RawData dbc::crypto::utils::StringToRawData(const std::string& str)
 {
-	const dbc::crypting::RawDataType* strPtr = reinterpret_cast<const dbc::crypting::RawDataType*>(str.c_str());
-	return std::move(dbc::crypting::RawData(strPtr, strPtr + str.size()));
+	const dbc::RawData::value_type* strPtr = reinterpret_cast<const dbc::RawData::value_type*>(str.c_str());
+	return std::move(dbc::RawData(strPtr, strPtr + str.size()));
 }
 
-std::string dbc::crypting::utils::RawDataToString(const RawData& data)
+std::string dbc::crypto::utils::RawDataToString(const RawData& data)
 {
 	std::string res;
 	if (!data.empty())
@@ -244,7 +244,7 @@ std::string dbc::crypting::utils::RawDataToString(const RawData& data)
 	return std::move(res);
 }
 
-dbc::crypting::RawData dbc::crypting::utils::SHA256_GetHash(const dbc::crypting::RawData& message)
+dbc::RawData dbc::crypto::utils::SHA256_GetHash(const dbc::RawData& message)
 {
 	RawData hash(SHA256_DIGEST_LENGTH);
 	SHA256_CTX sha256;
@@ -254,7 +254,7 @@ dbc::crypting::RawData dbc::crypting::utils::SHA256_GetHash(const dbc::crypting:
 	return hash;
 }
 
-void dbc::crypting::utils::RandomSequence(unsigned int seed, dbc::crypting::RawData& sequence_out)
+void dbc::crypto::utils::RandomSequence(unsigned int seed, dbc::RawData& sequence_out)
 {
 	srand(seed);
 	for (RawData::iterator itr = sequence_out.begin(); itr != sequence_out.end(); ++itr)
@@ -263,7 +263,7 @@ void dbc::crypting::utils::RandomSequence(unsigned int seed, dbc::crypting::RawD
 	}
 }
 
-unsigned int dbc::crypting::utils::GetSeed(const dbc::crypting::RawData& sequence)
+unsigned int dbc::crypto::utils::GetSeed(const dbc::RawData& sequence)
 {
 	if (sequence.empty())
 	{

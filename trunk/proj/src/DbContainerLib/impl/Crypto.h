@@ -5,11 +5,8 @@ namespace dbc
 {
 	class IProgressObserver;
 
-	namespace crypting
+	namespace crypto
 	{
-		typedef unsigned char RawDataType;
-		typedef std::vector<RawDataType> RawData;
-
 		class AesCryptorBase
 		{
 			NONCOPYABLE(AesCryptorBase);
@@ -27,7 +24,6 @@ namespace dbc
 			static unsigned long GetDefIoBlockSize();
 
 		protected:
-			void CheckUpdateFn(int ret);
 			void CryptRawData(const RawData& src, RawData& dest, dbc::IProgressObserver* observer);
 			uint64_t CryptBetweenStreams(std::istream &in, std::ostream& out, uint64_t size, dbc::IProgressObserver* observer = nullptr);
 
@@ -38,13 +34,14 @@ namespace dbc
 			std::shared_ptr<::EVP_CIPHER_CTX> m_ctx;
 
 		private:
+			void CheckUpdateFn(int ret);
 			size_t CryptPortion(const RawData& src, RawData& dest, size_t size, dbc::IProgressObserver* observer);
 			void InitCtx(dbc::IProgressObserver* observer);
 			void ClearCtx(dbc::IProgressObserver* observer);
 
 		private:
 			struct CryptoResourcesGuard;
-			static CryptoResourcesGuard s_init;
+			static CryptoResourcesGuard s_cryptoResources;
 			unsigned long m_IoBlockSize;
 
 			CryptInitFn m_cryptInitFn;
