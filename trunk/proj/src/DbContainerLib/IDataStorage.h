@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 #include "IProgressObserver.h"
-#include "TypesPublic.h"
+#include "Types.h"
 
 namespace dbc
 {

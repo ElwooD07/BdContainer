@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+#include <cstdint>
 
 namespace dbc
 {
@@ -20,4 +22,6 @@ namespace dbc
 
 	const uint64_t WRONG_SIZE = std::numeric_limits<uint64_t>::max();
 	const char PATH_SEPARATOR = '/'; // Also, this is default name for the root folder
+
+	typedef std::vector<uint8_t> RawData;
 }

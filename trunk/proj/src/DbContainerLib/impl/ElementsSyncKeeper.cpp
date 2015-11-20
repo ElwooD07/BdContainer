@@ -1,17 +1,18 @@
 #include "stdafx.h"
 #include "ElementsSyncKeeper.h"
+#include "Types.h"
 
 bool dbc::ElementsSyncKeeper::SetFileLock(uint64_t fileId, ReadWriteAccess access)
 {
 	switch (access)
 	{
-	case dbc::NoAccess:
+	case NoAccess:
 		return false;
-	case dbc::ReadAccess:
+	case ReadAccess:
 		return SetReadLock(fileId);
-	case dbc::WriteAccess:
+	case WriteAccess:
 		return SetWriteLock(fileId);
-	case dbc::AllAccess:
+	case AllAccess:
 		return SetReadWriteLock(fileId);
 	default:
 		assert(!"Unknown file lock type");
@@ -23,15 +24,15 @@ void dbc::ElementsSyncKeeper::ReleaseFileLock(uint64_t fileId, ReadWriteAccess a
 {
 	switch (access)
 	{
-	case dbc::NoAccess:
+	case NoAccess:
 		break;
-	case dbc::ReadAccess:
+	case ReadAccess:
 		ReleaseReadLock(fileId);
 		break;
-	case dbc::WriteAccess:
+	case WriteAccess:
 		ReleaseWriteLock(fileId);
 		break;
-	case dbc::AllAccess:
+	case AllAccess:
 		ReleaseReadWriteLock(fileId);
 		break;
 	default:
