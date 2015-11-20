@@ -39,15 +39,6 @@
     <ClInclude Include="..\IContainer.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="..\IContainerElement.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="..\IContainerFile.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="..\IContainerFolder.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
     <ClInclude Include="..\IContainerInfo.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
@@ -69,19 +60,7 @@
     <ClInclude Include="Container.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
-    <ClInclude Include="ContainerElement.h">
-      <Filter>Заголовочные файлы\impl</Filter>
-    </ClInclude>
-    <ClInclude Include="ContainerFile.h">
-      <Filter>Заголовочные файлы\impl</Filter>
-    </ClInclude>
-    <ClInclude Include="ContainerFolder.h">
-      <Filter>Заголовочные файлы\impl</Filter>
-    </ClInclude>
     <ClInclude Include="ContainerInfoImpl.h">
-      <Filter>Заголовочные файлы\impl</Filter>
-    </ClInclude>
-    <ClInclude Include="ContainerResources.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
     <ClInclude Include="Crypto.h">
@@ -90,16 +69,10 @@
     <ClInclude Include="DataStorageBinaryFile.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
-    <ClInclude Include="ElementsIterator.h">
-      <Filter>Заголовочные файлы\impl</Filter>
-    </ClInclude>
     <ClInclude Include="ElementsSyncKeeper.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
     <ClInclude Include="FileStreamsManager.h">
-      <Filter>Заголовочные файлы\impl</Filter>
-    </ClInclude>
-    <ClInclude Include="IContainnerResources.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
     <ClInclude Include="SQLQuery.h">
@@ -135,11 +108,32 @@
     <ClInclude Include="Utils\FileStreamsUtils.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
-    <ClInclude Include="Types.h">
-      <Filter>Заголовочные файлы\impl</Filter>
-    </ClInclude>
     <ClInclude Include="DefragProxyProgressObserver.h">
       <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="TypesInternal.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Types.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ContainerElement.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ContainerFile.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ContainerFolder.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\IContainnerResources.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerResourcesImpl.h">
+      <Filter>Заголовочные файлы\impl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ContainerResources.h">
+      <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

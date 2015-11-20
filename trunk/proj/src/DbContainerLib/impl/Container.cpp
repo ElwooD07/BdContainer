@@ -5,7 +5,7 @@
 #include "ContainerElement.h"
 #include "ContainerFolder.h"
 #include "ContainerFile.h"
-#include "ContainerResources.h"
+#include "ContainerResourcesImpl.h"
 #include "ContainerException.h"
 #include "Crypto.h"
 #include "ContainerInfoImpl.h"

@@ -114,23 +114,23 @@ dbc::ElementType dbc::ContainerElement::Type() const
 	return m_type;
 }
 
-dbc::IContainerFolder* dbc::ContainerElement::AsFolder()
+dbc::ContainerFolder* dbc::ContainerElement::AsFolder()
 {
 	return dynamic_cast<ContainerFolder*>(this);
 }
 
-dbc::IContainerFile* dbc::ContainerElement::AsFile()
+dbc::ContainerFile* dbc::ContainerElement::AsFile()
 {
 	return dynamic_cast<ContainerFile*>(this);
 }
 
-bool dbc::ContainerElement::IsTheSame(const IContainerElement& obj) const
+bool dbc::ContainerElement::IsTheSame(const ContainerElement& obj) const
 {
 	const ContainerElement& ce = dynamic_cast<const ContainerElement&>(obj);
 	return (m_resources == ce.m_resources && m_id == ce.m_id);
 }
 
-bool dbc::ContainerElement::IsChildOf(const IContainerElement& obj)
+bool dbc::ContainerElement::IsChildOf(const ContainerElement& obj)
 {
 	Refresh();
 
@@ -186,7 +186,7 @@ dbc::ContainerFolderGuard dbc::ContainerElement::GetParentEntry()
 	return ContainerFolderGuard(new ContainerFolder(m_resources, m_parentId));
 }
 
-void dbc::ContainerElement::MoveToEntry(IContainerFolder& newParent)
+void dbc::ContainerElement::MoveToEntry(ContainerFolder& newParent)
 {
 	Refresh();
 

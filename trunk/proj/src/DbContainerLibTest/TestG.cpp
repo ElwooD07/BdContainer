@@ -106,7 +106,7 @@ TEST(H_FilesInfoTest, SpaceUsageInfo)
 	std::fstream strm(CreateStream(dataPortion1Size));
 	ContainerFileGuard file = cont->GetRoot()->CreateFile("file1");
 
-	IContainerFile::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
+	ContainerFile::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
 	EXPECT_EQ(0, fileUsage.streamsTotal);
 	EXPECT_EQ(0, fileUsage.streamsUsed);
 	EXPECT_EQ(0, fileUsage.spaceAvailable);

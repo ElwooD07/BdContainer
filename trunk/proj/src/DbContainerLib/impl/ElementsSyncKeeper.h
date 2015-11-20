@@ -1,6 +1,5 @@
 #pragma once
-#include "Types.h"
-#include "IContainerFile.h"
+#include "TypesInternal.h"
 
 namespace dbc
 {

@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "ContainerResources.h"
+#include "ContainerResourcesImpl.h"
 #include "ContainerException.h"
 
 dbc::ContaierResourcesImpl::ContaierResourcesImpl(

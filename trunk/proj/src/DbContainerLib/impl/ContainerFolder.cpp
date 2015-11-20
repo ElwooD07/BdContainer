@@ -1,10 +1,8 @@
-// class ContainerFolder
 #include "stdafx.h"
 #include "ContainerFolder.h"
 #include "ContainerFile.h"
 #include "Container.h"
 #include "SQLQuery.h"
-#include "ElementsIterator.h"
 #include "FsUtils.h"
 #include "ContainerException.h"
 

@@ -4,7 +4,7 @@
 #include "ContainerException.h"
 #include "Crypto.h"
 #include "FsUtils.h"
-#include "Types.h"
+#include "TypesInternal.h"
 
 namespace
 {

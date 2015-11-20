@@ -1,6 +1,6 @@
 #pragma once
-#include "IContainerElement.h"
 #include "IContainerInfo.h"
+#include "ContainerElement.h"
 #include "DataUsagePreferences.h"
 #include <string>
 
@@ -22,4 +22,5 @@ namespace dbc
 		virtual void SetDataUsagePreferences(const DataUsagePreferences& prefs) = 0;
 	};
 
+	typedef std::shared_ptr<IContainer> ContainerGuard;
 }

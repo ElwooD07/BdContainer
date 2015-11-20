@@ -20,7 +20,7 @@ TEST(H_FilesPartialWrite, NonTransactional_Success)
 		std::fstream strm(CreateStream(dataPortion1Size));
 		file->Write(strm, dataPortion1Size);
 		EXPECT_EQ(dataPortion1Size, file->Size());
-		IContainerFile::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
 		EXPECT_EQ(1, fileUsage.streamsTotal);
 		EXPECT_EQ(1, fileUsage.streamsUsed);
 		EXPECT_EQ(clusterSize * 2, fileUsage.spaceAvailable);
@@ -33,7 +33,7 @@ TEST(H_FilesPartialWrite, NonTransactional_Success)
 		RewindStream(strm);
 		file->Write(strm, dataPortion1Size + dataPortion2Size);
 		EXPECT_EQ(dataPortion1Size + dataPortion2Size, file->Size());
-		IContainerFile::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
 		EXPECT_EQ(2, fileUsage.streamsTotal);
 		EXPECT_EQ(2, fileUsage.streamsUsed);
 		EXPECT_EQ(clusterSize * 3, fileUsage.spaceAvailable);
@@ -52,7 +52,7 @@ TEST(H_FilesPartialWrite, NonTransactional_Success)
 
 		file->Write(strm, dataPortion3Size);
 		EXPECT_EQ(dataPortion3Size, file->Size());
-		IContainerFile::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
 		EXPECT_EQ(2, fileUsage.streamsTotal);
 		EXPECT_EQ(1, fileUsage.streamsUsed);
 		EXPECT_EQ(clusterSize * 3, fileUsage.spaceAvailable);
@@ -117,9 +117,9 @@ TEST(H_FilesPartialWrite, NonTransactional_Fragmented)
 		RewindStream(strm2);
 		file2->Write(strm2, totalSize2);
 
-		IContainerFile::SpaceUsageInfo info1 = file1->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo info1 = file1->GetSpaceUsageInfo();
 		EXPECT_EQ(totalSize1, info1.spaceUsed);
-		IContainerFile::SpaceUsageInfo info2 = file2->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo info2 = file2->GetSpaceUsageInfo();
 		EXPECT_EQ(totalSize2, info2.spaceUsed);
 		EXPECT_EQ(info1.spaceAvailable, info2.spaceAvailable);
 		EXPECT_EQ(i + 1, info1.streamsTotal);
@@ -141,9 +141,9 @@ TEST(H_FilesPartialWrite, NonTransactional_Fragmented)
 	// Now files' streams should be reallocated: file 2 takes its own 5 streams and file1 takes 10 own streams + 5 streams fried by file2.
 	// Note, that its possible only if file2 is rewritten earlier than file1. In other case file1 will allocate 1 new stream.
 
-	IContainerFile::SpaceUsageInfo info1 = file1->GetSpaceUsageInfo();
+	ContainerFile::SpaceUsageInfo info1 = file1->GetSpaceUsageInfo();
 	EXPECT_EQ(newTotalSize1, info1.spaceUsed);
-	IContainerFile::SpaceUsageInfo info2 = file2->GetSpaceUsageInfo();
+	ContainerFile::SpaceUsageInfo info2 = file2->GetSpaceUsageInfo();
 	EXPECT_EQ(newTotalSize2, info2.spaceUsed);
 	EXPECT_NE(info1.spaceAvailable, info2.spaceAvailable);
 	uint64_t spaceAvailableBeforeTruncating = info1.spaceAvailable;
@@ -171,7 +171,7 @@ TEST(H_FilesPartialWrite, NonTransactional_Fragmented_StreamsTruncating)
 		file1->Write(strm1, dataPortion1Size);
 		RewindStream(strm1);
 		file1->Write(strm1, dataPortion1CuttedSize);
-		IContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
 		EXPECT_EQ(dataPortion1CuttedSize, info.spaceUsed);
 		EXPECT_EQ(clusterSize * 10, info.spaceAvailable);
 		EXPECT_EQ(1, info.streamsTotal);
@@ -184,7 +184,7 @@ TEST(H_FilesPartialWrite, NonTransactional_Fragmented_StreamsTruncating)
 	{
 		std::fstream strm1(CreateStream(dataPortion2Size));
 		file2->Write(strm1, dataPortion2Size);
-		IContainerFile::SpaceUsageInfo info = file2->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo info = file2->GetSpaceUsageInfo();
 		EXPECT_EQ(dataPortion2Size, info.spaceUsed); // < clusterSize * 4
 		EXPECT_EQ(clusterSize * 8, info.spaceAvailable);
 		EXPECT_EQ(1, info.streamsTotal);
@@ -193,7 +193,7 @@ TEST(H_FilesPartialWrite, NonTransactional_Fragmented_StreamsTruncating)
 	}
 
 	// Check first file
-	IContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
+	ContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
 	EXPECT_EQ(dataPortion1CuttedSize, info.spaceUsed);
 	EXPECT_EQ(clusterSize * 2, info.spaceAvailable);
 	EXPECT_EQ(1, info.streamsTotal);

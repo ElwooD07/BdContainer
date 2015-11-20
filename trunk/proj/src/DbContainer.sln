@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DbContainerLibTest", "DbCon
 		{8A02B5E0-57B1-4DC6-89AD-BC1B4B4BB929} = {8A02B5E0-57B1-4DC6-89AD-BC1B4B4BB929}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DbContainer", "DbContainer\DbContainer.vcxproj", "{B12702AD-ABFB-343A-A199-8E24837244A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -24,6 +26,10 @@ Global
 		{D7B83B8E-BF99-44C1-B579-8034D2A790FC}.Debug|Win32.Build.0 = Debug|Win32
 		{D7B83B8E-BF99-44C1-B579-8034D2A790FC}.Release|Win32.ActiveCfg = Release|Win32
 		{D7B83B8E-BF99-44C1-B579-8034D2A790FC}.Release|Win32.Build.0 = Release|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.Debug|Win32.Build.0 = Debug|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.Release|Win32.ActiveCfg = Release|Win32
+		{B12702AD-ABFB-343A-A199-8E24837244A3}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

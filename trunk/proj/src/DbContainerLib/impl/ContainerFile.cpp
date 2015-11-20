@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "ContainerFile.h"
 #include "FileStreamsManager.h"
+#include "Types.h"
+#include "Container.h"
 #include "SQLQuery.h"
 #include "ProxyProgressObserver.h"
 #include "ContainerException.h"
@@ -42,6 +44,9 @@ namespace
 dbc::ContainerFile::ContainerFile(ContainerResources resources, int64_t id)
 	: ContainerElement(resources, id), m_access(NoAccess)
 {	}
+
+dbc::ContainerFile::~ContainerFile()
+{ /*To avoid warning C4150*/}
 
 dbc::ContainerFile::ContainerFile(ContainerResources resources, int64_t parent_id, const std::string &name)
 	: ContainerElement(resources, parent_id, name), m_access(NoAccess)
@@ -207,9 +212,9 @@ void dbc::ContainerFile::Clear()
 	m_streamsManager->ReloadStreamsInfo();
 }
 
-dbc::IContainerFile::SpaceUsageInfo dbc::ContainerFile::GetSpaceUsageInfo()
+dbc::ContainerFile::SpaceUsageInfo dbc::ContainerFile::GetSpaceUsageInfo()
 {
-	IContainerFile::SpaceUsageInfo info;
+	SpaceUsageInfo info;
 	if (IsOpened())
 	{
 		m_streamsManager->ReloadStreamsInfo();

@@ -4,6 +4,7 @@
 #include "ContainerFile.h"
 #include "SQLQuery.h"
 #include "ContainerException.h"
+#include "IContainnerResources.h"
 
 using namespace dbc;
 

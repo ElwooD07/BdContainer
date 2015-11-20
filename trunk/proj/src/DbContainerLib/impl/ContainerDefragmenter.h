@@ -1,6 +1,7 @@
 #pragma once
 #include "IDefragProgressObserver.h"
 #include "IContainnerResources.h"
+#include "DataUsagePreferences.h"
 
 namespace dbc
 {

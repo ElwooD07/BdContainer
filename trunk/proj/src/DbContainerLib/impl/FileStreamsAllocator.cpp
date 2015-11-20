@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "IDataStorage.h"
 #include "FileStreamsAllocator.h"
 #include "FileStreamsManager.h"
 #include "SQLQuery.h"

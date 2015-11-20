@@ -3,7 +3,7 @@
 #include "SQLQuery.h"
 #include "ContainerException.h"
 #include "Logging.h"
-#include "Types.h"
+#include "TypesInternal.h"
 
 void dbc::detail::CreateNewSavepointName(std::string& name)
 {

@@ -1,0 +1,34 @@
+#pragma once
+#include "ContainerElement.h"
+#include "ElementsIterator.h"
+
+namespace dbc
+{
+	class Connection;
+
+	class ContainerFolder: public ContainerElement
+	{
+	public:
+		ContainerFolder(ContainerResources resources, int64_t id);
+		ContainerFolder(ContainerResources resources, int64_t parentId, const std::string& name);
+
+		virtual std::string Name(); // optimized for the root
+		virtual std::string Path(); // optimized for the root
+		virtual void Remove();
+		virtual void Rename(const std::string& newName);
+
+		ContainerFolderGuard Clone() const;
+		bool IsRoot() const;
+		bool HasChildren();
+		ContainerElementGuard GetChild(const std::string& name);
+		ContainerElementGuard CreateChild(const std::string& name, ElementType type, const std::string& tag = "");
+		ContainerFolderGuard CreateFolder(const std::string& name, const std::string& tag = "");
+		ContainerFileGuard CreateFile(const std::string& name, const std::string& tag = "");
+
+		DbcElementsIterator EnumFsEntries();
+
+	private:
+		Error RemoveFolder(Connection& owner, int64_t folderId); // Recursive
+		void CreateChildEntry(const std::string& name, ElementType type, const std::string& tag);
+	};
+}

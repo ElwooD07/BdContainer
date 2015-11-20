@@ -45,7 +45,7 @@ TEST(I_FilesPartialWrite, Transactional)
 		EXPECT_NE(dataPortion3Size, file->Size());
 		EXPECT_EQ(dataPortion1Size + dataPortion2Size, file->Size());
 
-		IContainerFile::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
 		EXPECT_EQ(dataPortion1Size + dataPortion2Size, fileUsage.spaceUsed);
 	}
 
@@ -77,7 +77,7 @@ TEST(I_FilesPartialWrite, Transactional_Fragmented)
 		file1->Write(strm1, dataPortion1Size);
 		EXPECT_EQ(dataPortion1Size, file1->Size());
 
-		IContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
 		EXPECT_EQ(dataPortion1Size, info.spaceUsed);
 		EXPECT_EQ(2, info.streamsTotal); // 1 stream from first write, 1 stream of 2 cluster from second one
 		EXPECT_EQ(1, info.streamsUsed); // stream from first write is unused after second transactional write
@@ -91,7 +91,7 @@ TEST(I_FilesPartialWrite, Transactional_Fragmented)
 		file2->Write(strm2, dataPortion2Size / 2); // rewrite first unused stream from file1
 		EXPECT_EQ(dataPortion2Size / 2, file2->Size());
 		// Check file2
-		IContainerFile::SpaceUsageInfo info = file2->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo info = file2->GetSpaceUsageInfo();
 		EXPECT_EQ(dataPortion2Size / 2, info.spaceUsed);
 		EXPECT_EQ(2, info.streamsTotal); // 2 streams from first write - first unused from file1 and one newly allocated
 		EXPECT_EQ(2, info.streamsUsed);
@@ -121,7 +121,7 @@ TEST(I_FilesPartialWrite, Transactional_Fragmented)
 		file3->Write(strm3, dataPortion3Size / 2); // rewrite two unused streams from file2
 		EXPECT_EQ(dataPortion3Size / 2, file3->Size());
 		// Check file3
-		IContainerFile::SpaceUsageInfo info = file3->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo info = file3->GetSpaceUsageInfo();
 		EXPECT_EQ(dataPortion3Size / 2, info.spaceUsed);
 		EXPECT_EQ(2, info.streamsTotal);
 		EXPECT_EQ(2, info.streamsUsed);
@@ -161,7 +161,7 @@ TEST(I_FilesPartialWrite, Transactional_Fragmented_StreamsTruncating)
 		file1->Write(strm1, dataPortion1Size);
 		RewindStream(strm1);
 		file1->Write(strm1, dataPortion1CuttedSize); // This operation shoud allocate new small stream and free first large stream
-		IContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo info = file1->GetSpaceUsageInfo();
 		EXPECT_EQ(dataPortion1CuttedSize, info.spaceUsed);
 		EXPECT_EQ(clusterSize * 12, info.spaceAvailable);
 		EXPECT_EQ(2, info.streamsTotal);
@@ -186,7 +186,7 @@ TEST(I_FilesPartialWrite, Transactional_Fragmented_StreamsTruncating)
 		// If allocated stream is large enough to meet fragmentation level requirements
 		// (see dbc::FileStreamsManager::FreeSpaceMeetsFragmentationLevelRequirements), the new stream is cutted from file2's stream.
 		// Cutted stream shoul be free and should be owned by file, which is cut this stream
-		IContainerFile::SpaceUsageInfo info = file3->GetSpaceUsageInfo();
+		ContainerFile::SpaceUsageInfo info = file3->GetSpaceUsageInfo();
 		EXPECT_EQ(dataPortion3Size, info.spaceUsed);
 		EXPECT_EQ(clusterSize * 8, info.spaceAvailable);
 		EXPECT_EQ(1, info.streamsTotal);
