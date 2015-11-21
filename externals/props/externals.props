@@ -9,6 +9,9 @@
     <sqlite_lib>$(ext)\SQLite\lib\$(Configuration)</sqlite_lib>
     <openssl_inc>$(ext)\openssl-1.0.1p\include</openssl_inc>
     <openssl_lib>$(ext)\openssl-1.0.1p\lib\$(Configuration)</openssl_lib>
+    <qt_inc>$(ext)\Qt\5.5\msvc2013\include</qt_inc>
+    <qt_bin>$(ext)\Qt\5.5\msvc2013\bin</qt_bin>
+    <qt_lib>$(ext)\Qt\5.5\msvc2013\lib</qt_lib>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup />
@@ -33,6 +36,15 @@
     </BuildMacro>
     <BuildMacro Include="openssl_lib">
       <Value>$(openssl_lib)</Value>
+    </BuildMacro>
+    <BuildMacro Include="qt_inc">
+      <Value>$(qt_inc)</Value>
+    </BuildMacro>
+    <BuildMacro Include="qt_bin">
+      <Value>$(qt_bin)</Value>
+    </BuildMacro>
+    <BuildMacro Include="qt_lib">
+      <Value>$(qt_lib)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>
