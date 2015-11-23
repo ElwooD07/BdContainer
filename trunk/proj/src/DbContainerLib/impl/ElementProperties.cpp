@@ -39,17 +39,6 @@ std::string dbc::ElementProperties::Tag() const
 	return m_tag;
 }
 
-void dbc::ElementProperties::SetSize(uint64_t new_size)
-{
-	m_size = new_size;
-}
-
-void dbc::ElementProperties::SetDateCreated(time_t new_date)
-{
-	m_date_created = new_date;
-	m_date_modified = new_date;
-}
-
 void dbc::ElementProperties::SetDateModified(time_t new_date)
 {
 	m_date_modified = new_date;
@@ -57,7 +46,7 @@ void dbc::ElementProperties::SetDateModified(time_t new_date)
 
 void dbc::ElementProperties::SetTag(const std::string& tag)
 {
-	std::string::const_iterator end = tag.length() > TAG_MAX_LEN ? tag.begin() + TAG_MAX_LEN : tag.end();
+	std::string::const_iterator end = tag.length() > s_MaxTagLength ? tag.begin() + s_MaxTagLength : tag.end();
 	m_tag.assign(tag.cbegin(), end);
 }
 
@@ -91,7 +80,7 @@ bool dbc::ElementProperties::ParseString(const std::string& props_str, ElementPr
 
 	std::string tag;
 	size_t len = 0;
-	for (std::vector<std::string>::const_iterator i = lst.begin() + 3; i != lst.cend(); ++i, len < TAG_MAX_LEN)
+	for (std::vector<std::string>::const_iterator i = lst.begin() + 3; i != lst.cend(); ++i, len < s_MaxTagLength)
 	{
 		tag.append((*i).begin(), (*i).end());
 		len += (*i).length();

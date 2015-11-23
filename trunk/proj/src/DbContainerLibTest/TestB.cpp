@@ -18,9 +18,9 @@ TEST(B_ContainerFuncTests, ElementProperties)
 	EXPECT_TRUE(ElementProperties::ParseString("0|asasas|342|", props_dummy));
 	EXPECT_TRUE(ElementProperties::ParseString("0||342|", props_dummy));
 	EXPECT_FALSE(ElementProperties::ParseString("0|342|", props_dummy));
-	std::string large_tag(ElementProperties::TAG_MAX_LEN + 10, '0');
+	std::string large_tag(ElementProperties::s_MaxTagLength+ 10, '0');
 	props.SetTag(large_tag);
-	EXPECT_EQ(std::string(ElementProperties::TAG_MAX_LEN, '0'), props.Tag());
+	EXPECT_EQ(std::string(ElementProperties::s_MaxTagLength, '0'), props.Tag());
 }
 
 TEST(B_ContainerFuncTests, GetRoot)

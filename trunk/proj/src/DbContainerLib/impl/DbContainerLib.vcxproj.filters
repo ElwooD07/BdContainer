@@ -114,7 +114,25 @@
     <ClInclude Include="TypesInternal.h">
       <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
-    <ClInclude Include="..\TypesPublic.h">
+    <ClInclude Include="..\ContainerElement.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ContainerFile.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ContainerFolder.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ContainerResources.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\IContainnerResources.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerResourcesImpl.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Types.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>

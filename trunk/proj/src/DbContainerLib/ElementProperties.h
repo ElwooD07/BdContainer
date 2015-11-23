@@ -14,15 +14,13 @@ namespace dbc
 		time_t DateModified() const;
 		std::string Tag() const;
 
-		void SetSize(uint64_t new_size);
-		void SetDateCreated(time_t new_date);
 		void SetDateModified(time_t new_date);
 		void SetTag(const std::string& tag);
 
 		bool operator==(const ElementProperties& obj) const;
 		bool operator!=(const ElementProperties& obj) const;
 		// The tag with length larger than this will be truncated to it
-		static const short int TAG_MAX_LEN = 200;
+		static const short int s_MaxTagLength = 10240; //10K
 
 		static bool ParseString(const std::string& props_str, ElementProperties& out_props);
 		static void MakeString(const ElementProperties& obj, std::string& out_wstr);

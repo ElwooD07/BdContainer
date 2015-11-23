@@ -106,7 +106,7 @@
     <ClInclude Include="..\IDefragProgressObserver.h" />
     <ClInclude Include="..\IProgressObserver.h" />
     <ClInclude Include="..\Iterator.h" />
-    <ClInclude Include="..\TypesPublic.h" />
+    <ClInclude Include="..\Types.h" />
     <ClInclude Include="Connection.h" />
     <ClInclude Include="Container.h" />
     <ClInclude Include="ContainerDefragmenter.h" />
