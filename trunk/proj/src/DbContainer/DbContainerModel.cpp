@@ -14,10 +14,23 @@ namespace
 	}
 }
 
-model::DbContainerModel::DbContainerModel(dbc::ContainerGuard container, QObject* parent /*= nullptr*/)
-	: m_container(container)
+model::DbContainerModel::DbContainerModel(QObject* parent /*= nullptr*/)
+	: QAbstractItemModel(parent)
+{ }
+
+model::DbContainerModel::~DbContainerModel()
 {
-	LoadRoot();
+	qDeleteAll(m_rootNodes);
+}
+
+void model::DbContainerModel::AddContainer(dbc::ContainerGuard container)
+{
+	m_containers.push_back(container);
+	int containerIndex = m_containers.size() - 1;
+	beginInsertRows(QModelIndex(), containerIndex, containerIndex);
+	dbc::ContainerFolderGuard root = container->GetRoot();
+	m_rootNodes.push_back(new TreeNode(nullptr, utils::StdString2QString(root->Path()), root));
+	endInsertRows();
 }
 
 QVariant model::DbContainerModel::data(const QModelIndex& index, int role) const
@@ -27,18 +40,18 @@ QVariant model::DbContainerModel::data(const QModelIndex& index, int role) const
 	{
 		if (role == Qt::DisplayRole)
 		{
-			return utils::StdString2QString(node->GetElement()->Name());
+			return GetDisplayData(node, index.row());
 		}
 	}
 	return QVariant();
 }
 
-bool model::DbContainerModel::hasChildren(const QModelIndex &parent/*= QModelIndex()*/) const
+bool model::DbContainerModel::hasChildren(const QModelIndex& parent /*= QModelIndex()*/) const
 {
 	TreeNode* node = Index2Node(parent);
 	if (node == nullptr) // For the root
 	{
-		return 1;
+		return !m_rootNodes.isEmpty();
 	}
 	bool showExpand = node->GetElement()->Type() == dbc::ElementTypeFolder;
 	if (node->wasLoaded && node->GetChildrenCount() == 0)
@@ -62,9 +75,16 @@ QModelIndex model::DbContainerModel::index(int row, int column, const QModelInde
 {
 	if (!parent.isValid()) // For the root
 	{
-		return createIndex(row, column, m_rootNode.get());
+		if (m_rootNodes.empty())
+		{
+			return QModelIndex();
+		}
+		else
+		{
+			return createIndex(row, column, m_rootNodes[row]);
+		}
 	}
-	TreeNode* parentNode = ParentIndex2Node(parent);
+	TreeNode* parentNode = ParentIndex2Node(parent, row);
 	assert(parentNode != nullptr);
 	TreeNode* childNode = parentNode->GetChild(row);
 	return createIndex(row, 0, childNode);
@@ -77,7 +97,16 @@ QModelIndex model::DbContainerModel::parent(const QModelIndex& index) const
 	{
 		return QModelIndex();
 	}
-	return createIndex(node->GetRow(), 0, const_cast<TreeNode*>(node->GetParent()));
+	TreeNode* parentNode = const_cast<TreeNode*>(node->GetParent());
+	int rootIndex = m_rootNodes.indexOf(parentNode);
+	if (rootIndex >= 0) // It is one of the root nodes
+	{
+		return createIndex(rootIndex, 0, parentNode);
+	}
+	else
+	{
+		return createIndex(node->GetRow(), 0, parentNode);
+	}
 }
 
 int model::DbContainerModel::rowCount(const QModelIndex& parent /*= QModelIndex()*/) const
@@ -85,7 +114,7 @@ int model::DbContainerModel::rowCount(const QModelIndex& parent /*= QModelIndex(
 	TreeNode* node = Index2Node(parent);
 	if (node == nullptr)  // For root
 	{
-		return 1;
+		return m_rootNodes.size();
 	}
 	else
 	{
@@ -101,18 +130,6 @@ int model::DbContainerModel::columnCount(const QModelIndex& parent /*= QModelInd
 void model::DbContainerModel::OnItemExpanded(const QModelIndex& index)
 {
 	LoadChildren(index);
-}
-
-void model::DbContainerModel::LoadRoot()
-{
-	assert(m_rootNode.get() == nullptr);
-	dbc::ContainerFolderGuard root = m_container->GetRoot();
-
-	beginInsertRows(QModelIndex(), 0, 0);
-	m_rootNode.reset(new TreeNode(nullptr, utils::StdString2QString(root->Path()), root));
-	endInsertRows();
-
-	LoadChildren(index(0, 0));
 }
 
 void model::DbContainerModel::LoadChildren(const QModelIndex& parent)
@@ -140,12 +157,24 @@ void model::DbContainerModel::LoadChildren(const QModelIndex& parent)
 	emit dataChanged(parent, parent);
 }
 
-model::TreeNode* model::DbContainerModel::ParentIndex2Node(const QModelIndex& parent) const
+QVariant model::DbContainerModel::GetDisplayData(model::TreeNode* node, int row) const
+{
+	if (node->GetElement()->Type() == dbc::ElementTypeFolder && node->GetElement()->AsFolder()->IsRoot())
+	{
+		return utils::StdString2QString(m_containers[row]->GetPath());
+	}
+	else
+	{
+		return utils::StdString2QString(node->GetElement()->Name());
+	}
+}
+
+model::TreeNode* model::DbContainerModel::ParentIndex2Node(const QModelIndex& parent, int row) const
 {
 	model::TreeNode* parentNode = Index2Node(parent);
 	if (parentNode == nullptr)
 	{
-		parentNode = m_rootNode.get();
+		parentNode = m_rootNodes[row];
 	}
 	return parentNode;
 }

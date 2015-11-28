@@ -89,14 +89,14 @@
     <ClCompile Include="ModelUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Widgets\ChooseContainerDialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_ChooseContainerDialog.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_ChooseContainerDialog.cpp">
       <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="Widgets\ChooseContainerDialog.cpp">
+      <Filter>Widgets</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -154,7 +154,7 @@
       <Filter>Form Files</Filter>
     </CustomBuild>
     <CustomBuild Include="Widgets\ChooseContainerDialog.h">
-      <Filter>Header Files</Filter>
+      <Filter>Widgets</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

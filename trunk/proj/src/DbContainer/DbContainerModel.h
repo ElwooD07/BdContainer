@@ -9,7 +9,10 @@ namespace model
 		Q_OBJECT
 
 	public:
-		explicit DbContainerModel(dbc::ContainerGuard container, QObject* parent = nullptr);
+		explicit DbContainerModel(QObject* parent = nullptr);
+		~DbContainerModel();
+
+		void AddContainer(dbc::ContainerGuard container);
 
 		virtual QVariant data(const QModelIndex& index, int role) const;
 		virtual bool hasChildren(const QModelIndex &parent = QModelIndex()) const;
@@ -24,14 +27,15 @@ namespace model
 		void OnItemExpanded(const QModelIndex& index);
 
 	private:
-		void LoadRoot();
 		void LoadChildren(const QModelIndex& parent);
 
-		model::TreeNode* ParentIndex2Node(const QModelIndex& parent) const;
+		QVariant GetDisplayData(model::TreeNode* node, int row) const;
+
+		model::TreeNode* ParentIndex2Node(const QModelIndex& parent, int row) const;
 
 	private:
-		dbc::ContainerGuard m_container;
-		std::auto_ptr<TreeNode> m_rootNode;
+		QVector<dbc::ContainerGuard> m_containers;
+		QVector<TreeNode*> m_rootNodes;
 	};
 }
 

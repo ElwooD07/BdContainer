@@ -13,10 +13,12 @@ namespace gui
 		MainWindow();
 
 	private slots:
-		void OnOpenTriggered();
+		void OnContainerOpenTriggered();
+		void OnContainerCreateTriggered();
 
 	private:
 		void InitMainControls();
+		void ContainerOpenOrCreate(bool open);
 
 	private:
 		Ui::MainWindow m_ui;

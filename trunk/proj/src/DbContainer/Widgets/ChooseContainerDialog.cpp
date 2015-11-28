@@ -16,11 +16,6 @@ dbc::ContainerGuard gui::ChooseContainerDialog::GetContainer()
 	return m_container;
 }
 
-QString gui::ChooseContainerDialog::GetChosenPath()
-{
-	return m_ui.txtPath->text();
-}
-
 void gui::ChooseContainerDialog::on_btnBrowse_clicked()
 {
 	QString path;
@@ -42,13 +37,15 @@ void gui::ChooseContainerDialog::on_btnProceed_clicked()
 {
 	try
 	{
+		std::string path = m_ui.txtPath->text().toStdString();
+		std::string password = m_ui.txtPassword->text().toStdString();
 		if (m_action == ActionOpen)
 		{
-			m_container = dbc::Connect(m_ui.txtPath->text().toStdString(), m_ui.txtPassword->text().toStdString());
+			m_container = dbc::Connect(path, password);
 		}
 		else
 		{
-			m_container = dbc::CreateContainer(m_ui.txtPath->text().toStdString(), m_ui.txtPassword->text().toStdString());
+			m_container = dbc::CreateContainer(path, password);
 		}
 		accept();
 	}

@@ -17,7 +17,6 @@ namespace gui
 
 		ChooseContainerDialog(QWidget* parent, ActionType action);
 		dbc::ContainerGuard GetContainer();
-		QString GetChosenPath();
 
 	private slots:
 		void on_btnBrowse_clicked();

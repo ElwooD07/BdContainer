@@ -13,14 +13,14 @@ gui::MainWindow::MainWindow()
 	InitMainControls();
 }
 
-void gui::MainWindow::OnOpenTriggered()
+void gui::MainWindow::OnContainerOpenTriggered()
 {
-	ChooseContainerDialog dialog(this, ChooseContainerDialog::ActionOpen);
-	int res = dialog.exec();
-	if (res == QDialog::Accepted)
-	{
-		m_fsTreeWidget->AddContainer(dialog.GetContainer());
-	}
+	ContainerOpenOrCreate(true);
+}
+
+void gui::MainWindow::OnContainerCreateTriggered()
+{
+	ContainerOpenOrCreate(false);
 }
 
 void gui::MainWindow::InitMainControls()
@@ -37,5 +37,17 @@ void gui::MainWindow::InitMainControls()
 	mainLayout->addWidget(splitter);
 	m_ui.centralWidget->setLayout(mainLayout);
 
-	connect(m_ui.actionContainerOpen, &QAction::triggered, this, &MainWindow::OnOpenTriggered);
+	connect(m_ui.actionContainerOpen, &QAction::triggered, this, &MainWindow::OnContainerOpenTriggered);
+	connect(m_ui.actionContainerCreate, &QAction::triggered, this, &MainWindow::OnContainerCreateTriggered);
+}
+
+void gui::MainWindow::ContainerOpenOrCreate(bool open)
+{
+	ChooseContainerDialog::ActionType action = open ? ChooseContainerDialog::ActionOpen : ChooseContainerDialog::ActionCreate;
+	ChooseContainerDialog dialog(this, action);
+	int res = dialog.exec();
+	if (res == QDialog::Accepted)
+	{
+		m_fsTreeWidget->AddContainer(dialog.GetContainer());
+	}
 }

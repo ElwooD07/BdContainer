@@ -178,6 +178,11 @@ void dbc::Container::ResetPassword(const std::string& newPassword)
 	m_storage->ResetPassword(newPassword);
 }
 
+std::string dbc::Container::GetPath() const
+{
+	return m_dbFile;
+}
+
 dbc::ContainerFolderGuard dbc::Container::GetRoot()
 {
 	return ContainerFolderGuard(new ContainerFolder(m_resources, ROOT_ID));
@@ -232,7 +237,7 @@ ContainerInfo dbc::Container::GetInfo()
 	return ContainerInfo(new ContainerInfoImpl(m_resources));
 }
 
-dbc::DataUsagePreferences dbc::Container::GetDataUsagePreferences()
+dbc::DataUsagePreferences dbc::Container::GetDataUsagePreferences() const
 {
 	return m_dataUsagePrefs;
 }

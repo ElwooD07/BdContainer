@@ -43,6 +43,7 @@ namespace
 			dbc::RawData trash(trashLen, '\0');
 			dbc::crypto::utils::RandomSequence(dbc::crypto::utils::GetSeed(dbc::crypto::utils::StringToRawData(password)), trash);
 			out.write(reinterpret_cast<const char*>(trash.data()), trash.size());
+			out.flush();
 		}
 		if (out.rdstate() != std::ios_base::goodbit)
 		{

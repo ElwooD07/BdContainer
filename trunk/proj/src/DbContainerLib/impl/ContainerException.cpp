@@ -51,7 +51,7 @@ std::string dbc::ContainerException::Reason() const
 std::string dbc::ContainerException::FullMessage() const
 {
 	std::stringstream stream;
-	stream << "Exception: " << what();
+	stream << "Error: " << what();
 	if (m_reason_type != SUCCESS && m_reason_type != ERR_UNDEFINED)
 		stream << "; reason: " << m_reason;
 	return std::move(stream.str());

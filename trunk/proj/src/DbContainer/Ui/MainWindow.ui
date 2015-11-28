@@ -32,7 +32,31 @@
     <addaction name="separator"/>
     <addaction name="actionInfo"/>
    </widget>
+   <widget class="QMenu" name="menuTree">
+    <property name="title">
+     <string>Tree</string>
+    </property>
+    <addaction name="actionAdd_folder"/>
+    <addaction name="actionAdd_file"/>
+    <addaction name="actionRemove"/>
+    <addaction name="separator"/>
+    <addaction name="actionCollapse"/>
+    <addaction name="actionExpand"/>
+   </widget>
+   <widget class="QMenu" name="menuElement">
+    <property name="title">
+     <string>Element</string>
+    </property>
+    <addaction name="actionInfo_2"/>
+    <addaction name="actionAdd_content"/>
+    <addaction name="actionErase_2"/>
+    <addaction name="actionErase_3"/>
+    <addaction name="separator"/>
+    <addaction name="actionInfo_3"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuTree"/>
+   <addaction name="menuElement"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -60,6 +84,66 @@
   <action name="actionInfo">
    <property name="text">
     <string>&amp;Info...</string>
+   </property>
+  </action>
+  <action name="actionAdd_folder">
+   <property name="text">
+    <string>Add folder</string>
+   </property>
+  </action>
+  <action name="actionAdd_file">
+   <property name="text">
+    <string>Add file</string>
+   </property>
+  </action>
+  <action name="actionRemove">
+   <property name="text">
+    <string>Remove</string>
+   </property>
+  </action>
+  <action name="actionCollapse">
+   <property name="text">
+    <string>Collapse</string>
+   </property>
+  </action>
+  <action name="actionExpand">
+   <property name="text">
+    <string>Expand</string>
+   </property>
+  </action>
+  <action name="actionInfo_2">
+   <property name="text">
+    <string>Rename</string>
+   </property>
+  </action>
+  <action name="actionAdd_content">
+   <property name="text">
+    <string>Add content...</string>
+   </property>
+  </action>
+  <action name="actionErase">
+   <property name="text">
+    <string>Erase</string>
+   </property>
+  </action>
+  <action name="actionErase_2">
+   <property name="text">
+    <string>Export...</string>
+   </property>
+  </action>
+  <action name="actionExposrt">
+   <property name="text">
+    <string>Exposrt...</string>
+   </property>
+  </action>
+  <action name="actionErase_3">
+   <property name="text">
+    <string>Erase</string>
+   </property>
+  </action>
+  <action name="actionInfo_3">
+   <property name="text">
+    <string>Info...</string>
    </property>
   </action>
  </widget>

@@ -2,6 +2,11 @@
 #include "ui_FsTreeWidget.h"
 #include "ContainerAPI.h"
 
+namespace model
+{
+	class DbContainerModel;
+}
+
 namespace gui
 {
 	class FsTreeWidget: public QWidget
@@ -14,6 +19,7 @@ namespace gui
 
 	private:
 		Ui::FsTreeWidget m_ui;
+		model::DbContainerModel* m_model;
 	};
 
 }
