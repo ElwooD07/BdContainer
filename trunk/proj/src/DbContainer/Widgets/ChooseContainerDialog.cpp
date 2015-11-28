@@ -7,6 +7,7 @@ gui::ChooseContainerDialog::ChooseContainerDialog(QWidget* parent, ActionType ac
 	, m_action(action)
 {
 	m_ui.setupUi(this);
+	setWindowTitle(action == ActionOpen ? tr("Open container") : tr("Create container"));
 	m_ui.btnProceed->setText(action == ActionOpen ? tr("Open") : tr("Create"));
 	on_txtPath_textChanged();
 }
@@ -21,11 +22,11 @@ void gui::ChooseContainerDialog::on_btnBrowse_clicked()
 	QString path;
 	if (m_action == ActionOpen)
 	{
-		path = QFileDialog::getOpenFileName(this, tr("Open container"), qApp->applicationDirPath(), tr("All files (%1)").arg("*.*", 1));
+		path = QFileDialog::getOpenFileName(this, windowTitle(), qApp->applicationDirPath(), tr("All files (%1)").arg("*.*", 1));
 	}
 	else
 	{
-		path = QFileDialog::getSaveFileName(this, tr("Create container"), qApp->applicationDirPath(), tr("DataBase files (%1)").arg("*.db", 1));
+		path = QFileDialog::getSaveFileName(this, windowTitle(), qApp->applicationDirPath(), tr("DataBase files (%1)").arg("*.db", 1));
 	}
 	if (!path.isEmpty())
 	{

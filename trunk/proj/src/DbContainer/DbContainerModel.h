@@ -9,6 +9,12 @@ namespace model
 		Q_OBJECT
 
 	public:
+		enum DbContainerModelDataRoles
+		{
+			RoleName = Qt::UserRole
+		};
+
+	public:
 		explicit DbContainerModel(QObject* parent = nullptr);
 		~DbContainerModel();
 
@@ -23,13 +29,19 @@ namespace model
 		virtual int rowCount(const QModelIndex& parent = QModelIndex()) const;
 		virtual int columnCount(const QModelIndex& parent = QModelIndex()) const;
 
+		virtual bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole);
+
+	signals:
+		void ShowMessage(const QString& message, const QString& title, QMessageBox::Icon type);
+
 	public slots:
 		void OnItemExpanded(const QModelIndex& index);
 
 	private:
 		void LoadChildren(const QModelIndex& parent);
-
 		QVariant GetDisplayData(model::TreeNode* node, int row) const;
+
+		void SetNodeName(const QModelIndex& index, const QString& name);
 
 		model::TreeNode* ParentIndex2Node(const QModelIndex& parent, int row) const;
 

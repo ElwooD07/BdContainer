@@ -36,21 +36,20 @@
     <property name="title">
      <string>Tree</string>
     </property>
-    <addaction name="actionAdd_folder"/>
-    <addaction name="actionAdd_file"/>
-    <addaction name="actionRemove"/>
-    <addaction name="separator"/>
     <addaction name="actionCollapse"/>
     <addaction name="actionExpand"/>
+    <addaction name="separator"/>
+    <addaction name="actionAdd_folder"/>
+    <addaction name="actionAdd_file"/>
    </widget>
    <widget class="QMenu" name="menuElement">
     <property name="title">
      <string>Element</string>
     </property>
-    <addaction name="actionInfo_2"/>
-    <addaction name="actionAdd_content"/>
+    <addaction name="actionElementRename"/>
+    <addaction name="actionElementAddContent"/>
     <addaction name="actionErase_2"/>
-    <addaction name="actionErase_3"/>
+    <addaction name="actionElementDelete"/>
     <addaction name="separator"/>
     <addaction name="actionInfo_3"/>
    </widget>
@@ -111,12 +110,12 @@
     <string>Expand</string>
    </property>
   </action>
-  <action name="actionInfo_2">
+  <action name="actionElementRename">
    <property name="text">
     <string>Rename</string>
    </property>
   </action>
-  <action name="actionAdd_content">
+  <action name="actionElementAddContent">
    <property name="text">
     <string>Add content...</string>
    </property>
@@ -136,14 +135,19 @@
     <string>Exposrt...</string>
    </property>
   </action>
-  <action name="actionErase_3">
+  <action name="actionElementDelete">
    <property name="text">
-    <string>Erase</string>
+    <string>Delete</string>
    </property>
   </action>
   <action name="actionInfo_3">
    <property name="text">
     <string>Info...</string>
+   </property>
+  </action>
+  <action name="actionRename">
+   <property name="text">
+    <string>Rename...</string>
    </property>
   </action>
  </widget>

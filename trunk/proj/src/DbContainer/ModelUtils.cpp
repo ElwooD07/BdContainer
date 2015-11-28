@@ -7,6 +7,11 @@ QString model::utils::StdString2QString(const std::string& stdString)
 	return std::move(QString::fromUtf8(stdString.c_str(), stdString.size()));
 }
 
+std::string model::utils::QString2StdString(const QString& str)
+{
+	return std::move(std::string(str.toUtf8().constData()));
+}
+
 QString model::utils::SlashedPath(const QString& path)
 {
 	QString res(path);

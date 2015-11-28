@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "DbContainerModel.h"
 #include "ModelUtils.h"
+#include "ContainerException.h"
 
 namespace
 {
@@ -11,6 +12,18 @@ namespace
 			return nullptr;
 		}
 		return static_cast<model::TreeNode*>(index.internalPointer());
+	}
+
+#define DBC_MODEL_TRY(actionStr) const QString titleStr(actionStr); \
+	try {
+#define DBC_MODEL_CATCH } \
+	catch (const dbc::ContainerException& ex) \
+	{ \
+		emit ShowMessage(model::utils::StdString2QString(ex.FullMessage()), titleStr, QMessageBox::Warning); \
+	} \
+	catch(const std::exception& ex) \
+	{ \
+		emit ShowMessage(model::utils::StdString2QString(ex.what()), titleStr, QMessageBox::Critical); \
 	}
 }
 
@@ -75,14 +88,7 @@ QModelIndex model::DbContainerModel::index(int row, int column, const QModelInde
 {
 	if (!parent.isValid()) // For the root
 	{
-		if (m_rootNodes.empty())
-		{
-			return QModelIndex();
-		}
-		else
-		{
-			return createIndex(row, column, m_rootNodes[row]);
-		}
+		return m_rootNodes.empty() ? QModelIndex() : createIndex(row, column, m_rootNodes[row]);
 	}
 	TreeNode* parentNode = ParentIndex2Node(parent, row);
 	assert(parentNode != nullptr);
@@ -98,33 +104,39 @@ QModelIndex model::DbContainerModel::parent(const QModelIndex& index) const
 		return QModelIndex();
 	}
 	TreeNode* parentNode = const_cast<TreeNode*>(node->GetParent());
+	// It is one of the root nodes, set its row as the index of the roots vector
 	int rootIndex = m_rootNodes.indexOf(parentNode);
-	if (rootIndex >= 0) // It is one of the root nodes
-	{
-		return createIndex(rootIndex, 0, parentNode);
-	}
-	else
-	{
-		return createIndex(node->GetRow(), 0, parentNode);
-	}
+	return createIndex(rootIndex >= 0 ? rootIndex : node->GetRow(), 0, parentNode);
 }
 
 int model::DbContainerModel::rowCount(const QModelIndex& parent /*= QModelIndex()*/) const
 {
 	TreeNode* node = Index2Node(parent);
-	if (node == nullptr)  // For root
-	{
-		return m_rootNodes.size();
-	}
-	else
-	{
-		return node->GetChildrenCount();
-	}
+	// Check for root
+	return (node == nullptr) ? m_rootNodes.size() : node->GetChildrenCount();
 }
 
 int model::DbContainerModel::columnCount(const QModelIndex& parent /*= QModelIndex()*/) const
 {
 	return 1;
+}
+
+bool model::DbContainerModel::setData(const QModelIndex& index, const QVariant& value, int role /*= Qt::EditRole*/)
+{
+	TreeNode* node = Index2Node(index);
+	if (node != nullptr)
+	{
+		switch (role)
+		{
+		case RoleName:
+			SetNodeName(index, value.toString());
+			break;
+		default:
+			return QAbstractItemModel::setData(index, value, role);
+		}
+		return true;
+	}
+	return false;
 }
 
 void model::DbContainerModel::OnItemExpanded(const QModelIndex& index)
@@ -167,6 +179,17 @@ QVariant model::DbContainerModel::GetDisplayData(model::TreeNode* node, int row)
 	{
 		return utils::StdString2QString(node->GetElement()->Name());
 	}
+}
+
+void model::DbContainerModel::SetNodeName(const QModelIndex& index, const QString& name)
+{
+	DBC_MODEL_TRY(tr("Set element name"));
+	TreeNode* node = Index2Node(index);
+	assert(node != nullptr);
+	node->GetElement()->Rename(utils::QString2StdString(name));
+	node->RefreshPath();
+	emit dataChanged(index, index);
+	DBC_MODEL_CATCH;
 }
 
 model::TreeNode* model::DbContainerModel::ParentIndex2Node(const QModelIndex& parent, int row) const
