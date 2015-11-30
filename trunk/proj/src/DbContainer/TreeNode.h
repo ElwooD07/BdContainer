@@ -12,14 +12,17 @@ namespace model
 		TreeNode(const TreeNode* parent, const QString& parentPath, dbc::ContainerElementGuard element);
 		~TreeNode();
 
-		void RefreshPath(const QString& newParentPath = "");
-		void AddChild(dbc::ContainerElementGuard child);
-		void ChangeParent(const TreeNode* newParent);
-		TreeNode* GetChild(int row);
-		int GetChildrenCount() const;
 		const dbc::ContainerElementGuard GetElement() const;
 		const TreeNode* GetParent() const;
 		int GetRow() const;
+
+		void RefreshPath(const QString& newParentPath = "");
+		void ChangeParent(const TreeNode* newParent);
+
+		TreeNode* GetChild(int row);
+		int GetChildrenCount() const;
+		void AddChild(dbc::ContainerElementGuard child);
+		void RemoveChild(int row);
 
 		bool operator<(const TreeNode& node) const;
 		bool operator==(const TreeNode& node) const;

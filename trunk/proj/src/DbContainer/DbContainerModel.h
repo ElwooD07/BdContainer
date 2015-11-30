@@ -11,7 +11,8 @@ namespace model
 	public:
 		enum DbContainerModelDataRoles
 		{
-			RoleName = Qt::UserRole
+			ItemNameRole = Qt::UserRole,
+			ItemTypeRole
 		};
 
 	public:
@@ -30,9 +31,11 @@ namespace model
 		virtual int columnCount(const QModelIndex& parent = QModelIndex()) const;
 
 		virtual bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole);
+		virtual bool removeRows(int row, int count, const QModelIndex& parent = QModelIndex());
+		virtual bool removeRow(int arow, const QModelIndex& aparent);
 
 	signals:
-		void ShowMessage(const QString& message, const QString& title, QMessageBox::Icon type);
+		void ShowMessage(const QString& message, const QString& title, QMessageBox::Icon type) const;
 
 	public slots:
 		void OnItemExpanded(const QModelIndex& index);
@@ -42,6 +45,7 @@ namespace model
 		QVariant GetDisplayData(model::TreeNode* node, int row) const;
 
 		void SetNodeName(const QModelIndex& index, const QString& name);
+		void RemoveItem(TreeNode* parent, int row);
 
 		model::TreeNode* ParentIndex2Node(const QModelIndex& parent, int row) const;
 
@@ -51,3 +55,4 @@ namespace model
 	};
 }
 
+Q_DECLARE_METATYPE(dbc::ElementType);

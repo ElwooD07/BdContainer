@@ -25,16 +25,15 @@ void gui::MainWindow::OnContainerCreateTriggered()
 	ContainerOpenOrCreate(false);
 }
 
-void gui::MainWindow::OnElementRenameTriggered()
+void gui::MainWindow::ShowMessage(const QString& message, const QString& title /*= ""*/, QMessageBox::Icon icon /*= QMessageBox::Information*/) const
 {
-	m_fsTreeWidget->RenameCurrentItem();
+	ShowMessageDialog(message, title, icon, QMessageBox::NoButton);
 }
 
-void gui::MainWindow::OnShowMessage(const QString& message, const QString& title /*= ""*/, QMessageBox::Icon icon /*= QMessageBox::Information*/)
+QMessageBox::StandardButton gui::MainWindow::ShowQuestion(const QString& message, const QString& title /*= ""*/, QMessageBox::StandardButtons buttons /*= QMessageBox::Yes | QMessageBox::No*/) const
 {
-	const QString newTitle = title.isEmpty() ? windowTitle() : title;
-	QMessageBox box(icon, newTitle, message);
-	box.exec();
+	assert(buttons != QMessageBox::NoButton);
+	return ShowMessageDialog(message, title, QMessageBox::Question, buttons);
 }
 
 void gui::MainWindow::InitMainControls()
@@ -56,7 +55,11 @@ void gui::MainWindow::InitActions()
 {
 	connect(m_ui.actionContainerOpen, &QAction::triggered, this, &MainWindow::OnContainerOpenTriggered);
 	connect(m_ui.actionContainerCreate, &QAction::triggered, this, &MainWindow::OnContainerCreateTriggered);
-	connect(m_ui.actionElementRename, &QAction::triggered, this, &MainWindow::OnElementRenameTriggered);
+	m_ui.actionContainerOpen->setShortcut(Qt::CTRL | Qt::Key_O);
+	m_ui.actionContainerCreate->setShortcut(Qt::CTRL | Qt::Key_N);
+
+	m_ui.menuBar->addMenu(m_fsTreeWidget->GetTreeMenu());
+	m_ui.menuBar->addMenu(m_fsTreeWidget->GetElementMenu());
 }
 
 void gui::MainWindow::ContainerOpenOrCreate(bool open)
@@ -68,4 +71,11 @@ void gui::MainWindow::ContainerOpenOrCreate(bool open)
 	{
 		m_fsTreeWidget->AddContainer(dialog.GetContainer());
 	}
+}
+
+QMessageBox::StandardButton gui::MainWindow::ShowMessageDialog(const QString& message, const QString& title, QMessageBox::Icon icon, QMessageBox::StandardButtons buttons) const
+{
+	const QString newTitle = title.isEmpty() ? windowTitle() : title;
+	QMessageBox box(icon, newTitle, message, buttons);
+	return static_cast<QMessageBox::StandardButton>(box.exec());
 }

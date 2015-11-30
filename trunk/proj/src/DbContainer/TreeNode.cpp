@@ -36,6 +36,13 @@ void model::TreeNode::AddChild(dbc::ContainerElementGuard child)
 	m_children.push_back(new TreeNode(this, m_path, child));
 }
 
+void model::TreeNode::RemoveChild(int row)
+{
+	m_children[row]->GetElement()->Remove();
+	delete m_children[row];
+	m_children.erase(m_children.begin() + row);
+}
+
 void model::TreeNode::ChangeParent(const TreeNode* newParent)
 {
 	assert(newParent != nullptr);

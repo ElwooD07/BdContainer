@@ -26,3 +26,8 @@ QString model::utils::SlashedPath(const std::string& path)
 {
 	return SlashedPath(StdString2QString(path));
 }
+
+bool model::utils::IsItemEditable(const QModelIndex& index)
+{
+	return (index.isValid() && (index.flags() & Qt::ItemIsEditable) == Qt::ItemIsEditable);
+}

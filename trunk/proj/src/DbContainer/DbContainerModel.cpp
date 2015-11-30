@@ -51,9 +51,15 @@ QVariant model::DbContainerModel::data(const QModelIndex& index, int role) const
 	TreeNode* node = Index2Node(index);
 	if (node != nullptr)
 	{
-		if (role == Qt::DisplayRole)
+		switch (role)
 		{
+		case Qt::DisplayRole:
+		case ItemNameRole:
 			return GetDisplayData(node, index.row());
+		case ItemTypeRole:
+			return QVariant::fromValue(node->GetElement()->Type());
+		default:
+			return QVariant();
 		}
 	}
 	return QVariant();
@@ -76,7 +82,13 @@ bool model::DbContainerModel::hasChildren(const QModelIndex& parent /*= QModelIn
 
 Qt::ItemFlags model::DbContainerModel::flags(const QModelIndex& index) const
 {
-	return QAbstractItemModel::flags(index);
+	int flags = QAbstractItemModel::flags(index);
+	TreeNode* node = Index2Node(index);
+	if (node != nullptr && node->GetParent() != nullptr)
+	{
+		flags |= Qt::ItemIsEditable;
+	}
+	return flags;
 }
 
 QVariant model::DbContainerModel::headerData(int section, Qt::Orientation orientation, int role /*= Qt::DisplayRole*/) const
@@ -128,7 +140,7 @@ bool model::DbContainerModel::setData(const QModelIndex& index, const QVariant& 
 	{
 		switch (role)
 		{
-		case RoleName:
+		case ItemNameRole:
 			SetNodeName(index, value.toString());
 			break;
 		default:
@@ -137,6 +149,31 @@ bool model::DbContainerModel::setData(const QModelIndex& index, const QVariant& 
 		return true;
 	}
 	return false;
+}
+
+bool model::DbContainerModel::removeRows(int row, int count, const QModelIndex& parent /*= QModelIndex()*/)
+{
+	int endRow = row + count - 1;
+	if (row >= 0 && count > 0 && endRow < rowCount(parent))
+	{
+		beginRemoveRows(parent, row, endRow);
+		TreeNode* parentNode = Index2Node(parent);
+		for (int i = row; i <= endRow; ++i)
+		{
+			DBC_MODEL_TRY(tr("Remove element"));
+			RemoveItem(parentNode, i);
+			DBC_MODEL_CATCH;
+		}
+		endRemoveRows();
+
+		return true;
+	}
+	return false;
+}
+
+bool model::DbContainerModel::removeRow(int arow, const QModelIndex& aparent)
+{
+	return removeRows(arow, 1, aparent);
 }
 
 void model::DbContainerModel::OnItemExpanded(const QModelIndex& index)
@@ -171,6 +208,7 @@ void model::DbContainerModel::LoadChildren(const QModelIndex& parent)
 
 QVariant model::DbContainerModel::GetDisplayData(model::TreeNode* node, int row) const
 {
+	DBC_MODEL_TRY(tr("Get element name"));
 	if (node->GetElement()->Type() == dbc::ElementTypeFolder && node->GetElement()->AsFolder()->IsRoot())
 	{
 		return utils::StdString2QString(m_containers[row]->GetPath());
@@ -179,6 +217,8 @@ QVariant model::DbContainerModel::GetDisplayData(model::TreeNode* node, int row)
 	{
 		return utils::StdString2QString(node->GetElement()->Name());
 	}
+	DBC_MODEL_CATCH;
+	return QVariant();
 }
 
 void model::DbContainerModel::SetNodeName(const QModelIndex& index, const QString& name)
@@ -190,6 +230,20 @@ void model::DbContainerModel::SetNodeName(const QModelIndex& index, const QStrin
 	node->RefreshPath();
 	emit dataChanged(index, index);
 	DBC_MODEL_CATCH;
+}
+
+void model::DbContainerModel::RemoveItem(TreeNode* parent, int row)
+{
+	if (parent == nullptr)
+	{
+		m_rootNodes[row]->GetElement()->Remove();
+		delete m_rootNodes[row];
+		m_rootNodes.erase(m_rootNodes.begin() + row);
+	}
+	else
+	{
+		parent->RemoveChild(row);
+	}
 }
 
 model::TreeNode* model::DbContainerModel::ParentIndex2Node(const QModelIndex& parent, int row) const

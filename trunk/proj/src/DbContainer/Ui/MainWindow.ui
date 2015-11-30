@@ -32,30 +32,7 @@
     <addaction name="separator"/>
     <addaction name="actionInfo"/>
    </widget>
-   <widget class="QMenu" name="menuTree">
-    <property name="title">
-     <string>Tree</string>
-    </property>
-    <addaction name="actionCollapse"/>
-    <addaction name="actionExpand"/>
-    <addaction name="separator"/>
-    <addaction name="actionAdd_folder"/>
-    <addaction name="actionAdd_file"/>
-   </widget>
-   <widget class="QMenu" name="menuElement">
-    <property name="title">
-     <string>Element</string>
-    </property>
-    <addaction name="actionElementRename"/>
-    <addaction name="actionElementAddContent"/>
-    <addaction name="actionErase_2"/>
-    <addaction name="actionElementDelete"/>
-    <addaction name="separator"/>
-    <addaction name="actionInfo_3"/>
-   </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuTree"/>
-   <addaction name="menuElement"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">

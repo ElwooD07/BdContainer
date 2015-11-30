@@ -6,8 +6,11 @@ namespace gui
 	{
 		Q_OBJECT;
 
-	public slots :
-		virtual void OnShowMessage(const QString& message, const QString& title = "", QMessageBox::Icon icon = QMessageBox::Information) = 0;
+	public:
+		virtual QMessageBox::StandardButton ShowQuestion(const QString& message, const QString& title = "", QMessageBox::StandardButtons buttons = QMessageBox::Yes | QMessageBox::No) const = 0;
+
+	public slots:
+		virtual void ShowMessage(const QString& message, const QString& title = "", QMessageBox::Icon icon = QMessageBox::Information) const = 0;
 
 	protected:
 		MainWindowView(QWidget* parent, Qt::WindowFlags flags)
