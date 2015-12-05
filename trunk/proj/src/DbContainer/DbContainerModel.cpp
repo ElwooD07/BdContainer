@@ -46,6 +46,23 @@ void model::DbContainerModel::AddContainer(dbc::ContainerGuard container)
 	endInsertRows();
 }
 
+dbc::ContainerGuard model::DbContainerModel::GetContainerByIndex(const QModelIndex& index)
+{
+	QModelIndex currentIndex = index;
+	int row = -1;
+	while (currentIndex.isValid())
+	{
+		row = currentIndex.row();
+		currentIndex = currentIndex.parent();
+	}
+	if (row >= 0)
+	{
+		assert(row < m_containers.size());
+		return m_containers[row];
+	}
+	return dbc::ContainerGuard(0);
+}
+
 QVariant model::DbContainerModel::data(const QModelIndex& index, int role) const
 {
 	TreeNode* node = Index2Node(index);

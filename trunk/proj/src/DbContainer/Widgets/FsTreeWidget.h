@@ -17,6 +17,7 @@ namespace gui
 	public:
 		explicit FsTreeWidget(QWidget* parent, MainWindowView* mainWindow);
 		void AddContainer(dbc::ContainerGuard container);
+		dbc::ContainerGuard GetSelectedContainer();
 
 		QMenu* GetTreeMenu();
 		QMenu* GetElementMenu();

@@ -29,6 +29,11 @@ void gui::FsTreeWidget::AddContainer(dbc::ContainerGuard container)
 	m_model->AddContainer(container);
 }
 
+dbc::ContainerGuard gui::FsTreeWidget::GetSelectedContainer()
+{
+	return m_model->GetContainerByIndex(m_ui.treeFs->currentIndex());
+}
+
 QMenu* gui::FsTreeWidget::GetTreeMenu()
 {
 	assert(m_menuTree != nullptr);

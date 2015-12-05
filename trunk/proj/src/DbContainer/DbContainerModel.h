@@ -20,6 +20,7 @@ namespace model
 		~DbContainerModel();
 
 		void AddContainer(dbc::ContainerGuard container);
+		virtual dbc::ContainerGuard GetContainerByIndex(const QModelIndex& index);
 
 		virtual QVariant data(const QModelIndex& index, int role) const;
 		virtual bool hasChildren(const QModelIndex &parent = QModelIndex()) const;

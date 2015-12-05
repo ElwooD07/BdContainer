@@ -25,6 +25,19 @@ void gui::MainWindow::OnContainerCreateTriggered()
 	ContainerOpenOrCreate(false);
 }
 
+void gui::MainWindow::OnContainerInfoClicked()
+{
+	dbc::ContainerGuard selectedContainer = m_fsTreeWidget->GetSelectedContainer();
+	if (selectedContainer.get() != nullptr)
+	{
+		dbc::ContainerInfo info = selectedContainer->GetInfo();
+		QString infoStr = tr("Total elements: %1, Total streams: %2, Used streams: %3, Used space: %4, Free space: %5").arg(
+			info->TotalElements(), 1).arg(info->TotalStreams(), 2).arg(info->UsedStreams(), 3).arg(info->UsedSpace(), 4).arg(
+			info->FreeSpace(), 5);
+		QMessageBox::information(this, tr("Container info"), infoStr);
+	}
+}
+
 void gui::MainWindow::ShowMessage(const QString& message, const QString& title /*= ""*/, QMessageBox::Icon icon /*= QMessageBox::Information*/) const
 {
 	ShowMessageDialog(message, title, icon, QMessageBox::NoButton);
@@ -55,6 +68,7 @@ void gui::MainWindow::InitActions()
 {
 	connect(m_ui.actionContainerOpen, &QAction::triggered, this, &MainWindow::OnContainerOpenTriggered);
 	connect(m_ui.actionContainerCreate, &QAction::triggered, this, &MainWindow::OnContainerCreateTriggered);
+	connect(m_ui.actionContainerInfo, &QAction::triggered, this, &MainWindow::OnContainerInfoClicked);
 	m_ui.actionContainerOpen->setShortcut(Qt::CTRL | Qt::Key_O);
 	m_ui.actionContainerCreate->setShortcut(Qt::CTRL | Qt::Key_N);
 

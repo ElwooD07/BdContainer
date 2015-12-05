@@ -30,7 +30,7 @@
     <addaction name="actionContainerOpen"/>
     <addaction name="actionContainerCreate"/>
     <addaction name="separator"/>
-    <addaction name="actionInfo"/>
+    <addaction name="actionContainerInfo"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -57,7 +57,7 @@
     <string>&amp;Create...</string>
    </property>
   </action>
-  <action name="actionInfo">
+  <action name="actionContainerInfo">
    <property name="text">
     <string>&amp;Info...</string>
    </property>

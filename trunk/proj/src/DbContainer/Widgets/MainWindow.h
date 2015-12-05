@@ -20,6 +20,7 @@ namespace gui
 	private slots:
 		void OnContainerOpenTriggered();
 		void OnContainerCreateTriggered();
+		void OnContainerInfoClicked();
 
 	private:
 		void InitMainControls();
