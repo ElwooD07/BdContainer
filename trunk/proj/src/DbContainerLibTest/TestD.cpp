@@ -13,7 +13,7 @@ namespace
 	std::string fold_name_base = "folder ";
 	std::string non_conflict_name = "arbadakarba";
 
-	typedef std::vector<ContainerFolderGuard> Folders_vt;
+	typedef std::vector<FolderGuard> Folders_vt;
 	typedef std::vector<std::string> FoldersNames_vt;
 
 	void CreateFoldNames(size_t count, FoldersNames_vt& names)
@@ -36,8 +36,8 @@ TEST(D_FileSystemTest, Folders_Create_1)
 	CreateFoldNames(foldsInPack, foldsNames);
 	ASSERT_FALSE(foldsNames.empty());
 
-	ContainerFolderGuard root = cont->GetRoot();
-	ContainerElementGuard ce;
+	FolderGuard root = cont->GetRoot();
+	ElementGuard ce;
 
 	Folders_vt folds;
 	for (int i = 0; i < foldsInPack; ++i)
@@ -67,9 +67,9 @@ TEST(D_FileSystemTest, Folders_Create_2_Ex)
 	CreateFoldNames(foldsInPack, foldsNames);
 	ASSERT_FALSE(foldsNames.empty());
 
-	ContainerFolderGuard root;
+	FolderGuard root;
 	ASSERT_NO_THROW(root = cont->GetRoot());
-	ContainerFolderGuard new_root;
+	FolderGuard new_root;
 	ASSERT_NO_THROW(new_root = root->CreateFolder("new root"));
 	
 	ASSERT_NE(new_root.get(), nullptr);
@@ -85,7 +85,7 @@ TEST(D_FileSystemTest, Folders_Create_2_Ex)
 	std::string compared_path(root->Name() + non_conflict_name + dbc::PATH_SEPARATOR + foldsNames[foldsInPack - 1]);
 	EXPECT_EQ(compared_path, folds[foldsInPack - 1]->Path());
 
-	ContainerElementGuard ce;
+	ElementGuard ce;
 	DbcElementsIterator itr;
 	ASSERT_NO_THROW(itr = new_root->EnumFsEntries());
 	for (int i = 0; i < foldsInPack; ++i)
@@ -107,17 +107,17 @@ TEST(D_FileSystemTest, Folders_Create_3)
 	const unsigned char foldsInPack = 5;
 	CreateFoldNames(foldsInPack, foldsNames);
 	ASSERT_FALSE(foldsNames.empty());
-	ContainerFolderGuard root;
+	FolderGuard root;
 	ASSERT_NO_THROW(root = cont->GetRoot());
 
 	for (int i = 1; i < foldsInPack; ++i)
 	{
-		ContainerFolderGuard new_root;
+		FolderGuard new_root;
 		ASSERT_NO_THROW(new_root = root->CreateFolder(foldsNames[i]));
 
 		for (int j = 0; j < foldsInPack; ++j)
 		{
-			ContainerElementGuard ce;
+			ElementGuard ce;
 			EXPECT_NO_THROW(new_root->CreateChild(foldsNames[j], ElementTypeFolder));
 			EXPECT_NO_THROW(ce = new_root->GetChild(foldsNames[j]));
 			EXPECT_EQ(foldsNames[j], ce->Name());
@@ -136,14 +136,14 @@ TEST(D_FileSystemTest, Folders_Create_3)
 TEST(D_FileSystemTest, Folders_Create_Delete)
 {
 	ASSERT_TRUE(DatabasePrepare());
-	ContainerFolderGuard root = cont->GetRoot();
+	FolderGuard root = cont->GetRoot();
 
 	FoldersNames_vt foldsNames;
 	const unsigned char foldsInPack = 5;
 	CreateFoldNames(foldsInPack, foldsNames);
 	ASSERT_FALSE(foldsNames.empty());
 	
-	ContainerFolderGuard cfold;
+	FolderGuard cfold;
 	for (size_t i = 0; i < foldsInPack; ++i)
 	{
 		ASSERT_NO_THROW(cfold = root->CreateChild(foldsNames[i], ElementTypeFolder)->AsFolder()->Clone());
@@ -154,7 +154,7 @@ TEST(D_FileSystemTest, Folders_Create_Delete)
 	}
 	
 	std::string deletedName = foldsNames[foldsInPack / 2];
-	ContainerElementGuard ce;
+	ElementGuard ce;
 	
 	EXPECT_NO_THROW(ce = root->GetChild(deletedName));
 	ASSERT_NE(ce->AsFolder(), nullptr);
@@ -168,7 +168,7 @@ TEST(D_FileSystemTest, Folders_Create_Delete)
 TEST(D_FileSystemTest, FoldersIterator)
 {
 	ASSERT_TRUE(DatabasePrepare());
-	ContainerFolderGuard root = cont->GetRoot();
+	FolderGuard root = cont->GetRoot();
 
 	const size_t foldsCount = 5;
 	FoldersNames_vt foldNames;
@@ -183,7 +183,7 @@ TEST(D_FileSystemTest, FoldersIterator)
 	DbcElementsIterator ei;
 	ASSERT_NO_THROW(ei = root->EnumFsEntries());
 	EXPECT_FALSE(ei->Empty());
-	ContainerElementGuard ce;
+	ElementGuard ce;
 	for (size_t i = 0; ei->HasNext(); ++i)
 	{
 		ce = ei->Next();

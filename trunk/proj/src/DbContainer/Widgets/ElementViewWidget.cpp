@@ -4,7 +4,7 @@
 
 namespace
 {
-	QString GetTypeString(dbc::ContainerElementGuard element)
+	QString GetTypeString(dbc::ElementGuard element)
 	{
 		assert(element.get() != nullptr);
 		dbc::ElementType type = element->Type();
@@ -15,7 +15,9 @@ namespace
 		case dbc::ElementTypeFolder:
 			return gui::ElementViewWidget::tr("Folder");
 		case dbc::ElementTypeSymLink:
-			return gui::ElementViewWidget::tr("Link");
+			return gui::ElementViewWidget::tr("Symbolic link");
+		case dbc::ElementTypeDirectLink:
+			return gui::ElementViewWidget::tr("Direct link");
 		default:
 			assert(!"Unknown element type");
 			return "";
@@ -30,7 +32,7 @@ gui::ElementViewWidget::ElementViewWidget(QWidget* parent)
 	SetInfoForCurrentElement();
 }
 
-void gui::ElementViewWidget::SetElement(dbc::ContainerElementGuard element)
+void gui::ElementViewWidget::SetElement(dbc::ElementGuard element)
 {
 	m_element = element;
 	SetInfoForCurrentElement();

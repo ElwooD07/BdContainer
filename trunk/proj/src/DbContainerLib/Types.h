@@ -10,7 +10,7 @@ namespace dbc
 		ElementTypeFolder,
 		ElementTypeFile,
 		ElementTypeSymLink,
-		ElementTypeIdLink
+		ElementTypeDirectLink
 	};
 
 	enum ReadWriteAccess

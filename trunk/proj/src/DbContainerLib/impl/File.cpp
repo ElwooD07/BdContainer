@@ -64,9 +64,9 @@ void dbc::File::Remove()
 	Element::Remove();
 }
 
-dbc::ContainerFileGuard dbc::File::Clone() const
+dbc::FileGuard dbc::File::Clone() const
 {
-	return ContainerFileGuard(new File(m_resources, m_id));
+	return FileGuard(new File(m_resources, m_id));
 }
 
 void dbc::File::Open(ReadWriteAccess access)

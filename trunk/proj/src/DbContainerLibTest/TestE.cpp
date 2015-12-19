@@ -43,19 +43,19 @@ bool WriteTestFile(const std::string &content)
 TEST(E_FileSystemTest, Files_CreateRemove)
 {
 	ASSERT_TRUE(DatabasePrepare());
-	ContainerFolderGuard root = cont->GetRoot();
+	FolderGuard root = cont->GetRoot();
 
-	ContainerElementGuard ce;
+	ElementGuard ce;
 	EXPECT_NO_THROW(ce = root->CreateChild(fname, ElementTypeFile));
 	ASSERT_NE(ce->AsFile(), nullptr);
-	ContainerFileGuard cfile;
+	FileGuard cfile;
 	EXPECT_NO_THROW(cfile = ce->AsFile()->Clone());
 	
 	DbcElementsIterator ei;
 	EXPECT_NO_THROW(ei = root->EnumFsEntries());
 	EXPECT_EQ(1, ei->Count());
 
-	ContainerFileGuard cfile2;
+	FileGuard cfile2;
 	EXPECT_THROW(ce = root->CreateChild(fname, ElementTypeFile), ContainerException);
 	EXPECT_NO_THROW(ce = root->CreateChild(fname + " 2", ElementTypeFile));
 	EXPECT_NO_THROW(cfile2 = ce->AsFile()->Clone());
@@ -83,9 +83,9 @@ TEST(E_FileSystemTest,  Files_Open)
 {
 	ASSERT_TRUE(DatabasePrepare());
 	cont->Clear();
-	ContainerFolderGuard root = cont->GetRoot();
+	FolderGuard root = cont->GetRoot();
 
-	ContainerFileGuard cfile;
+	FileGuard cfile;
 	EXPECT_NO_THROW(cfile = root->CreateFile(fname));
 
 	std::string ostr;
@@ -141,7 +141,7 @@ TEST(E_FileSystemTest,  Files_SimpleWrite)
 	std::ifstream tfile_istream(fname);
 	ASSERT_TRUE(tfile_istream.is_open());
 
-	ContainerFileGuard cfile = cont->GetRoot()->CreateFile(fname);
+	FileGuard cfile = cont->GetRoot()->CreateFile(fname);
 
 	ASSERT_NO_THROW(cfile->Open(WriteAccess));
 	EXPECT_EQ(0, cfile->Size());
@@ -156,7 +156,7 @@ TEST(E_FileSystemTest, Files_SimpleRead)
 
 	std::string origContent;
 	size_t dataSize = 0;
-	ContainerFileGuard cfile = cont->GetRoot()->CreateFile(fname);
+	FileGuard cfile = cont->GetRoot()->CreateFile(fname);
 	{
 		const std::string baseContent("0123456789");
 		dataSize = contentRepeats * baseContent.size();

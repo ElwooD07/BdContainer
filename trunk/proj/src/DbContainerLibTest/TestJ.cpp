@@ -29,7 +29,7 @@ void RandomWriteReadImpl()
 	}
 
 	// Create files in container and real streams for data
-	std::vector<ContainerFileGuard> files;
+	std::vector<FileGuard> files;
 	std::vector<std::fstream> fstreams;
 	const std::string fileNameBase("file");
 	for (unsigned char i = 0; i < filesCount; ++i)

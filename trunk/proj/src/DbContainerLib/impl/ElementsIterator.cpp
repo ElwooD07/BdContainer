@@ -40,7 +40,7 @@ ElementsIterator::ElementsIterator(ContainerResources resources, int64_t folder_
 	m_size = m_info.size();
 }
 
-ContainerElementGuard ElementsIterator::Next()
+ElementGuard ElementsIterator::Next()
 {
 	if (!HasNext())
 	{
@@ -51,9 +51,9 @@ ContainerElementGuard ElementsIterator::Next()
 	switch (current.Type)
 	{
 	case ElementTypeFolder:
-		return ContainerElementGuard(new Folder(m_resources, current.ID));
+		return ElementGuard(new Folder(m_resources, current.ID));
 	case ElementTypeFile:
-		return ContainerElementGuard(new File(m_resources, current.ID));
+		return ElementGuard(new File(m_resources, current.ID));
 	default:
 		assert(!"Unknown element type specified");
 		throw ContainerException(ERR_INTERNAL);

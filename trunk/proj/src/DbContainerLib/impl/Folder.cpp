@@ -59,9 +59,9 @@ void dbc::Folder::Rename(const std::string& newName)
 	}
 }
 
-dbc::ContainerFolderGuard dbc::Folder::Clone() const
+dbc::FolderGuard dbc::Folder::Clone() const
 {
-	return ContainerFolderGuard(new Folder(m_resources, m_id));
+	return FolderGuard(new Folder(m_resources, m_id));
 }
 
 bool dbc::Folder::IsRoot() const
@@ -82,7 +82,7 @@ bool dbc::Folder::HasChildren()
 	return query.ColumnInt(0) > 0;
 }
 
-dbc::ContainerElementGuard dbc::Folder::GetChild(const std::string& name)
+dbc::ElementGuard dbc::Folder::GetChild(const std::string& name)
 {
 	Refresh();
 
@@ -105,43 +105,43 @@ dbc::ContainerElementGuard dbc::Folder::GetChild(const std::string& name)
 	switch (tmp_type)
 	{
 	case ElementTypeFolder:
-		return ContainerElementGuard(new Folder(m_resources, id));
+		return ElementGuard(new Folder(m_resources, id));
 	case ElementTypeFile:
-		return ContainerElementGuard(new File(m_resources, id));
+		return ElementGuard(new File(m_resources, id));
 	case ElementTypeSymLink:
-		return ContainerElementGuard(new SymLink(m_resources, id));
+		return ElementGuard(new SymLink(m_resources, id));
 	default:
 		assert(!"Unknown element type specified");
 		throw ContainerException(ERR_DB, IS_DAMAGED);
 	}
 }
 
-dbc::ContainerElementGuard dbc::Folder::CreateChild(const std::string& name, ElementType type, const std::string& tag /*= 0*/)
+dbc::ElementGuard dbc::Folder::CreateChild(const std::string& name, ElementType type, const std::string& tag /*= 0*/)
 {
 	CreateChildEntry(name, type, tag);
 	switch (type)
 	{
 	case ElementTypeFolder:
-		return ContainerElementGuard(new Folder(m_resources, m_id, name));
+		return ElementGuard(new Folder(m_resources, m_id, name));
 	case ElementTypeFile:
-		return ContainerElementGuard(new File(m_resources, m_id, name));
+		return ElementGuard(new File(m_resources, m_id, name));
 	case ElementTypeSymLink:
-		return ContainerElementGuard(new SymLink(m_resources, m_id, name));
+		return ElementGuard(new SymLink(m_resources, m_id, name));
 	default:
 		assert(!"Unknown element type specified");
 		throw ContainerException(ERR_INTERNAL);
 	}
 }
 
-dbc::ContainerFolderGuard dbc::Folder::CreateFolder(const std::string& name, const std::string& tag)
+dbc::FolderGuard dbc::Folder::CreateFolder(const std::string& name, const std::string& tag)
 {
 	CreateChildEntry(name, ElementTypeFolder, tag);
-	return ContainerFolderGuard(new Folder(m_resources, m_id, name));
+	return FolderGuard(new Folder(m_resources, m_id, name));
 }
-dbc::ContainerFileGuard dbc::Folder::CreateFile(const std::string& name, const std::string& tag)
+dbc::FileGuard dbc::Folder::CreateFile(const std::string& name, const std::string& tag)
 {
 	CreateChildEntry(name, ElementTypeFile, tag);
-	return ContainerFileGuard(new File(m_resources, m_id, name));
+	return FileGuard(new File(m_resources, m_id, name));
 }
 
 dbc::SymLinkGuard dbc::Folder::CreateSymLink(const std::string& name, const std::string& targetPath, const std::string& tag /*= ""*/)

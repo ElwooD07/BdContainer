@@ -9,10 +9,10 @@ namespace model
 	class TreeNode
 	{
 	public:
-		TreeNode(const TreeNode* parent, const QString& parentPath, dbc::ContainerElementGuard element);
+		TreeNode(const TreeNode* parent, const QString& parentPath, dbc::ElementGuard element);
 		~TreeNode();
 
-		const dbc::ContainerElementGuard GetElement() const;
+		const dbc::ElementGuard GetElement() const;
 		const TreeNode* GetParent() const;
 		int GetRow() const;
 
@@ -21,7 +21,7 @@ namespace model
 
 		TreeNode* GetChild(int row);
 		int GetChildrenCount() const;
-		TreeNode* AddChild(dbc::ContainerElementGuard child);
+		TreeNode* AddChild(dbc::ElementGuard child);
 		void RemoveChild(int row);
 
 		bool operator<(const TreeNode& node) const;
@@ -33,7 +33,7 @@ namespace model
 	private:
 		const TreeNode* m_parent;
 		QString m_path;
-		dbc::ContainerElementGuard m_element;
+		dbc::ElementGuard m_element;
 		bool loaded;
 
 		TreeNodesList m_children;

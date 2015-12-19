@@ -20,7 +20,7 @@ namespace model
 		~DbContainerModel();
 
 		void AddContainer(dbc::ContainerGuard container);
-		dbc::ContainerElementGuard GetElementByIndex(const QModelIndex& index);
+		dbc::ElementGuard GetElementByIndex(const QModelIndex& index);
 		dbc::ContainerGuard GetContainerByIndex(const QModelIndex& index);
 
 		virtual QVariant data(const QModelIndex& index, int role) const;
@@ -59,4 +59,4 @@ namespace model
 }
 
 Q_DECLARE_METATYPE(dbc::ElementType);
-Q_DECLARE_METATYPE(dbc::ContainerElementGuard);
+Q_DECLARE_METATYPE(dbc::ElementGuard);

@@ -60,7 +60,7 @@ void gui::FsTreeWidget::OnExpandAllTriggered()
 
 void gui::FsTreeWidget::OnItemSelected(const QModelIndex& index)
 {
-	dbc::ContainerElementGuard element = m_model->GetElementByIndex(index);
+	dbc::ElementGuard element = m_model->GetElementByIndex(index);
 	emit CurrentElementChanged(element);
 }
 

@@ -10,7 +10,7 @@ namespace dbc
 		SymLink(ContainerResources resources, int64_t parentId, const std::string& name);
 
 		std::string TargetPath() const;
-		ContainerElementGuard Target() const;
+		ElementGuard Target() const;
 		void ChangeTarget(const std::string& newTarget);
 
 	private:

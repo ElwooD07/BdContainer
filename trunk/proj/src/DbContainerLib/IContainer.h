@@ -15,8 +15,8 @@ namespace dbc
 		virtual std::string GetPath() const = 0;
 
 		// Working with the entire files and folders
-		virtual ContainerFolderGuard GetRoot() = 0;
-		virtual ContainerElementGuard GetElement(const std::string &path) = 0;
+		virtual FolderGuard GetRoot() = 0;
+		virtual ElementGuard GetElement(const std::string &path) = 0;
 		virtual ContainerInfo GetInfo() = 0;
 
 		virtual DataUsagePreferences GetDataUsagePreferences() const = 0;

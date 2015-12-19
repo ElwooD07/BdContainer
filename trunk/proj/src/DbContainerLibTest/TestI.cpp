@@ -12,7 +12,7 @@ TEST(I_FilesPartialWrite, Transactional)
 	ASSERT_TRUE(DatabasePrepare());
 	unsigned int clusterSize = PrepareContainerForPartialWriteTest(cont, true);
 
-	ContainerFileGuard file = cont->GetRoot()->CreateFile("file1");
+	FileGuard file = cont->GetRoot()->CreateFile("file1");
 	EXPECT_EQ(0, file->Size());
 
 	size_t dataPortion1Size = clusterSize - 20;
@@ -63,9 +63,9 @@ TEST(I_FilesPartialWrite, Transactional_Fragmented)
 {
 	ASSERT_TRUE(DatabasePrepare());
 	unsigned int clusterSize = PrepareContainerForPartialWriteTest(cont, true);
-	ContainerFileGuard file1 = cont->GetRoot()->CreateFile("file1");
-	ContainerFileGuard file2 = cont->GetRoot()->CreateFile("file2");
-	ContainerFileGuard file3 = cont->GetRoot()->CreateFile("file3");
+	FileGuard file1 = cont->GetRoot()->CreateFile("file1");
+	FileGuard file2 = cont->GetRoot()->CreateFile("file2");
+	FileGuard file3 = cont->GetRoot()->CreateFile("file3");
 
 	size_t dataPortion1Size = clusterSize * 2 - 20; // 2 clusters total
 	{
@@ -150,9 +150,9 @@ TEST(I_FilesPartialWrite, Transactional_Fragmented_StreamsTruncating)
 {
 	ASSERT_TRUE(DatabasePrepare());
 	unsigned int clusterSize = PrepareContainerForPartialWriteTest(cont, true);
-	ContainerFileGuard file1 = cont->GetRoot()->CreateFile("file1");
-	ContainerFileGuard file2 = cont->GetRoot()->CreateFile("file2");
-	ContainerFileGuard file3 = cont->GetRoot()->CreateFile("file3");
+	FileGuard file1 = cont->GetRoot()->CreateFile("file1");
+	FileGuard file2 = cont->GetRoot()->CreateFile("file2");
+	FileGuard file3 = cont->GetRoot()->CreateFile("file3");
 
 	size_t dataPortion1Size = clusterSize * 10 - 20; // 10 clusters total
 	size_t dataPortion1CuttedSize = clusterSize + 50; // 2 clusters total

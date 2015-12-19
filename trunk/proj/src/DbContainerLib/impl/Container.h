@@ -27,8 +27,8 @@ namespace dbc
 		virtual void ResetPassword(const std::string& newPassword);
 		virtual std::string GetPath() const;
 
-		virtual ContainerFolderGuard GetRoot();
-		virtual ContainerElementGuard GetElement(const std::string& path);
+		virtual FolderGuard GetRoot();
+		virtual ElementGuard GetElement(const std::string& path);
 		virtual ContainerInfo GetInfo();
 
 		virtual DataUsagePreferences GetDataUsagePreferences() const;

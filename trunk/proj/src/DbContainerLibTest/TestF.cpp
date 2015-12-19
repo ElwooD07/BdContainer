@@ -13,10 +13,10 @@ extern bool databaseConnected;
 TEST(F_ContainerObjectsTest, ExceptionalSituations_1)
 {
 	ASSERT_TRUE(DatabasePrepare());
-	ContainerFolderGuard root = cont->GetRoot();
+	FolderGuard root = cont->GetRoot();
 	
-	ContainerFolderGuard ce = root->CreateFolder("folder 1");
-	ContainerFileGuard ce2 = ce->CreateFile("file 1");
+	FolderGuard ce = root->CreateFolder("folder 1");
+	FileGuard ce2 = ce->CreateFile("file 1");
 	EXPECT_NO_THROW(ce->Rename("file 1"));
 	EXPECT_THROW(root->CreateFile("file 1"), ContainerException);
 

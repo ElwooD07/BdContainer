@@ -23,7 +23,7 @@ std::string dbc::SymLink::TargetPath() const
 	return m_target;
 }
 
-dbc::ContainerElementGuard dbc::SymLink::Target() const
+dbc::ElementGuard dbc::SymLink::Target() const
 {
 	if (m_target == nullptr)
 	{

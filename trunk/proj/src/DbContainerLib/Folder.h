@@ -18,13 +18,13 @@ namespace dbc
 		virtual void Remove();
 		virtual void Rename(const std::string& newName);
 
-		ContainerFolderGuard Clone() const;
+		FolderGuard Clone() const;
 		bool IsRoot() const;
 		bool HasChildren();
-		ContainerElementGuard GetChild(const std::string& name);
-		ContainerElementGuard CreateChild(const std::string& name, ElementType type, const std::string& tag = "");
-		ContainerFolderGuard CreateFolder(const std::string& name, const std::string& tag = "");
-		ContainerFileGuard CreateFile(const std::string& name, const std::string& tag = "");
+		ElementGuard GetChild(const std::string& name);
+		ElementGuard CreateChild(const std::string& name, ElementType type, const std::string& tag = "");
+		FolderGuard CreateFolder(const std::string& name, const std::string& tag = "");
+		FileGuard CreateFile(const std::string& name, const std::string& tag = "");
 
 		SymLinkGuard CreateSymLink(const std::string& name, const std::string& targetPath, const std::string& tag = "");
 

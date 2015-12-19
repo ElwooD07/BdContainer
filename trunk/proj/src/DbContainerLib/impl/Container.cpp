@@ -183,12 +183,12 @@ std::string dbc::Container::GetPath() const
 	return m_dbFile;
 }
 
-dbc::ContainerFolderGuard dbc::Container::GetRoot()
+dbc::FolderGuard dbc::Container::GetRoot()
 {
-	return ContainerFolderGuard(new Folder(m_resources, ROOT_ID));
+	return FolderGuard(new Folder(m_resources, ROOT_ID));
 }
 
-dbc::ContainerElementGuard dbc::Container::GetElement(const std::string& path)
+dbc::ElementGuard dbc::Container::GetElement(const std::string& path)
 {
 	if (path.empty())
 	{
@@ -224,9 +224,9 @@ dbc::ContainerElementGuard dbc::Container::GetElement(const std::string& path)
 	switch (elementType)
 	{
 	case ElementTypeFolder:
-		return ContainerElementGuard(new Folder(m_resources, parentId));
+		return ElementGuard(new Folder(m_resources, parentId));
 	case ElementTypeFile:
-		return ContainerElementGuard(new File(m_resources, parentId));
+		return ElementGuard(new File(m_resources, parentId));
 	default:
 		throw ContainerException(ERR_INTERNAL);
 	}

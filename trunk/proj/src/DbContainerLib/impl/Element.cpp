@@ -160,14 +160,14 @@ bool dbc::Element::IsChildOf(const Element& obj)
 	return false;
 }
 
-dbc::ContainerFolderGuard dbc::Element::GetParentEntry()
+dbc::FolderGuard dbc::Element::GetParentEntry()
 {
 	if (m_parentId < Container::ROOT_ID)
 	{
 		throw ContainerException(ERR_DB_FS, NOT_FOUND);
 	}
 
-	return ContainerFolderGuard(new Folder(m_resources, m_parentId));
+	return FolderGuard(new Folder(m_resources, m_parentId));
 }
 
 void dbc::Element::MoveToEntry(Folder& newParent)

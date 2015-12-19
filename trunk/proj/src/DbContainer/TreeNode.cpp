@@ -2,7 +2,7 @@
 #include "TreeNode.h"
 #include "ModelUtils.h"
 
-model::TreeNode::TreeNode(const TreeNode* parent, const QString& parentPath, dbc::ContainerElementGuard element)
+model::TreeNode::TreeNode(const TreeNode* parent, const QString& parentPath, dbc::ElementGuard element)
 	: m_parent(parent)
 	, m_path(utils::SlashedPath(parentPath) + utils::StdString2QString(element->Name()))
 	, m_element(element)
@@ -30,7 +30,7 @@ void model::TreeNode::RefreshPath(const QString& newParentPath /*= ""*/)
 	}
 }
 
-model::TreeNode* model::TreeNode::AddChild(dbc::ContainerElementGuard child)
+model::TreeNode* model::TreeNode::AddChild(dbc::ElementGuard child)
 {
 	assert(child.get() != nullptr);
 	m_children.push_back(new TreeNode(this, m_path, child));
@@ -64,7 +64,7 @@ int model::TreeNode::GetChildrenCount() const
 	return m_children.size();
 }
 
-const dbc::ContainerElementGuard model::TreeNode::GetElement() const
+const dbc::ElementGuard model::TreeNode::GetElement() const
 {
 	return m_element;
 }

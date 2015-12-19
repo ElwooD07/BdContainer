@@ -23,12 +23,12 @@ namespace dbc
 
 	typedef std::vector<ElementInfo> ElementInfo_vt;
 
-	class ElementsIterator: public Iterator<ContainerElementGuard>
+	class ElementsIterator: public Iterator<ElementGuard>
 	{
 	public:
 		ElementsIterator(ContainerResources resources, int64_t folder_id);
 
-		virtual ContainerElementGuard Next();
+		virtual ElementGuard Next();
 
 	private:
 		int64_t m_folderId;
@@ -36,5 +36,5 @@ namespace dbc
 		ElementInfo_vt m_info;
 	};
 
-	typedef std::auto_ptr<Iterator<ContainerElementGuard> > DbcElementsIterator;
+	typedef std::auto_ptr<Iterator<ElementGuard> > DbcElementsIterator;
 }

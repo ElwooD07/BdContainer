@@ -23,7 +23,7 @@ namespace gui
 		QMenu* GetElementMenu();
 
 	signals:
-		void CurrentElementChanged(dbc::ContainerElementGuard element);
+		void CurrentElementChanged(dbc::ElementGuard element);
 
 	private slots:
 		void OnCollapseAllTriggered();

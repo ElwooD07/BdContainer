@@ -12,8 +12,8 @@ namespace dbc
 	class Folder;
 	class File;
 
-	typedef std::shared_ptr<Folder> ContainerFolderGuard;
-	typedef std::shared_ptr<File> ContainerFileGuard;
+	typedef std::shared_ptr<Folder> FolderGuard;
+	typedef std::shared_ptr<File> FileGuard;
 
 	class Element
 	{
@@ -32,7 +32,7 @@ namespace dbc
 		virtual bool IsTheSame(const Element& obj) const;
 		virtual bool IsChildOf(const Element& obj);
 
-		virtual ContainerFolderGuard GetParentEntry();
+		virtual FolderGuard GetParentEntry();
 
 		virtual void MoveToEntry(Folder& newParent);
 		virtual void Remove();
@@ -62,5 +62,5 @@ namespace dbc
 		void InitElementInfo(SQLQuery& query, int typeN, int propsN, int specificDataN);
 	};
 
-	typedef std::shared_ptr<Element> ContainerElementGuard;
+	typedef std::shared_ptr<Element> ElementGuard;
 }

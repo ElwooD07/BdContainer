@@ -14,8 +14,8 @@ TEST(G_ContainerInfoTests, IsEmpty)
 	cont->Clear();
 	EXPECT_TRUE(info->IsEmpty());
 
-	ContainerFolderGuard root = cont->GetRoot();
-	ContainerElementGuard ce = root->CreateChild("folder", ElementTypeFolder);
+	FolderGuard root = cont->GetRoot();
+	ElementGuard ce = root->CreateChild("folder", ElementTypeFolder);
 	EXPECT_FALSE(info->IsEmpty());
 
 	ce->Remove();
@@ -31,8 +31,8 @@ TEST(G_ContainerInfoTests, TotalElements)
 	EXPECT_EQ(1, info->TotalElements()); // root should necessarily be in the empty container
 	EXPECT_EQ(1, info->TotalElements(ElementTypeFolder));
 	EXPECT_EQ(0, info->TotalElements(ElementTypeFile));
-	ContainerFolderGuard root = cont->GetRoot();
-	ContainerFolderGuard cfold = root->CreateFolder("folder1");
+	FolderGuard root = cont->GetRoot();
+	FolderGuard cfold = root->CreateFolder("folder1");
 	EXPECT_EQ(2, info->TotalElements());
 
 	cfold->CreateChild("file1", ElementTypeFile);
@@ -65,7 +65,7 @@ TEST(G_ContainerInfoTests, TotalDataSize)
 	cont->Clear();
 	ContainerInfo info = cont->GetInfo();
 	
-	ContainerFolderGuard root = cont->GetRoot();
+	FolderGuard root = cont->GetRoot();
 
 	std::vector<std::string> data;
 	data.push_back("0123456789");
@@ -77,7 +77,7 @@ TEST(G_ContainerInfoTests, TotalDataSize)
 	const std::string fileBaseName("file");
 	for (size_t i = 0; i < data.size(); ++i)
 	{
-		ContainerFileGuard cf = root->CreateFile(fileBaseName + std::string(1, i + 97));
+		FileGuard cf = root->CreateFile(fileBaseName + std::string(1, i + 97));
 		EXPECT_EQ(0, cf->Size());
 		std::stringstream strm;
 		strm << data[i];
@@ -88,7 +88,7 @@ TEST(G_ContainerInfoTests, TotalDataSize)
 	}
 	for (size_t i = 0; i < data.size(); ++i)
 	{
-		ContainerElementGuard ce = root->GetChild(fileBaseName + std::string(1, i + 97));
+		ElementGuard ce = root->GetChild(fileBaseName + std::string(1, i + 97));
 		EXPECT_EQ(data[i].size(), ce->AsFile()->Size());
 		ASSERT_NO_THROW(ce->Remove());
 		totalSize -= data[i].size();
@@ -104,7 +104,7 @@ TEST(H_FilesInfoTest, SpaceUsageInfo)
 
 	size_t dataPortion1Size = clusterSize + clusterSize / 2;
 	std::fstream strm(CreateStream(dataPortion1Size));
-	ContainerFileGuard file = cont->GetRoot()->CreateFile("file1");
+	FileGuard file = cont->GetRoot()->CreateFile("file1");
 
 	File::SpaceUsageInfo fileUsage = file->GetSpaceUsageInfo();
 	EXPECT_EQ(0, fileUsage.streamsTotal);

@@ -17,7 +17,7 @@ namespace dbc
 
 		virtual void Remove();
 
-		ContainerFileGuard Clone() const;
+		FileGuard Clone() const;
 
 		void Open(ReadWriteAccess access);
 		bool IsOpened() const;

@@ -30,7 +30,7 @@ namespace
 model::DbContainerModel::DbContainerModel(QObject* parent /*= nullptr*/)
 	: QAbstractItemModel(parent)
 {
-	int registered = qRegisterMetaType<dbc::ContainerElementGuard>();
+	int registered = qRegisterMetaType<dbc::ElementGuard>();
 	assert(registered != 0);
 }
 
@@ -44,14 +44,14 @@ void model::DbContainerModel::AddContainer(dbc::ContainerGuard container)
 	m_containers.push_back(container);
 	int containerIndex = m_containers.size() - 1;
 	beginInsertRows(QModelIndex(), containerIndex, containerIndex);
-	dbc::ContainerFolderGuard root = container->GetRoot();
+	dbc::FolderGuard root = container->GetRoot();
 	m_rootNodes.push_back(new TreeNode(nullptr, utils::StdString2QString(root->Path()), root));
 	endInsertRows();
 }
 
-dbc::ContainerElementGuard model::DbContainerModel::GetElementByIndex(const QModelIndex& index)
+dbc::ElementGuard model::DbContainerModel::GetElementByIndex(const QModelIndex& index)
 {
-	dbc::ContainerElementGuard element;
+	dbc::ElementGuard element;
 	TreeNode* node = Index2Node(index);
 	if (node != nullptr)
 	{
@@ -217,7 +217,7 @@ QModelIndex model::DbContainerModel::AddElement(dbc::ElementType type, const QSt
 		return QModelIndex();
 	}
 	LoadChildren(parent);
-	dbc::ContainerElementGuard element = folder->CreateChild(utils::QString2StdString(name), type);
+	dbc::ElementGuard element = folder->CreateChild(utils::QString2StdString(name), type);
 
 	DBC_MODEL_TRY(tr("Element adding"));
 	int insertedRow = parentNode->GetChildrenCount();
@@ -241,7 +241,7 @@ void model::DbContainerModel::LoadChildren(const QModelIndex& parent)
 {
 	TreeNode* node = Index2Node(parent);
 	assert(node != nullptr);
-	dbc::ContainerElementGuard element = node->GetElement();
+	dbc::ElementGuard element = node->GetElement();
 	if (!node->wasLoaded && element->Type() == dbc::ElementTypeFolder)
 	{
 		dbc::Folder* folder = element->AsFolder();

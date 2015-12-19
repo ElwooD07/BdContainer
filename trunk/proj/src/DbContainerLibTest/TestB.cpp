@@ -27,7 +27,7 @@ TEST(B_ContainerFuncTests, GetRoot)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
-	ContainerFolderGuard root;
+	FolderGuard root;
 	ASSERT_NO_THROW(root = cont->GetRoot());
 	EXPECT_EQ(ElementTypeFolder, root->Type());
 	EXPECT_TRUE(root->IsRoot());
@@ -36,15 +36,15 @@ TEST(B_ContainerFuncTests, GetRoot)
 TEST(B_ContainerFuncTests, Clear)
 {
 	ASSERT_TRUE(DatabasePrepare());
-	ContainerFolderGuard root = cont->GetRoot();
+	FolderGuard root = cont->GetRoot();
 
 	root->ResetProperties("root tag");
 
 	std::string ce_name1("some name");
 	std::string ce_name2("some other name");
 	// Work with children entries tested in other files
-	ContainerElementGuard ce1 = root->CreateChild(ce_name1, ElementTypeFolder);
-	ContainerElementGuard ce2 = root->CreateChild(ce_name2, ElementTypeFile);
+	ElementGuard ce1 = root->CreateChild(ce_name1, ElementTypeFolder);
+	ElementGuard ce2 = root->CreateChild(ce_name2, ElementTypeFile);
 	EXPECT_TRUE(ce1->Exists());
 	EXPECT_TRUE(ce2->Exists());
 	EXPECT_NO_THROW(cont->Clear());
@@ -60,7 +60,7 @@ TEST(B_ContainerFuncTests, GetElement)
 {
 	ASSERT_TRUE(DatabasePrepare());
 	cont->Clear();
-	ContainerFolderGuard root = cont->GetRoot();
+	FolderGuard root = cont->GetRoot();
 
 	const std::string child1name("folder 1");
 	const std::string child2name("nested folder");
@@ -72,7 +72,7 @@ TEST(B_ContainerFuncTests, GetElement)
 	const std::string child2path(utils::SlashedPath(child1path) + child2name);
 	const std::string child3path(utils::SlashedPath(child2path) + child3name);
 	
-	ContainerElementGuard ce;
+	ElementGuard ce;
 	EXPECT_NO_THROW(ce = cont->GetElement(child1path));
 	EXPECT_EQ(child1name, ce->Name());
 	EXPECT_EQ(child1path, ce->Path());

@@ -24,7 +24,7 @@ TEST(C_FileSystemTest, Folders_Root)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
-	ContainerFolderGuard root;
+	FolderGuard root;
 	ASSERT_NO_THROW(root = cont->GetRoot());
 	ASSERT_NE(root.get(), nullptr);
 	EXPECT_TRUE(root->IsRoot());
@@ -52,9 +52,9 @@ TEST(C_FileSystemTest, Folders_RootAndChild)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
-	ContainerFolderGuard root;
+	FolderGuard root;
 	ASSERT_NO_THROW(root = cont->GetRoot());
-	ContainerElementGuard ce;
+	ElementGuard ce;
 	EXPECT_NO_THROW(ce = root->CreateChild(folder1name, ElementTypeFolder, folder1tag));
 	Folder* cf = nullptr;
 	EXPECT_NO_THROW(cf = ce->AsFolder());
@@ -77,10 +77,10 @@ TEST(C_FileSystemTest, Folders_RootAndChildrenCreate)
 {
 	ASSERT_TRUE(DatabasePrepare());
 	
-	ContainerFolderGuard root;
-	ContainerElementGuard ce1;
-	ContainerElementGuard ce2;
-	ContainerElementGuard ce3;
+	FolderGuard root;
+	ElementGuard ce1;
+	ElementGuard ce2;
+	ElementGuard ce3;
 
 	EXPECT_NO_THROW(root = cont->GetRoot());
 	EXPECT_NO_THROW(ce1 = root->CreateChild(folder1name, ElementTypeFolder, folder1tag));
@@ -124,11 +124,11 @@ TEST(C_FileSystemTest, Folders_RootAndChildrenMove)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
-	ContainerFolderGuard root;
-	ContainerFolderGuard ceFold1;
-	ContainerFolderGuard ceFold2;
-	ContainerFileGuard ceFile1;
-	ContainerFileGuard ceFile2;
+	FolderGuard root;
+	FolderGuard ceFold1;
+	FolderGuard ceFold2;
+	FileGuard ceFile1;
+	FileGuard ceFile2;
 
 	EXPECT_NO_THROW(root = cont->GetRoot());
 	EXPECT_NO_THROW(ceFold1 = root->CreateFolder(folder1name, folder1tag));
