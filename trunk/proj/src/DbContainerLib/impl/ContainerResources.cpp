@@ -3,7 +3,7 @@
 #include "ContainerException.h"
 
 dbc::ContaierResourcesImpl::ContaierResourcesImpl(
-	IContainer& container,
+	Container& container,
 	Connection& connection,
 	IDataStorage& dataStorage)
 	: m_container(container)
@@ -23,7 +23,7 @@ dbc::Connection& dbc::ContaierResourcesImpl::GetConnection()
 	return m_connection;
 }
 
-dbc::IContainer& dbc::ContaierResourcesImpl::GetContainer()
+dbc::Container& dbc::ContaierResourcesImpl::GetContainer()
 {
 	CheckUsefulnessAndThrow(ERR_DB_NO_CONNECTION);
 	return m_container;

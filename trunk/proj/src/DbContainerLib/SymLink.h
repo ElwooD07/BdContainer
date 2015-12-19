@@ -13,8 +13,10 @@ namespace dbc
 		ElementGuard Target() const;
 		void ChangeTarget(const std::string& newTarget);
 
+		static Error IsTargetPathValid(const std::string& target);
+
 	private:
-		void InitTarget();
+		void InitTarget(const std::string& target);
 
 	private:
 		const char* m_target;

@@ -2,6 +2,7 @@
 #include "Folder.h"
 #include "File.h"
 #include "Container.h"
+#include "IContainnerResources.h"
 #include "SQLQuery.h"
 #include "FsUtils.h"
 #include "CommonUtils.h"
@@ -93,7 +94,7 @@ dbc::ElementGuard dbc::Folder::GetChild(const std::string& name)
 	int count = query.ColumnInt(0);
 	if (count == 0)
 	{
-		throw ContainerException(ERR_DB_FS, NOT_FOUND);
+		throw ContainerException(notFoundError);
 	}
 	else if (count > 1)
 	{
@@ -146,6 +147,11 @@ dbc::FileGuard dbc::Folder::CreateFile(const std::string& name, const std::strin
 
 dbc::SymLinkGuard dbc::Folder::CreateSymLink(const std::string& name, const std::string& targetPath, const std::string& tag /*= ""*/)
 {
+	Error err = SymLink::IsTargetPathValid(targetPath);
+	if (err != SUCCESS)
+	{
+		throw ContainerException(err);
+	}
 	CreateChildEntry(name, ElementTypeSymLink, tag, targetPath);
 	return SymLinkGuard(new SymLink(m_resources, m_id, name));
 }
@@ -203,7 +209,7 @@ void dbc::Folder::CreateChildEntry(const std::string& name, ElementType type, co
 	}
 
 	Error tmp = Exists(m_id, name);
-	if (tmp != s_errElementNotFound)
+	if (tmp != notFoundError)
 	{
 		if (tmp == SUCCESS)
 		{

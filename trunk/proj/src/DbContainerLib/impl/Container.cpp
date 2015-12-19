@@ -2,9 +2,6 @@
 #include "Container.h"
 #include "ContainerAPI.h"
 #include "DataStorageBinaryFile.h"
-#include "Element.h"
-#include "Folder.h"
-#include "File.h"
 #include "ContainerResourcesImpl.h"
 #include "ContainerException.h"
 #include "Crypto.h"
@@ -211,7 +208,7 @@ dbc::ElementGuard dbc::Container::GetElement(const std::string& path)
 		int count = query.ColumnInt(0);
 		if (count == 0)
 		{
-			throw ContainerException(ERR_DB_FS, NOT_FOUND);
+			throw ContainerException(Element::notFoundError);
 		}
 		else if (count > 1)
 		{
@@ -245,6 +242,29 @@ dbc::DataUsagePreferences dbc::Container::GetDataUsagePreferences() const
 void dbc::Container::SetDataUsagePreferences(const DataUsagePreferences& prefs)
 {
 	m_dataUsagePrefs = prefs;
+}
+
+dbc::ElementGuard dbc::Container::GetElement(uint64_t id)
+{
+	SQLQuery query(m_connection, "SELECT type FROM FileSystem WHERE id = ?;");
+	query.BindInt64(1, id);
+	if (!query.Step())
+	{
+		throw ContainerException(Element::notFoundError);
+	}
+	int type = query.ColumnInt(1);
+	switch (type)
+	{
+	case ElementTypeFolder:
+		return ElementGuard(new Folder(m_resources, id));
+	case ElementTypeFile:
+		return ElementGuard(new File(m_resources, id));
+	case ElementTypeSymLink:
+		return ElementGuard(new SymLink(m_resources, id));
+	default:
+		assert(!"Unknown element type specified");
+		throw ContainerException(ERR_DB, IS_DAMAGED);
+	}
 }
 
 void dbc::Container::PrepareContainer(const std::string& password, bool create)

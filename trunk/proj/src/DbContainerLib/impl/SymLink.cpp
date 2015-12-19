@@ -8,14 +8,20 @@ dbc::SymLink::SymLink(ContainerResources resources, int64_t id)
 	: Element(resources, id)
 	, m_target(nullptr)
 {
-	InitTarget();
+	if (!m_specificData.empty())
+	{
+		InitTarget(utils::RawDataToString(m_specificData));
+	}
 }
 
 dbc::SymLink::SymLink(ContainerResources resources, int64_t parentId, const std::string& name)
 	: Element(resources, parentId, name)
 	, m_target(nullptr)
 {
-	InitTarget();
+	if (!m_specificData.empty())
+	{
+		InitTarget(utils::RawDataToString(m_specificData));
+	}
 }
 
 std::string dbc::SymLink::TargetPath() const
@@ -34,18 +40,32 @@ dbc::ElementGuard dbc::SymLink::Target() const
 
 void dbc::SymLink::ChangeTarget(const std::string& newTarget)
 {
-	if (newTarget.empty())
-	{
-		throw ContainerException(WRONG_PARAMETERS);
-	}
-	m_specificData = utils::StringToRawData(newTarget);
-	InitTarget();
+	InitTarget(newTarget);
 }
 
-void dbc::SymLink::InitTarget()
+dbc::Error dbc::SymLink::IsTargetPathValid(const std::string& target)
 {
-	if (!m_specificData.empty())
+	if (target.empty())
 	{
-		m_target = reinterpret_cast<const char*>(m_specificData.data());
+		return WRONG_PARAMETERS;
 	}
+	else if (target == std::string({ dbc::PATH_SEPARATOR }))
+	{
+		return ACTION_IS_FORBIDDEN; // Can't create link to the root
+	}
+	else
+	{
+		return SUCCESS;
+	}
+}
+
+void dbc::SymLink::InitTarget(const std::string& target)
+{
+	Error err = IsTargetPathValid(target);
+	if (err != SUCCESS)
+	{
+		throw ContainerException(err);
+	}
+	UpdateSpecificData(utils::StringToRawData(target));
+	m_target = reinterpret_cast<const char*>(m_specificData.data());
 }

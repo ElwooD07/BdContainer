@@ -9,10 +9,10 @@ namespace dbc
 	class ContaierResourcesImpl: public IContainerResources
 	{
 	public:
-		ContaierResourcesImpl(IContainer& container, Connection& connection, IDataStorage& dataStorage);
+		ContaierResourcesImpl(Container& container, Connection& connection, IDataStorage& dataStorage);
 
 		virtual bool ContainerAlive();
-		virtual IContainer& GetContainer();
+		virtual Container& GetContainer();
 		virtual Connection& GetConnection();
 		virtual IDataStorage& Storage();
 		virtual ElementsSyncKeeper& GetSync();
@@ -23,7 +23,7 @@ namespace dbc
 		void CheckUsefulnessAndThrow(Error err);
 
 	private:
-		IContainer& m_container;
+		Container& m_container;
 		Connection& m_connection;
 		IDataStorage& m_dataStorage;
 		ElementsSyncKeeper m_synkKeeper;

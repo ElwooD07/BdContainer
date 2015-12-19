@@ -2,7 +2,6 @@
 #include "Connection.h"
 #include "IContainer.h"
 #include "IDataStorage.h"
-#include "IContainnerResources.h"
 
 struct sqlite3;
 
@@ -34,6 +33,8 @@ namespace dbc
 		virtual DataUsagePreferences GetDataUsagePreferences() const;
 		virtual void SetDataUsagePreferences(const DataUsagePreferences& prefs);
 		// ~from IContainer
+
+		ElementGuard GetElement(uint64_t id);
 
 	private:
 		void PrepareContainer(const std::string &password, bool create);

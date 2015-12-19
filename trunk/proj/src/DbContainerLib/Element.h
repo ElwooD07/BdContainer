@@ -41,10 +41,15 @@ namespace dbc
 		virtual void GetProperties(ElementProperties& out);
 		virtual void ResetProperties(const std::string& tag);
 
+		static Error notFoundError;
+
 	protected:
 		void Refresh();
 		Error Exists(int64_t parent_id, std::string name); // Returns s_errElementNotFound (see .cpp) as false and SUCCESS as true, or other error code if there was an error
 		void WriteProps();
+		void UpdateSpecificData(const RawData& specificData);
+
+		friend class DirectLink;
 
 	protected:
 		ContainerResources m_resources;
@@ -55,8 +60,6 @@ namespace dbc
 		std::string m_name;
 		ElementProperties m_props;
 		RawData m_specificData;
-
-		static Error s_errElementNotFound;
 
 	private:
 		void InitElementInfo(SQLQuery& query, int typeN, int propsN, int specificDataN);
