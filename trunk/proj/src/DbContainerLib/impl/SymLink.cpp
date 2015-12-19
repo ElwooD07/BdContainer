@@ -5,14 +5,14 @@
 #include "IContainnerResources.h"
 
 dbc::SymLink::SymLink(ContainerResources resources, int64_t id)
-	: ContainerElement(resources, id)
+	: Element(resources, id)
 	, m_target(nullptr)
 {
 	InitTarget();
 }
 
 dbc::SymLink::SymLink(ContainerResources resources, int64_t parentId, const std::string& name)
-	: ContainerElement(resources, parentId, name)
+	: Element(resources, parentId, name)
 	, m_target(nullptr)
 {
 	InitTarget();

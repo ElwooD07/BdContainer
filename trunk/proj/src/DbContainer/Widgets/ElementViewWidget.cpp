@@ -14,7 +14,7 @@ namespace
 			return gui::ElementViewWidget::tr("File");
 		case dbc::ElementTypeFolder:
 			return gui::ElementViewWidget::tr("Folder");
-		case dbc::ElementTypeLink:
+		case dbc::ElementTypeSymLink:
 			return gui::ElementViewWidget::tr("Link");
 		default:
 			assert(!"Unknown element type");

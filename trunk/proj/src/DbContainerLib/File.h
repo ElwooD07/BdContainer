@@ -1,5 +1,5 @@
 #pragma once
-#include "ContainerElement.h"
+#include "Element.h"
 #include "IProgressObserver.h"
 
 namespace dbc
@@ -8,12 +8,12 @@ namespace dbc
 	union Error;
 	class FileStreamsManager;
 
-	class ContainerFile: public ContainerElement
+	class File: public Element
 	{
 	public:
-		ContainerFile(ContainerResources resources, int64_t id);
-		ContainerFile(ContainerResources resources, int64_t parentId, const std::string& name);
-		~ContainerFile();
+		File(ContainerResources resources, int64_t id);
+		File(ContainerResources resources, int64_t parentId, const std::string& name);
+		~File();
 
 		virtual void Remove();
 

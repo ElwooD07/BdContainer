@@ -91,11 +91,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ContainerAPI.h" />
-    <ClInclude Include="..\ContainerElement.h" />
     <ClInclude Include="..\ContainerException.h" />
-    <ClInclude Include="..\ContainerFile.h" />
-    <ClInclude Include="..\ContainerFolder.h" />
     <ClInclude Include="..\ContainerResources.h" />
+    <ClInclude Include="..\Element.h" />
+    <ClInclude Include="..\ElementsIterator.h" />
+    <ClInclude Include="..\File.h" />
+    <ClInclude Include="..\Folder.h" />
     <ClInclude Include="..\SymLink.h" />
     <ClInclude Include="..\DataUsagePreferences.h" />
     <ClInclude Include="..\ElementProperties.h" />
@@ -135,12 +136,12 @@
     <ClCompile Include="Container.cpp" />
     <ClCompile Include="ContainerAPI.cpp" />
     <ClCompile Include="ContainerDefragmenter.cpp" />
-    <ClCompile Include="ContainerElement.cpp" />
     <ClCompile Include="ContainerException.cpp" />
-    <ClCompile Include="ContainerFile.cpp" />
-    <ClCompile Include="ContainerFolder.cpp" />
     <ClCompile Include="ContainerInfoImpl.cpp" />
     <ClCompile Include="ContainerResources.cpp" />
+    <ClCompile Include="Element.cpp" />
+    <ClCompile Include="File.cpp" />
+    <ClCompile Include="Folder.cpp" />
     <ClCompile Include="SymLink.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="DataStorageBinaryFile.cpp" />

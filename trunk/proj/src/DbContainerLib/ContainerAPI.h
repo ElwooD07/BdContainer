@@ -1,8 +1,8 @@
 #pragma once
 #include "IContainer.h"
 #include "IDataStorage.h"
-#include "ContainerFolder.h"
-#include "ContainerFile.h"
+#include "Folder.h"
+#include "File.h"
 #include <string>
 #include <limits>
 

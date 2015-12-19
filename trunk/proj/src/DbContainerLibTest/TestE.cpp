@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ContainerAPI.h"
-#include "ContainerFile.h"
+#include "File.h"
 #include "ContainerException.h"
 #include "Utils.h"
 

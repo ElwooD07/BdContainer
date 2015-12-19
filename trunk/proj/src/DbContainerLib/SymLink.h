@@ -1,9 +1,9 @@
 #pragma once
-#include "ContainerElement.h"
+#include "Element.h"
 
 namespace dbc
 {
-	class SymLink : public ContainerElement
+	class SymLink : public Element
 	{
 	public:
 		SymLink(ContainerResources resources, int64_t id);

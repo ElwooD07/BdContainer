@@ -1,39 +1,39 @@
 #include "stdafx.h"
-#include "ContainerFolder.h"
-#include "ContainerFile.h"
+#include "Folder.h"
+#include "File.h"
 #include "Container.h"
 #include "SQLQuery.h"
 #include "FsUtils.h"
 #include "CommonUtils.h"
 #include "ContainerException.h"
 
-dbc::ContainerFolder::ContainerFolder(ContainerResources resources, int64_t id)
-	: ContainerElement(resources, id)
+dbc::Folder::Folder(ContainerResources resources, int64_t id)
+	: Element(resources, id)
 {	}
 
-dbc::ContainerFolder::ContainerFolder(ContainerResources resources, int64_t parent_id, const std::string &name)
-	: ContainerElement(resources, parent_id, name)
+dbc::Folder::Folder(ContainerResources resources, int64_t parent_id, const std::string &name)
+	: Element(resources, parent_id, name)
 {	}
 
-std::string dbc::ContainerFolder::Name()
+std::string dbc::Folder::Name()
 {
 	if (IsRoot())
 	{
 		return m_name;
 	}
-	return ContainerElement::Name();
+	return Element::Name();
 }
 
-std::string dbc::ContainerFolder::Path()
+std::string dbc::Folder::Path()
 {
 	if (IsRoot())
 	{
 		return m_name;
 	}
-	return ContainerElement::Path();
+	return Element::Path();
 }
 
-void dbc::ContainerFolder::Remove()
+void dbc::Folder::Remove()
 {
 	Refresh();
 
@@ -44,11 +44,11 @@ void dbc::ContainerFolder::Remove()
 	}
 }
 
-void dbc::ContainerFolder::Rename(const std::string& newName)
+void dbc::Folder::Rename(const std::string& newName)
 {
 	if (!IsRoot())
 	{
-		ContainerElement::Rename(newName);
+		Element::Rename(newName);
 
 		m_props.SetDateModified(::time(0));
 		WriteProps();
@@ -59,12 +59,12 @@ void dbc::ContainerFolder::Rename(const std::string& newName)
 	}
 }
 
-dbc::ContainerFolderGuard dbc::ContainerFolder::Clone() const
+dbc::ContainerFolderGuard dbc::Folder::Clone() const
 {
-	return ContainerFolderGuard(new ContainerFolder(m_resources, m_id));
+	return ContainerFolderGuard(new Folder(m_resources, m_id));
 }
 
-bool dbc::ContainerFolder::IsRoot() const
+bool dbc::Folder::IsRoot() const
 {
 	if (m_id == dbc::Container::ROOT_ID)
 	{
@@ -74,7 +74,7 @@ bool dbc::ContainerFolder::IsRoot() const
 	return false;
 }
 
-bool dbc::ContainerFolder::HasChildren()
+bool dbc::Folder::HasChildren()
 {
 	SQLQuery query(m_resources->GetConnection(), "SELECT count(*) FROM FileSystem WHERE parent_id = ? LIMIT 1;");
 	query.BindInt64(1, m_id);
@@ -82,7 +82,7 @@ bool dbc::ContainerFolder::HasChildren()
 	return query.ColumnInt(0) > 0;
 }
 
-dbc::ContainerElementGuard dbc::ContainerFolder::GetChild(const std::string& name)
+dbc::ContainerElementGuard dbc::Folder::GetChild(const std::string& name)
 {
 	Refresh();
 
@@ -105,9 +105,9 @@ dbc::ContainerElementGuard dbc::ContainerFolder::GetChild(const std::string& nam
 	switch (tmp_type)
 	{
 	case ElementTypeFolder:
-		return ContainerElementGuard(new ContainerFolder(m_resources, id));
+		return ContainerElementGuard(new Folder(m_resources, id));
 	case ElementTypeFile:
-		return ContainerElementGuard(new ContainerFile(m_resources, id));
+		return ContainerElementGuard(new File(m_resources, id));
 	case ElementTypeSymLink:
 		return ContainerElementGuard(new SymLink(m_resources, id));
 	default:
@@ -116,15 +116,15 @@ dbc::ContainerElementGuard dbc::ContainerFolder::GetChild(const std::string& nam
 	}
 }
 
-dbc::ContainerElementGuard dbc::ContainerFolder::CreateChild(const std::string& name, ElementType type, const std::string& tag /*= 0*/)
+dbc::ContainerElementGuard dbc::Folder::CreateChild(const std::string& name, ElementType type, const std::string& tag /*= 0*/)
 {
 	CreateChildEntry(name, type, tag);
 	switch (type)
 	{
 	case ElementTypeFolder:
-		return ContainerElementGuard(new ContainerFolder(m_resources, m_id, name));
+		return ContainerElementGuard(new Folder(m_resources, m_id, name));
 	case ElementTypeFile:
-		return ContainerElementGuard(new ContainerFile(m_resources, m_id, name));
+		return ContainerElementGuard(new File(m_resources, m_id, name));
 	case ElementTypeSymLink:
 		return ContainerElementGuard(new SymLink(m_resources, m_id, name));
 	default:
@@ -133,30 +133,30 @@ dbc::ContainerElementGuard dbc::ContainerFolder::CreateChild(const std::string& 
 	}
 }
 
-dbc::ContainerFolderGuard dbc::ContainerFolder::CreateFolder(const std::string& name, const std::string& tag)
+dbc::ContainerFolderGuard dbc::Folder::CreateFolder(const std::string& name, const std::string& tag)
 {
 	CreateChildEntry(name, ElementTypeFolder, tag);
-	return ContainerFolderGuard(new ContainerFolder(m_resources, m_id, name));
+	return ContainerFolderGuard(new Folder(m_resources, m_id, name));
 }
-dbc::ContainerFileGuard dbc::ContainerFolder::CreateFile(const std::string& name, const std::string& tag)
+dbc::ContainerFileGuard dbc::Folder::CreateFile(const std::string& name, const std::string& tag)
 {
 	CreateChildEntry(name, ElementTypeFile, tag);
-	return ContainerFileGuard(new ContainerFile(m_resources, m_id, name));
+	return ContainerFileGuard(new File(m_resources, m_id, name));
 }
 
-dbc::SymLinkGuard dbc::ContainerFolder::CreateSymLink(const std::string& name, const std::string& targetPath, const std::string& tag /*= ""*/)
+dbc::SymLinkGuard dbc::Folder::CreateSymLink(const std::string& name, const std::string& targetPath, const std::string& tag /*= ""*/)
 {
 	CreateChildEntry(name, ElementTypeSymLink, tag, targetPath);
 	return SymLinkGuard(new SymLink(m_resources, m_id, name));
 }
 
-dbc::DbcElementsIterator dbc::ContainerFolder::EnumFsEntries()
+dbc::DbcElementsIterator dbc::Folder::EnumFsEntries()
 {
 	Refresh();
 	return DbcElementsIterator(new ElementsIterator(m_resources, m_id));
 }
 
-dbc::Error dbc::ContainerFolder::RemoveFolder(Connection& connection, int64_t folderId)
+dbc::Error dbc::Folder::RemoveFolder(Connection& connection, int64_t folderId)
 {
 	if (folderId <= 1)
 	{
@@ -193,7 +193,7 @@ dbc::Error dbc::ContainerFolder::RemoveFolder(Connection& connection, int64_t fo
 	return ret;
 }
 
-void dbc::ContainerFolder::CreateChildEntry(const std::string& name, ElementType type, const std::string& tag, const std::string& specificData)
+void dbc::Folder::CreateChildEntry(const std::string& name, ElementType type, const std::string& tag, const std::string& specificData)
 {
 	Refresh();
 

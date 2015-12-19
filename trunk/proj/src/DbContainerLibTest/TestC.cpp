@@ -56,7 +56,7 @@ TEST(C_FileSystemTest, Folders_RootAndChild)
 	ASSERT_NO_THROW(root = cont->GetRoot());
 	ContainerElementGuard ce;
 	EXPECT_NO_THROW(ce = root->CreateChild(folder1name, ElementTypeFolder, folder1tag));
-	ContainerFolder* cf = nullptr;
+	Folder* cf = nullptr;
 	EXPECT_NO_THROW(cf = ce->AsFolder());
 	EXPECT_TRUE(cf->Exists());
 	EXPECT_TRUE(ce->Exists());
@@ -86,7 +86,7 @@ TEST(C_FileSystemTest, Folders_RootAndChildrenCreate)
 	EXPECT_NO_THROW(ce1 = root->CreateChild(folder1name, ElementTypeFolder, folder1tag));
 	EXPECT_NO_THROW(ce2 = root->CreateChild(file1name, ElementTypeFile, file1tag));
 
-	ContainerFolder* cfold = nullptr;
+	Folder* cfold = nullptr;
 	EXPECT_NO_THROW(ce3 = root->GetChild(folder1name));
 	EXPECT_NO_THROW(cfold = ce3->AsFolder());
 	ASSERT_NE(cfold, nullptr);
@@ -101,7 +101,7 @@ TEST(C_FileSystemTest, Folders_RootAndChildrenCreate)
 	std::string folder1path(root->Name() + folder1name);
 	EXPECT_EQ(folder1path, cfold->Path());
 
-	ContainerFile* cfile = nullptr;
+	File* cfile = nullptr;
 	EXPECT_NO_THROW(ce3 = root->GetChild(file1name));
 	EXPECT_NO_THROW(cfile = ce3->AsFile());
 	ASSERT_NE(cfile, nullptr);

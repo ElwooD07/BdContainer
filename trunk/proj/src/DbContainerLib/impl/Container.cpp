@@ -2,9 +2,9 @@
 #include "Container.h"
 #include "ContainerAPI.h"
 #include "DataStorageBinaryFile.h"
-#include "ContainerElement.h"
-#include "ContainerFolder.h"
-#include "ContainerFile.h"
+#include "Element.h"
+#include "Folder.h"
+#include "File.h"
 #include "ContainerResourcesImpl.h"
 #include "ContainerException.h"
 #include "Crypto.h"
@@ -185,7 +185,7 @@ std::string dbc::Container::GetPath() const
 
 dbc::ContainerFolderGuard dbc::Container::GetRoot()
 {
-	return ContainerFolderGuard(new ContainerFolder(m_resources, ROOT_ID));
+	return ContainerFolderGuard(new Folder(m_resources, ROOT_ID));
 }
 
 dbc::ContainerElementGuard dbc::Container::GetElement(const std::string& path)
@@ -224,9 +224,9 @@ dbc::ContainerElementGuard dbc::Container::GetElement(const std::string& path)
 	switch (elementType)
 	{
 	case ElementTypeFolder:
-		return ContainerElementGuard(new ContainerFolder(m_resources, parentId));
+		return ContainerElementGuard(new Folder(m_resources, parentId));
 	case ElementTypeFile:
-		return ContainerElementGuard(new ContainerFile(m_resources, parentId));
+		return ContainerElementGuard(new File(m_resources, parentId));
 	default:
 		throw ContainerException(ERR_INTERNAL);
 	}

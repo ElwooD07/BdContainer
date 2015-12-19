@@ -1,5 +1,5 @@
 #pragma once
-#include "ContainerElement.h"
+#include "Element.h"
 #include "ElementsIterator.h"
 #include "SymLink.h"
 
@@ -7,11 +7,11 @@ namespace dbc
 {
 	class Connection;
 
-	class ContainerFolder: public ContainerElement
+	class Folder: public Element
 	{
 	public:
-		ContainerFolder(ContainerResources resources, int64_t id);
-		ContainerFolder(ContainerResources resources, int64_t parentId, const std::string& name);
+		Folder(ContainerResources resources, int64_t id);
+		Folder(ContainerResources resources, int64_t parentId, const std::string& name);
 
 		virtual std::string Name(); // optimized for the root
 		virtual std::string Path(); // optimized for the root

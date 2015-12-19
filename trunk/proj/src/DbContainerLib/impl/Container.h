@@ -9,7 +9,7 @@ struct sqlite3;
 namespace dbc
 {
 	enum ElementType;
-	class ContainerElement;
+	class Element;
 
 	class Container: public IContainer
 	{

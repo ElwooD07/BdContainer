@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "ContainerFile.h"
+#include "File.h"
 #include "FileStreamsManager.h"
 #include "Types.h"
 #include "Container.h"
@@ -13,7 +13,7 @@ namespace
 	class TemporarilyFileOpener
 	{
 	public:
-		TemporarilyFileOpener(dbc::ContainerFile* file, dbc::ReadWriteAccess access)
+		TemporarilyFileOpener(dbc::File* file, dbc::ReadWriteAccess access)
 			: m_file(file)
 			, m_wasTemporarilyOpened(false)
 		{
@@ -36,23 +36,23 @@ namespace
 		}
 
 	private:
-		dbc::ContainerFile* m_file;
+		dbc::File* m_file;
 		bool m_wasTemporarilyOpened;
 	};
 }
 
-dbc::ContainerFile::ContainerFile(ContainerResources resources, int64_t id)
-	: ContainerElement(resources, id), m_access(NoAccess)
+dbc::File::File(ContainerResources resources, int64_t id)
+	: Element(resources, id), m_access(NoAccess)
 {	}
 
-dbc::ContainerFile::~ContainerFile()
+dbc::File::~File()
 { /*To avoid warning C4150*/}
 
-dbc::ContainerFile::ContainerFile(ContainerResources resources, int64_t parent_id, const std::string &name)
-	: ContainerElement(resources, parent_id, name), m_access(NoAccess)
+dbc::File::File(ContainerResources resources, int64_t parent_id, const std::string &name)
+	: Element(resources, parent_id, name), m_access(NoAccess)
 {	}
 
-void dbc::ContainerFile::Remove()
+void dbc::File::Remove()
 {
 	Refresh();
 
@@ -61,15 +61,15 @@ void dbc::ContainerFile::Remove()
 	query.BindInt64(2, m_id);
 	while (query.Step());
 
-	ContainerElement::Remove();
+	Element::Remove();
 }
 
-dbc::ContainerFileGuard dbc::ContainerFile::Clone() const
+dbc::ContainerFileGuard dbc::File::Clone() const
 {
-	return ContainerFileGuard(new ContainerFile(m_resources, m_id));
+	return ContainerFileGuard(new File(m_resources, m_id));
 }
 
-void dbc::ContainerFile::Open(ReadWriteAccess access)
+void dbc::File::Open(ReadWriteAccess access)
 {
 	if (access == NoAccess)
 	{
@@ -89,29 +89,29 @@ void dbc::ContainerFile::Open(ReadWriteAccess access)
 	m_streamsManager.reset(new FileStreamsManager(m_id, m_resources));
 }
 
-bool dbc::ContainerFile::IsOpened() const
+bool dbc::File::IsOpened() const
 {
 	return m_access != NoAccess;
 }
 
-dbc::ReadWriteAccess dbc::ContainerFile::Access() const
+dbc::ReadWriteAccess dbc::File::Access() const
 {
 	return m_access;
 }
 
-void dbc::ContainerFile::Close()
+void dbc::File::Close()
 {
 	m_resources->GetSync().ReleaseFileLock(m_id, m_access);
 	m_access = NoAccess;
 	m_streamsManager.reset();
 }
 
-bool dbc::ContainerFile::IsEmpty() const
+bool dbc::File::IsEmpty() const
 {
 	return Size() == 0;
 }
 
-uint64_t dbc::ContainerFile::Size() const
+uint64_t dbc::File::Size() const
 {
 	if (IsOpened())
 	{
@@ -126,7 +126,7 @@ uint64_t dbc::ContainerFile::Size() const
 	}
 }
 
-uint64_t dbc::ContainerFile::Read(std::ostream& out, uint64_t size, IProgressObserver* observer)
+uint64_t dbc::File::Read(std::ostream& out, uint64_t size, IProgressObserver* observer)
 {
 	if (!out)
 	{
@@ -175,7 +175,7 @@ uint64_t dbc::ContainerFile::Read(std::ostream& out, uint64_t size, IProgressObs
 	return readTotal;
 }
 
-uint64_t dbc::ContainerFile::Write(std::istream& in, uint64_t size, IProgressObserver* observer)
+uint64_t dbc::File::Write(std::istream& in, uint64_t size, IProgressObserver* observer)
 {
 	if (!in)
 	{
@@ -200,7 +200,7 @@ uint64_t dbc::ContainerFile::Write(std::istream& in, uint64_t size, IProgressObs
 	return writtenTotal;
 }
 
-void dbc::ContainerFile::Clear()
+void dbc::File::Clear()
 {
 	TemporarilyFileOpener openGuard(this, WriteAccess);
 	m_streamsManager->ReloadStreamsInfo();
@@ -212,7 +212,7 @@ void dbc::ContainerFile::Clear()
 	m_streamsManager->ReloadStreamsInfo();
 }
 
-dbc::ContainerFile::SpaceUsageInfo dbc::ContainerFile::GetSpaceUsageInfo()
+dbc::File::SpaceUsageInfo dbc::File::GetSpaceUsageInfo()
 {
 	SpaceUsageInfo info;
 	if (IsOpened())
@@ -230,7 +230,7 @@ dbc::ContainerFile::SpaceUsageInfo dbc::ContainerFile::GetSpaceUsageInfo()
 	return std::move(info);
 }
 
-uint64_t dbc::ContainerFile::DirectWrite(std::istream& in, uint64_t size, IProgressObserver* observer)
+uint64_t dbc::File::DirectWrite(std::istream& in, uint64_t size, IProgressObserver* observer)
 {
 	try
 	{
@@ -245,7 +245,7 @@ uint64_t dbc::ContainerFile::DirectWrite(std::istream& in, uint64_t size, IProgr
 	return WriteImpl(in, size, false, observer);
 }
 
-uint64_t dbc::ContainerFile::TransactionalWrite(std::istream& in, uint64_t size, IProgressObserver* observer)
+uint64_t dbc::File::TransactionalWrite(std::istream& in, uint64_t size, IProgressObserver* observer)
 {
 	try
 	{
@@ -263,7 +263,7 @@ uint64_t dbc::ContainerFile::TransactionalWrite(std::istream& in, uint64_t size,
 	return writtenTotal;
 }
 
-uint64_t dbc::ContainerFile::WriteImpl(std::istream& in, uint64_t size, bool writeOnlyToUnusedStreams, IProgressObserver* observer)
+uint64_t dbc::File::WriteImpl(std::istream& in, uint64_t size, bool writeOnlyToUnusedStreams, IProgressObserver* observer)
 {
 	ProxyProgressObserver proxyObserver(observer);
 	uint64_t writtenTotal = 0;
@@ -288,7 +288,7 @@ uint64_t dbc::ContainerFile::WriteImpl(std::istream& in, uint64_t size, bool wri
 	return writtenTotal;
 }
 
-void dbc::ContainerFile::GetSpaceUsageInfoImpl(FileStreamsManager* streamsManager, SpaceUsageInfo& info)
+void dbc::File::GetSpaceUsageInfoImpl(FileStreamsManager* streamsManager, SpaceUsageInfo& info)
 {
 	const StreamsChain_vt& streams = streamsManager->GetAllStreams();
 	info.streamsTotal = streams.size();

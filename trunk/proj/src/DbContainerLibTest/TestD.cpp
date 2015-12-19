@@ -46,7 +46,7 @@ TEST(D_FileSystemTest, Folders_Create_1)
 		EXPECT_NO_THROW(ce = root->GetChild(foldsNames[i]));
 		EXPECT_EQ(foldsNames[i], ce->Name());
 		EXPECT_EQ(ElementTypeFolder, ce->Type());
-		ContainerFolder* cf = ce->AsFolder();
+		Folder* cf = ce->AsFolder();
 		ASSERT_NE(cf, nullptr);
 		folds.push_back(cf->AsFolder()->Clone());
 	}
@@ -122,7 +122,7 @@ TEST(D_FileSystemTest, Folders_Create_3)
 			EXPECT_NO_THROW(ce = new_root->GetChild(foldsNames[j]));
 			EXPECT_EQ(foldsNames[j], ce->Name());
 			EXPECT_EQ(ElementTypeFolder, ce->Type());
-			ContainerFolder* cf = ce->AsFolder();
+			Folder* cf = ce->AsFolder();
 			ASSERT_NE(cf, nullptr);
 
 			EXPECT_THROW(new_root->CreateChild(foldsNames[j], ElementTypeFolder), ContainerException);

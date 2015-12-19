@@ -210,7 +210,7 @@ QModelIndex model::DbContainerModel::AddElement(dbc::ElementType type, const QSt
 		return QModelIndex();
 	}
 	TreeNode* parentNode = Index2Node(parent);
-	dbc::ContainerFolder* folder = parentNode->GetElement()->AsFolder();
+	dbc::Folder* folder = parentNode->GetElement()->AsFolder();
 	assert(folder != nullptr);
 	if (folder == nullptr)
 	{
@@ -244,7 +244,7 @@ void model::DbContainerModel::LoadChildren(const QModelIndex& parent)
 	dbc::ContainerElementGuard element = node->GetElement();
 	if (!node->wasLoaded && element->Type() == dbc::ElementTypeFolder)
 	{
-		dbc::ContainerFolder* folder = element->AsFolder();
+		dbc::Folder* folder = element->AsFolder();
 		assert(folder != nullptr);
 		dbc::DbcElementsIterator iterator = folder->EnumFsEntries();
 		if (iterator->HasNext())

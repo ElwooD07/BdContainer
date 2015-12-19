@@ -50,7 +50,7 @@ void gui::FsTreeMenuTree::OnCreateFolderTriggered()
 
 void gui::FsTreeMenuTree::OnCreateLinkTriggered()
 {
-	CreateChild(tr("New link"), tr("Create link"), dbc::ElementTypeLink);
+	CreateChild(tr("New link"), tr("Create link"), dbc::ElementTypeSymLink);
 }
 
 void gui::FsTreeMenuTree::CreateChild(const QString& defaultName, const QString& titleStr, dbc::ElementType type)

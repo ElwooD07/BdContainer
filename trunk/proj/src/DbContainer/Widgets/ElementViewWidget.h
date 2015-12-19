@@ -1,5 +1,5 @@
 #pragma once
-#include "ContainerElement.h"
+#include "Element.h"
 #include "ui_ElementViewWidget.h"
 
 namespace gui

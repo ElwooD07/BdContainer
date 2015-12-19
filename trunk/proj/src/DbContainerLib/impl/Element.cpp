@@ -1,16 +1,16 @@
 #include "stdafx.h"
-#include "ContainerElement.h"
+#include "Element.h"
 #include "ContainerAPI.h"
 #include "Container.h"
-#include "ContainerFolder.h"
-#include "ContainerFile.h"
+#include "Folder.h"
+#include "File.h"
 #include "SQLQuery.h"
 #include "ContainerException.h"
 #include "FsUtils.h"
 
-dbc::Error dbc::ContainerElement::s_errElementNotFound = dbc::Error(ERR_DB_FS, NOT_FOUND);
+dbc::Error dbc::Element::s_errElementNotFound = dbc::Error(ERR_DB_FS, NOT_FOUND);
 
-dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t id)
+dbc::Element::Element(ContainerResources resources, int64_t id)
 	: m_resources(resources), m_id(id)
 {
 	SQLQuery query(m_resources->GetConnection(), "SELECT parent_id, name, type, props, specific_data FROM FileSystem WHERE id = ?;");
@@ -24,7 +24,7 @@ dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t id
 	InitElementInfo(query, 2, 3, 4);
 }
 
-dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t parent_id, const std::string& name)
+dbc::Element::Element(ContainerResources resources, int64_t parent_id, const std::string& name)
 	: m_resources(resources), m_parentId(parent_id), m_name(name)
 {
 	SQLQuery query(m_resources->GetConnection(), "SELECT id, type, props, specific_data FROM FileSystem WHERE parent_id = ? AND name = ?;");
@@ -38,7 +38,7 @@ dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t pa
 	InitElementInfo(query, 1, 2, 3);
 }
 
-bool dbc::ContainerElement::Exists()
+bool dbc::Element::Exists()
 {
 	Error res = Exists(m_parentId, m_name);
 	if (res == SUCCESS)
@@ -55,16 +55,16 @@ bool dbc::ContainerElement::Exists()
 	}
 }
 
-std::string dbc::ContainerElement::Name()
+std::string dbc::Element::Name()
 {
 	Refresh();
 
 	return m_name;
 }
 
-std::string dbc::ContainerElement::Path()
+std::string dbc::Element::Path()
 {
-	// Class ContainerElement does not contain such field as "m_path", because his path may change independently of it at any time. Thats why this func is not const and does queries to get the "current" path of the element.
+	// Class Element does not contain such field as "m_path", because his path may change independently of it at any time. Thats why this func is not const and does queries to get the "current" path of the element.
 	Refresh();
 
 	std::string out;
@@ -93,32 +93,32 @@ std::string dbc::ContainerElement::Path()
 	return out;
 }
 
-dbc::ElementType dbc::ContainerElement::Type() const
+dbc::ElementType dbc::Element::Type() const
 {
 	return m_type;
 }
 
-dbc::ContainerFolder* dbc::ContainerElement::AsFolder()
+dbc::Folder* dbc::Element::AsFolder()
 {
-	return dynamic_cast<ContainerFolder*>(this);
+	return dynamic_cast<Folder*>(this);
 }
 
-dbc::ContainerFile* dbc::ContainerElement::AsFile()
+dbc::File* dbc::Element::AsFile()
 {
-	return dynamic_cast<ContainerFile*>(this);
+	return dynamic_cast<File*>(this);
 }
 
-bool dbc::ContainerElement::IsTheSame(const ContainerElement& obj) const
+bool dbc::Element::IsTheSame(const Element& obj) const
 {
-	const ContainerElement& ce = dynamic_cast<const ContainerElement&>(obj);
+	const Element& ce = dynamic_cast<const Element&>(obj);
 	return (m_resources == ce.m_resources && m_id == ce.m_id);
 }
 
-bool dbc::ContainerElement::IsChildOf(const ContainerElement& obj)
+bool dbc::Element::IsChildOf(const Element& obj)
 {
 	Refresh();
 
-	const ContainerElement& elementObj = dynamic_cast<const ContainerElement&>(obj);
+	const Element& elementObj = dynamic_cast<const Element&>(obj);
 	if (elementObj.m_type == ElementTypeFile)
 	{
 		return false;
@@ -160,17 +160,17 @@ bool dbc::ContainerElement::IsChildOf(const ContainerElement& obj)
 	return false;
 }
 
-dbc::ContainerFolderGuard dbc::ContainerElement::GetParentEntry()
+dbc::ContainerFolderGuard dbc::Element::GetParentEntry()
 {
 	if (m_parentId < Container::ROOT_ID)
 	{
 		throw ContainerException(ERR_DB_FS, NOT_FOUND);
 	}
 
-	return ContainerFolderGuard(new ContainerFolder(m_resources, m_parentId));
+	return ContainerFolderGuard(new Folder(m_resources, m_parentId));
 }
 
-void dbc::ContainerElement::MoveToEntry(ContainerFolder& newParent)
+void dbc::Element::MoveToEntry(Folder& newParent)
 {
 	Refresh();
 
@@ -179,7 +179,7 @@ void dbc::ContainerElement::MoveToEntry(ContainerFolder& newParent)
 		throw ContainerException(ACTION_IS_FORBIDDEN);
 	}
 
-	ContainerElement& elementObj = dynamic_cast<ContainerElement&>(newParent);
+	Element& elementObj = dynamic_cast<Element&>(newParent);
 	Error res = Exists(elementObj.m_id, m_name);
 	if (res != s_errElementNotFound)
 	{
@@ -199,14 +199,14 @@ void dbc::ContainerElement::MoveToEntry(ContainerFolder& newParent)
 	WriteProps();
 }
 
-void dbc::ContainerElement::Remove()
+void dbc::Element::Remove()
 {
 	SQLQuery query(m_resources->GetConnection(), "DELETE FROM FileSystem WHERE id = ?;");
 	query.BindInt64(1, m_id);
 	query.Step();
 }
 
-void dbc::ContainerElement::Rename(const std::string& newName)
+void dbc::Element::Rename(const std::string& newName)
 {
 	if (newName.empty() || !dbc::utils::FileNameIsValid(newName))
 	{
@@ -236,14 +236,14 @@ void dbc::ContainerElement::Rename(const std::string& newName)
 	m_name = newName;
 }
 
-void dbc::ContainerElement::GetProperties(ElementProperties& out)
+void dbc::Element::GetProperties(ElementProperties& out)
 {
 	Refresh();
 
 	out = m_props;
 }
 
-void dbc::ContainerElement::ResetProperties(const std::string& tag)
+void dbc::Element::ResetProperties(const std::string& tag)
 {
 	Refresh();
 
@@ -255,7 +255,7 @@ void dbc::ContainerElement::ResetProperties(const std::string& tag)
 	WriteProps();
 }
 
-void dbc::ContainerElement::Refresh()
+void dbc::Element::Refresh()
 {
 	SQLQuery query(m_resources->GetConnection(), "SELECT count(*), parent_id, name, props FROM FileSystem WHERE id = ?;");
 	query.BindInt64(1, m_id);
@@ -272,7 +272,7 @@ void dbc::ContainerElement::Refresh()
 	ElementProperties::ParseString(props_str, m_props);
 }
 
-dbc::Error dbc::ContainerElement::Exists(int64_t parent_id, std::string name)
+dbc::Error dbc::Element::Exists(int64_t parent_id, std::string name)
 {
 	int count = 0;
 	try
@@ -288,7 +288,7 @@ dbc::Error dbc::ContainerElement::Exists(int64_t parent_id, std::string name)
 	}
 }
 
-void dbc::ContainerElement::WriteProps()
+void dbc::Element::WriteProps()
 {
 	// Writes properties about this object to the table FileSystem in 'props' column
 	// Its exceptions are managed by calling functions
@@ -300,7 +300,7 @@ void dbc::ContainerElement::WriteProps()
 	query.Step();
 }
 
-void dbc::ContainerElement::InitElementInfo(SQLQuery& query, int typeN, int propsN, int specificDataN)
+void dbc::Element::InitElementInfo(SQLQuery& query, int typeN, int propsN, int specificDataN)
 {
 	int tmp_type = query.ColumnInt(typeN);
 	m_type = static_cast<ElementType>(tmp_type);

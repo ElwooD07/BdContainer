@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "ElementsIterator.h"
-#include "ContainerFolder.h"
-#include "ContainerFile.h"
+#include "Folder.h"
+#include "File.h"
 #include "SQLQuery.h"
 #include "ContainerException.h"
 #include "IContainnerResources.h"
@@ -51,9 +51,9 @@ ContainerElementGuard ElementsIterator::Next()
 	switch (current.Type)
 	{
 	case ElementTypeFolder:
-		return ContainerElementGuard(new ContainerFolder(m_resources, current.ID));
+		return ContainerElementGuard(new Folder(m_resources, current.ID));
 	case ElementTypeFile:
-		return ContainerElementGuard(new ContainerFile(m_resources, current.ID));
+		return ContainerElementGuard(new File(m_resources, current.ID));
 	default:
 		assert(!"Unknown element type specified");
 		throw ContainerException(ERR_INTERNAL);

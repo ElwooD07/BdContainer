@@ -9,32 +9,32 @@ namespace dbc
 {
 	class SQLQuery;
 
-	class ContainerFolder;
-	class ContainerFile;
+	class Folder;
+	class File;
 
-	typedef std::shared_ptr<ContainerFolder> ContainerFolderGuard;
-	typedef std::shared_ptr<ContainerFile> ContainerFileGuard;
+	typedef std::shared_ptr<Folder> ContainerFolderGuard;
+	typedef std::shared_ptr<File> ContainerFileGuard;
 
-	class ContainerElement
+	class Element
 	{
 	public:
-		ContainerElement(ContainerResources resources, int64_t id);
-		ContainerElement(ContainerResources resources, int64_t parentId, const std::string& name);
+		Element(ContainerResources resources, int64_t id);
+		Element(ContainerResources resources, int64_t parentId, const std::string& name);
 
 		virtual bool Exists();
 		virtual std::string Name();
 		virtual std::string Path();
 		virtual ElementType Type() const;
 
-		virtual ContainerFolder* AsFolder();
-		virtual ContainerFile* AsFile();
+		virtual Folder* AsFolder();
+		virtual File* AsFile();
 
-		virtual bool IsTheSame(const ContainerElement& obj) const;
-		virtual bool IsChildOf(const ContainerElement& obj);
+		virtual bool IsTheSame(const Element& obj) const;
+		virtual bool IsChildOf(const Element& obj);
 
 		virtual ContainerFolderGuard GetParentEntry();
 
-		virtual void MoveToEntry(ContainerFolder& newParent);
+		virtual void MoveToEntry(Folder& newParent);
 		virtual void Remove();
 		virtual void Rename(const std::string& newName);
 
@@ -62,5 +62,5 @@ namespace dbc
 		void InitElementInfo(SQLQuery& query, int typeN, int propsN, int specificDataN);
 	};
 
-	typedef std::shared_ptr<ContainerElement> ContainerElementGuard;
+	typedef std::shared_ptr<Element> ContainerElementGuard;
 }
