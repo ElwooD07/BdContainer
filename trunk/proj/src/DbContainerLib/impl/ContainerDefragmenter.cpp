@@ -139,8 +139,8 @@ float dbc::ContainerDefragmenter::CalculateSingleFileFragmentation(uint64_t file
 		{
 			++fragmentedStreams;
 			if (utils::FreeSpaceMeetsFragmentationLevelRequirements(size - used,
-				m_resources->DataUsagePrefs().FragmentationLevel(),
-				m_resources->DataUsagePrefs().ClusterSize()))
+				m_resources->GetContainer().GetDataUsagePreferences().FragmentationLevel(),
+				m_resources->GetContainer().GetDataUsagePreferences().ClusterSize()))
 			{
 				++fragmentedStreams; // Potentially fragmented
 			}

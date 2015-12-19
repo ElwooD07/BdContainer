@@ -43,7 +43,7 @@ namespace
 
 		std::list<std::string> tables;
 		tables.push_back("CREATE TABLE Sets(id INTEGER PRIMARY KEY NOT NULL, storage_data_size INTEGER, storage_data BLOB);");
-		tables.push_back("CREATE TABLE FileSystem(id INTEGER PRIMARY KEY NOT NULL, parent_id INTEGER, name TEXT, type INTEGER, props TEXT);");
+		tables.push_back("CREATE TABLE FileSystem(id INTEGER PRIMARY KEY NOT NULL, parent_id INTEGER, name TEXT, type INTEGER, props TEXT, specific_data BLOB);");
 		tables.push_back("CREATE TABLE FileStreams(id INTEGER PRIMARY KEY NOT NULL, file_id INTEGER NOT NULL, stream_order INTEGER, start INTEGER, size INTEGER, used INTEGER);");
 
 		for (std::list<std::string>::const_iterator itr = tables.begin(); itr != tables.end(); ++itr)
@@ -269,7 +269,7 @@ void dbc::Container::PrepareContainer(const std::string& password, bool create)
 	}
 	SetDBPragma(m_connection);
 
-	m_resources.reset(new ContaierResourcesImpl(m_connection, *m_storage, m_dataUsagePrefs));
+	m_resources.reset(new ContaierResourcesImpl(*this, m_connection, *m_storage));
 }
 
 void dbc::Container::ReadSets(RawData& storageData)

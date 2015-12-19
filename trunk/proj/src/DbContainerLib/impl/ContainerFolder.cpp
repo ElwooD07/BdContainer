@@ -4,6 +4,7 @@
 #include "Container.h"
 #include "SQLQuery.h"
 #include "FsUtils.h"
+#include "CommonUtils.h"
 #include "ContainerException.h"
 
 dbc::ContainerFolder::ContainerFolder(ContainerResources resources, int64_t id)
@@ -107,13 +108,15 @@ dbc::ContainerElementGuard dbc::ContainerFolder::GetChild(const std::string& nam
 		return ContainerElementGuard(new ContainerFolder(m_resources, id));
 	case ElementTypeFile:
 		return ContainerElementGuard(new ContainerFile(m_resources, id));
+	case ElementTypeSymLink:
+		return ContainerElementGuard(new SymLink(m_resources, id));
 	default:
 		assert(!"Unknown element type specified");
 		throw ContainerException(ERR_DB, IS_DAMAGED);
 	}
 }
 
-dbc::ContainerElementGuard dbc::ContainerFolder::CreateChild(const std::string& name, ElementType type, const std::string& tag)
+dbc::ContainerElementGuard dbc::ContainerFolder::CreateChild(const std::string& name, ElementType type, const std::string& tag /*= 0*/)
 {
 	CreateChildEntry(name, type, tag);
 	switch (type)
@@ -122,6 +125,8 @@ dbc::ContainerElementGuard dbc::ContainerFolder::CreateChild(const std::string& 
 		return ContainerElementGuard(new ContainerFolder(m_resources, m_id, name));
 	case ElementTypeFile:
 		return ContainerElementGuard(new ContainerFile(m_resources, m_id, name));
+	case ElementTypeSymLink:
+		return ContainerElementGuard(new SymLink(m_resources, m_id, name));
 	default:
 		assert(!"Unknown element type specified");
 		throw ContainerException(ERR_INTERNAL);
@@ -137,6 +142,12 @@ dbc::ContainerFileGuard dbc::ContainerFolder::CreateFile(const std::string& name
 {
 	CreateChildEntry(name, ElementTypeFile, tag);
 	return ContainerFileGuard(new ContainerFile(m_resources, m_id, name));
+}
+
+dbc::SymLinkGuard dbc::ContainerFolder::CreateSymLink(const std::string& name, const std::string& targetPath, const std::string& tag /*= ""*/)
+{
+	CreateChildEntry(name, ElementTypeSymLink, tag, targetPath);
+	return SymLinkGuard(new SymLink(m_resources, m_id, name));
 }
 
 dbc::DbcElementsIterator dbc::ContainerFolder::EnumFsEntries()
@@ -182,7 +193,7 @@ dbc::Error dbc::ContainerFolder::RemoveFolder(Connection& connection, int64_t fo
 	return ret;
 }
 
-void dbc::ContainerFolder::CreateChildEntry(const std::string& name, ElementType type, const std::string& tag)
+void dbc::ContainerFolder::CreateChildEntry(const std::string& name, ElementType type, const std::string& tag, const std::string& specificData)
 {
 	Refresh();
 
@@ -201,7 +212,7 @@ void dbc::ContainerFolder::CreateChildEntry(const std::string& name, ElementType
 		throw ContainerException(ERR_DB_FS, CANT_WRITE, tmp);
 	}
 
-	SQLQuery query(m_resources->GetConnection(), "INSERT INTO FileSystem(parent_id, name, type, props) VALUES (?, ?, ?, ?);");
+	SQLQuery query(m_resources->GetConnection(), "INSERT INTO FileSystem(parent_id, name, type, props, specific_data) VALUES (?, ?, ?, ?, ?);");
 	query.BindInt64(1, m_id);
 	query.BindText(2, name);
 	query.BindInt(3, type);
@@ -211,5 +222,7 @@ void dbc::ContainerFolder::CreateChildEntry(const std::string& name, ElementType
 	std::string propsStr;
 	ElementProperties::MakeString(props, propsStr);
 	query.BindText(4, propsStr);
+	RawData specificDataBlob(utils::StringToRawData(specificData));
+	query.BindBlob(5, specificDataBlob);
 	query.Step();
 }

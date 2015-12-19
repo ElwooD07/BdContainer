@@ -13,7 +13,7 @@ dbc::Error dbc::ContainerElement::s_errElementNotFound = dbc::Error(ERR_DB_FS, N
 dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t id)
 	: m_resources(resources), m_id(id)
 {
-	SQLQuery query(m_resources->GetConnection(), "SELECT parent_id, name, type, props FROM FileSystem WHERE id = ?;");
+	SQLQuery query(m_resources->GetConnection(), "SELECT parent_id, name, type, props, specific_data FROM FileSystem WHERE id = ?;");
 	query.BindInt64(1, id);
 	if (!query.Step()) // SQLITE_DONE or SQLITE_OK, but not SQLITE_ROW, which expected
 	{
@@ -21,21 +21,13 @@ dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t id
 	}
 	m_parentId = query.ColumnInt64(0);
 	query.ColumnText(1, m_name);
-	int tmp_type = query.ColumnInt(2);
-	m_type = static_cast<ElementType>(tmp_type);
-	if (m_type == ElementTypeUnknown)
-	{
-		throw ContainerException(ERR_DB_FS, CANT_OPEN, ERR_DB, IS_DAMAGED);
-	}
-	std::string propsStr;
-	query.ColumnText(3, propsStr);
-	ElementProperties::ParseString(propsStr, m_props);
+	InitElementInfo(query, 2, 3, 4);
 }
 
 dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t parent_id, const std::string& name)
 	: m_resources(resources), m_parentId(parent_id), m_name(name)
 {
-	SQLQuery query(m_resources->GetConnection(), "SELECT id, type, props FROM FileSystem WHERE parent_id = ? AND name = ?;");
+	SQLQuery query(m_resources->GetConnection(), "SELECT id, type, props, specific_data FROM FileSystem WHERE parent_id = ? AND name = ?;");
 	query.BindInt64(1, parent_id);
 	query.BindText(2, name);
 	if (!query.Step()) // SQLITE_DONE or SQLITE_OK, but not SQLITE_ROW, which expected
@@ -43,15 +35,7 @@ dbc::ContainerElement::ContainerElement(ContainerResources resources, int64_t pa
 		throw ContainerException(ERR_DB_FS, NOT_FOUND);
 	}
 	m_id = query.ColumnInt64(0);
-	int tmp_type = query.ColumnInt(1);
-	m_type = static_cast<ElementType>(tmp_type);
-	if (m_type == ElementTypeUnknown)
-	{
-		throw ContainerException(ERR_DB_FS, CANT_OPEN, ERR_DB, IS_DAMAGED);
-	}
-	std::string props_str;
-	query.ColumnText(2, props_str);
-	ElementProperties::ParseString(props_str, m_props);
+	InitElementInfo(query, 1, 2, 3);
 }
 
 bool dbc::ContainerElement::Exists()
@@ -307,11 +291,27 @@ dbc::Error dbc::ContainerElement::Exists(int64_t parent_id, std::string name)
 void dbc::ContainerElement::WriteProps()
 {
 	// Writes properties about this object to the table FileSystem in 'props' column
-	// Its exceptions is managed by calling functions
+	// Its exceptions are managed by calling functions
 	SQLQuery query(m_resources->GetConnection(), "UPDATE FileSystem SET props = ? WHERE id = ?;");
 	std::string propsStr;
 	ElementProperties::MakeString(m_props, propsStr);
 	query.BindText(1, propsStr);
 	query.BindInt64(2, m_id);
 	query.Step();
+}
+
+void dbc::ContainerElement::InitElementInfo(SQLQuery& query, int typeN, int propsN, int specificDataN)
+{
+	int tmp_type = query.ColumnInt(typeN);
+	m_type = static_cast<ElementType>(tmp_type);
+	if (m_type == ElementTypeUnknown)
+	{
+		throw ContainerException(ERR_DB_FS, CANT_OPEN, ERR_DB, IS_DAMAGED);
+	}
+
+	std::string propsStr;
+	query.ColumnText(propsN, propsStr);
+	ElementProperties::ParseString(propsStr, m_props);
+
+	query.ColumnBlob(specificDataN, m_specificData);
 }

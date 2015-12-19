@@ -7,6 +7,8 @@
 
 namespace dbc
 {
+	class SQLQuery;
+
 	class ContainerFolder;
 	class ContainerFile;
 
@@ -40,6 +42,11 @@ namespace dbc
 		virtual void ResetProperties(const std::string& tag);
 
 	protected:
+		void Refresh();
+		Error Exists(int64_t parent_id, std::string name); // Returns s_errElementNotFound (see .cpp) as false and SUCCESS as true, or other error code if there was an error
+		void WriteProps();
+
+	protected:
 		ContainerResources m_resources;
 
 		int64_t m_id;
@@ -47,13 +54,12 @@ namespace dbc
 		ElementType m_type;
 		std::string m_name;
 		ElementProperties m_props;
+		RawData m_specificData;
 
 		static Error s_errElementNotFound;
 
-	protected:
-		void Refresh();
-		Error Exists(int64_t parent_id, std::string name); // Returns s_errElementNotFound (see .cpp) as false and SUCCESS as true, or other error code if there was an error
-		void WriteProps();
+	private:
+		void InitElementInfo(SQLQuery& query, int typeN, int propsN, int specificDataN);
 	};
 
 	typedef std::shared_ptr<ContainerElement> ContainerElementGuard;

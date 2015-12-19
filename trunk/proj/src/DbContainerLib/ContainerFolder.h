@@ -1,6 +1,7 @@
 #pragma once
 #include "ContainerElement.h"
 #include "ElementsIterator.h"
+#include "SymLink.h"
 
 namespace dbc
 {
@@ -25,10 +26,12 @@ namespace dbc
 		ContainerFolderGuard CreateFolder(const std::string& name, const std::string& tag = "");
 		ContainerFileGuard CreateFile(const std::string& name, const std::string& tag = "");
 
+		SymLinkGuard CreateSymLink(const std::string& name, const std::string& targetPath, const std::string& tag = "");
+
 		DbcElementsIterator EnumFsEntries();
 
 	private:
 		Error RemoveFolder(Connection& owner, int64_t folderId); // Recursive
-		void CreateChildEntry(const std::string& name, ElementType type, const std::string& tag);
+		void CreateChildEntry(const std::string& name, ElementType type, const std::string& tag, const std::string& specificData = "");
 	};
 }

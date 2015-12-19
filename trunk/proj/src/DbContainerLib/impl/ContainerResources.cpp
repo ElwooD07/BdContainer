@@ -3,12 +3,12 @@
 #include "ContainerException.h"
 
 dbc::ContaierResourcesImpl::ContaierResourcesImpl(
+	IContainer& container,
 	Connection& connection,
-	IDataStorage& dataStorage,
-	DataUsagePreferences& dataUsagePrefs)
-	: m_connection(connection)
+	IDataStorage& dataStorage)
+	: m_container(container)
+	, m_connection(connection)
 	, m_dataStorage(dataStorage)
-	, m_dataUsagePrefs(dataUsagePrefs)
 	, m_contaierAlive(true)
 { }
 
@@ -23,16 +23,16 @@ dbc::Connection& dbc::ContaierResourcesImpl::GetConnection()
 	return m_connection;
 }
 
+dbc::IContainer& dbc::ContaierResourcesImpl::GetContainer()
+{
+	CheckUsefulnessAndThrow(ERR_DB_NO_CONNECTION);
+	return m_container;
+}
+
 dbc::IDataStorage& dbc::ContaierResourcesImpl::Storage()
 {
 	CheckUsefulnessAndThrow(Error(ERR_DATA, NO_ACCESS));
 	return m_dataStorage;
-}
-
-dbc::DataUsagePreferences& dbc::ContaierResourcesImpl::DataUsagePrefs()
-{
-	CheckUsefulnessAndThrow(CONTAINER_RESOURCES_NOT_AVAILABLE);
-	return m_dataUsagePrefs;
 }
 
 dbc::ElementsSyncKeeper& dbc::ContaierResourcesImpl::GetSync()

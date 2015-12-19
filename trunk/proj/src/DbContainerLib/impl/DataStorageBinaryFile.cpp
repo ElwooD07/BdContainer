@@ -4,7 +4,7 @@
 #include "ContainerException.h"
 #include "Crypto.h"
 #include "FsUtils.h"
-#include "TypesInternal.h"
+#include "CommonUtils.h"
 
 namespace
 {
@@ -23,7 +23,7 @@ namespace
 		assert(key.empty() && iv.empty());
 
 		static const char s_salt[]("arbadakarba123");
-		dbc::RawData hash = dbc::crypto::utils::SHA256_GetHash(dbc::crypto::utils::StringToRawData(password + s_salt));
+		dbc::RawData hash = dbc::crypto::utils::SHA256_GetHash(dbc::utils::StringToRawData(password + s_salt));
 		const unsigned int keyAndIvLen = dbc::crypto::AesCryptorBase::GetKeyAndIvLen();
 		assert(hash.size() == keyAndIvLen * 2);
 		key.assign(hash.begin(), hash.begin() + keyAndIvLen);
@@ -41,7 +41,7 @@ namespace
 		if (trashLen > 0)
 		{
 			dbc::RawData trash(trashLen, '\0');
-			dbc::crypto::utils::RandomSequence(dbc::crypto::utils::GetSeed(dbc::crypto::utils::StringToRawData(password)), trash);
+			dbc::crypto::utils::RandomSequence(dbc::crypto::utils::GetSeed(dbc::utils::StringToRawData(password)), trash);
 			out.write(reinterpret_cast<const char*>(trash.data()), trash.size());
 			out.flush();
 		}

@@ -22,9 +22,9 @@ gui::FsTreeMenuTree::FsTreeMenuTree(QWidget* parent, QTreeView* treeView, MainWi
 	, m_model(model)
 {
 	QList<QAction*> actionsForSelectedFolder;
-	actionsForSelectedFolder << addAction(tr("Create file"), this, SLOT(OnCreateFileTriggered()), Qt::Key_Plus | Qt::Key_1);
-	actionsForSelectedFolder << addAction(tr("Create folder"), this, SLOT(OnCreateFolderTriggered()), Qt::Key_Plus | Qt::Key_2);
-	actionsForSelectedFolder << addAction(tr("Create link..."), this, SLOT(OnCreateLinkTriggered()), Qt::Key_Plus | Qt::Key_3);
+	actionsForSelectedFolder << addAction(tr("Create file"), this, SLOT(OnCreateFileTriggered()));
+	actionsForSelectedFolder << addAction(tr("Create folder"), this, SLOT(OnCreateFolderTriggered()));
+	actionsForSelectedFolder << addAction(tr("Create link..."), this, SLOT(OnCreateLinkTriggered()));
 
 	for (QAction* action : actionsForSelectedFolder)
 	{

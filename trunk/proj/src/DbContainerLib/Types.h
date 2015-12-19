@@ -9,7 +9,8 @@ namespace dbc
 		ElementTypeUnknown = 0,
 		ElementTypeFolder,
 		ElementTypeFile,
-		ElementTypeLink // TODO: Implement this class!
+		ElementTypeSymLink,
+		ElementTypeIdLink
 	};
 
 	enum ReadWriteAccess

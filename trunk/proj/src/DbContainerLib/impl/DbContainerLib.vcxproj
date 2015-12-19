@@ -96,12 +96,12 @@
     <ClInclude Include="..\ContainerFile.h" />
     <ClInclude Include="..\ContainerFolder.h" />
     <ClInclude Include="..\ContainerResources.h" />
+    <ClInclude Include="..\SymLink.h" />
     <ClInclude Include="..\DataUsagePreferences.h" />
     <ClInclude Include="..\ElementProperties.h" />
     <ClInclude Include="..\ErrorCodes.h" />
     <ClInclude Include="..\IContainer.h" />
     <ClInclude Include="..\IContainerInfo.h" />
-    <ClInclude Include="..\IContainnerResources.h" />
     <ClInclude Include="..\IDataStorage.h" />
     <ClInclude Include="..\IDefragProgressObserver.h" />
     <ClInclude Include="..\IProgressObserver.h" />
@@ -118,6 +118,7 @@
     <ClInclude Include="ElementsSyncKeeper.h" />
     <ClInclude Include="FileStreamsAllocator.h" />
     <ClInclude Include="FileStreamsManager.h" />
+    <ClInclude Include="IContainnerResources.h" />
     <ClInclude Include="ProxyProgressObserver.h" />
     <ClInclude Include="SQLQuery.h" />
     <ClInclude Include="stdafx.h" />
@@ -140,6 +141,7 @@
     <ClCompile Include="ContainerFolder.cpp" />
     <ClCompile Include="ContainerInfoImpl.cpp" />
     <ClCompile Include="ContainerResources.cpp" />
+    <ClCompile Include="SymLink.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="DataStorageBinaryFile.cpp" />
     <ClCompile Include="DataUsagePreferences.cpp" />

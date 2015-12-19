@@ -126,13 +126,16 @@
     <ClInclude Include="..\ContainerResources.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="..\IContainnerResources.h">
+    <ClInclude Include="..\Types.h">
       <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="IContainnerResources.h">
+      <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
     <ClInclude Include="ContainerResourcesImpl.h">
-      <Filter>Заголовочные файлы</Filter>
+      <Filter>Заголовочные файлы\impl</Filter>
     </ClInclude>
-    <ClInclude Include="..\Types.h">
+    <ClInclude Include="..\SymLink.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
@@ -219,6 +222,9 @@
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
     <ClCompile Include="Utils\FileStreamsUtils.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="SymLink.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>

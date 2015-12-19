@@ -29,3 +29,19 @@ std::string dbc::utils::BinaryToHexString(const void* data, size_t dataLen)
 	}
 	return result;
 }
+
+dbc::RawData dbc::utils::StringToRawData(const std::string& str)
+{
+	const dbc::RawData::value_type* strPtr = reinterpret_cast<const dbc::RawData::value_type*>(str.c_str());
+	return std::move(dbc::RawData(strPtr, strPtr + str.size()));
+}
+
+std::string dbc::utils::RawDataToString(const RawData& data)
+{
+	std::string res;
+	if (!data.empty())
+	{
+		res.assign(reinterpret_cast<const char*>(data.data()), data.size());
+	}
+	return std::move(res);
+}

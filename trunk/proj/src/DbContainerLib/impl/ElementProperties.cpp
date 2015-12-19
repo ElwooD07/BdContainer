@@ -74,9 +74,9 @@ bool dbc::ElementProperties::ParseString(const std::string& props_str, ElementPr
 		return false;
 	}
 
-	utils::String2Number(lst[0], out_props.m_size);
-	utils::String2Number(lst[1], out_props.m_date_created);
-	utils::String2Number(lst[2], out_props.m_date_modified);
+	utils::StringToNumber(lst[0], out_props.m_size);
+	utils::StringToNumber(lst[1], out_props.m_date_created);
+	utils::StringToNumber(lst[2], out_props.m_date_modified);
 
 	std::string tag;
 	size_t len = 0;

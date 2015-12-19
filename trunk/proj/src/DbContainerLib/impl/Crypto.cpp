@@ -228,22 +228,6 @@ uint64_t dbc::crypto::AesDecryptor::Decrypt(std::istream& in, std::ostream& out,
 	return CryptBetweenStreams(in, out, size, observer);
 }
 
-dbc::RawData dbc::crypto::utils::StringToRawData(const std::string& str)
-{
-	const dbc::RawData::value_type* strPtr = reinterpret_cast<const dbc::RawData::value_type*>(str.c_str());
-	return std::move(dbc::RawData(strPtr, strPtr + str.size()));
-}
-
-std::string dbc::crypto::utils::RawDataToString(const RawData& data)
-{
-	std::string res;
-	if (!data.empty())
-	{
-		res.assign(reinterpret_cast<const char*>(data.data()), data.size());
-	}
-	return std::move(res);
-}
-
 dbc::RawData dbc::crypto::utils::SHA256_GetHash(const dbc::RawData& message)
 {
 	RawData hash(SHA256_DIGEST_LENGTH);

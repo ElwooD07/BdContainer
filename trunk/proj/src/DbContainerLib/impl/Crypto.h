@@ -66,9 +66,6 @@ namespace dbc
 
 		namespace utils
 		{
-			RawData StringToRawData(const std::string& str);
-			std::string RawDataToString(const RawData& data);
-
 			RawData SHA256_GetHash(const RawData& message);
 			void RandomSequence(unsigned int seed, RawData& sequence_out);
 			unsigned int GetSeed(const RawData& sequence);

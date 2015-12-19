@@ -187,7 +187,7 @@ uint64_t dbc::ContainerFile::Write(std::istream& in, uint64_t size, IProgressObs
 
 	TransactionGuard transaction = m_resources->GetConnection().StartTransaction();
 	uint64_t writtenTotal = 0;
-	if (m_resources->DataUsagePrefs().TransactionalWrite())
+	if (m_resources->GetContainer().GetDataUsagePreferences().TransactionalWrite())
 	{
 		writtenTotal = TransactionalWrite(in, size, observer);
 	}

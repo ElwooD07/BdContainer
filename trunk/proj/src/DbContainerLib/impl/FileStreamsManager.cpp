@@ -69,7 +69,7 @@ uint64_t dbc::FileStreamsManager::MaxOrder()
 
 uint64_t dbc::FileStreamsManager::CalculateClusterMultipleSize(uint64_t sizeRequested)
 {
-	uint64_t clusterSize = m_resources->DataUsagePrefs().ClusterSize();
+	uint64_t clusterSize = m_resources->GetContainer().GetDataUsagePreferences().ClusterSize();
 	uint64_t ratio = sizeRequested / clusterSize;
 	if (ratio == 0 || sizeRequested % clusterSize > 0)
 	{
@@ -81,8 +81,8 @@ uint64_t dbc::FileStreamsManager::CalculateClusterMultipleSize(uint64_t sizeRequ
 bool dbc::FileStreamsManager::FreeSpaceMeetsFragmentationLevelRequirements(uint64_t freeSpace)
 {
 	return utils::FreeSpaceMeetsFragmentationLevelRequirements(freeSpace,
-		m_resources->DataUsagePrefs().FragmentationLevel(),
-		m_resources->DataUsagePrefs().ClusterSize());
+		m_resources->GetContainer().GetDataUsagePreferences().FragmentationLevel(),
+		m_resources->GetContainer().GetDataUsagePreferences().ClusterSize());
 }
 
 void dbc::FileStreamsManager::AppendStream(const StreamInfo& info)

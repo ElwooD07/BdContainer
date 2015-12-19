@@ -1,9 +1,11 @@
 #include "stdafx.h"
 #include "impl/Crypto.h"
 #include "ContainerException.h"
+#include "impl/Utils/CommonUtils.h"
 
 using namespace dbc;
 using namespace dbc::crypto;
+using namespace dbc::utils;
 
 RawData keyNormal = { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf };
 RawData ivNormal = { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7 };
@@ -50,7 +52,7 @@ TEST(CryptingTest, CryptorsInitFailed_NormalKeyAndIvSize)
 
 TEST(CryptingTest, EncryptString)
 {
-	RawData expression(utils::StringToRawData("1234567890"));
+	RawData expression(StringToRawData("1234567890"));
 	AesEncryptor encryptor(keyNormal, ivNormal);
 	RawData encrypted;
 	ASSERT_NO_THROW(encryptor.Encrypt(expression, encrypted));
@@ -60,7 +62,7 @@ TEST(CryptingTest, EncryptString)
 
 TEST(CryptingTest, DecryptString)
 {
-	RawData expression(utils::StringToRawData("1234567890"));
+	RawData expression(StringToRawData("1234567890"));
 	AesEncryptor encryptor(keyNormal, ivNormal);
 	RawData encrypted;
 	uint64_t encryptedSize = 0;
