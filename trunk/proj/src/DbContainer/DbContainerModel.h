@@ -20,7 +20,8 @@ namespace model
 		~DbContainerModel();
 
 		void AddContainer(dbc::ContainerGuard container);
-		virtual dbc::ContainerGuard GetContainerByIndex(const QModelIndex& index);
+		dbc::ContainerElementGuard GetElementByIndex(const QModelIndex& index);
+		dbc::ContainerGuard GetContainerByIndex(const QModelIndex& index);
 
 		virtual QVariant data(const QModelIndex& index, int role) const;
 		virtual bool hasChildren(const QModelIndex &parent = QModelIndex()) const;
@@ -33,7 +34,8 @@ namespace model
 
 		virtual bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole);
 		virtual bool removeRows(int row, int count, const QModelIndex& parent = QModelIndex());
-		virtual bool removeRow(int arow, const QModelIndex& aparent);
+
+		QModelIndex AddElement(dbc::ElementType type, const QString& name, const QModelIndex& parent);
 
 	signals:
 		void ShowMessage(const QString& message, const QString& title, QMessageBox::Icon type) const;
@@ -57,3 +59,4 @@ namespace model
 }
 
 Q_DECLARE_METATYPE(dbc::ElementType);
+Q_DECLARE_METATYPE(dbc::ContainerElementGuard);

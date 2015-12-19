@@ -3,7 +3,7 @@
 #include "ContainerException.h"
 
 gui::ChooseContainerDialog::ChooseContainerDialog(QWidget* parent, ActionType action)
-	: QDialog(parent, Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint)
+	: QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint)
 	, m_action(action)
 {
 	m_ui.setupUi(this);

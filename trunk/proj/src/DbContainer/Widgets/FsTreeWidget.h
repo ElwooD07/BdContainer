@@ -23,15 +23,12 @@ namespace gui
 		QMenu* GetElementMenu();
 
 	signals:
-		void SetEnabledActionsForSelectedItem(bool enabled);
+		void CurrentElementChanged(dbc::ContainerElementGuard element);
 
 	private slots:
-		void OnMenuTreeAboutToShow();
-
-		void OnCollapseTriggered();
 		void OnCollapseAllTriggered();
-		void OnExpandTriggered();
 		void OnExpandAllTriggered();
+		void OnItemSelected(const QModelIndex& index);
 
 	private:
 		void InitMenus();
@@ -44,5 +41,4 @@ namespace gui
 		QMenu* m_menuTree;
 		QMenu* m_menuElement;
 	};
-
 }

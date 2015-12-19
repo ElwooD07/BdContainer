@@ -59,12 +59,6 @@
     <ClCompile Include="Widgets\ElementViewWidget.cpp">
       <Filter>Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_ElementViewWidget.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_ElementViewWidget.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
     <ClCompile Include="Widgets\FsTreeWidget.cpp">
       <Filter>Widgets</Filter>
     </ClCompile>

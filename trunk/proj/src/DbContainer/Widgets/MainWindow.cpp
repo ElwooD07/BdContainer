@@ -62,6 +62,8 @@ void gui::MainWindow::InitMainControls()
 	mainLayout->setSpacing(0);
 	mainLayout->addWidget(splitter);
 	m_ui.centralWidget->setLayout(mainLayout);
+
+	connect(m_fsTreeWidget, &gui::FsTreeWidget::CurrentElementChanged, elementView, &gui::ElementViewWidget::SetElement);
 }
 
 void gui::MainWindow::InitActions()

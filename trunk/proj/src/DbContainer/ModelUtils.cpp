@@ -31,3 +31,9 @@ bool model::utils::IsItemEditable(const QModelIndex& index)
 {
 	return (index.isValid() && (index.flags() & Qt::ItemIsEditable) == Qt::ItemIsEditable);
 }
+
+QString model::utils::Timestamp2QString(time_t timestamp)
+{
+	QDateTime dateTime = QDateTime::fromTime_t(timestamp);
+	return dateTime.toString(Qt::ISODate);
+}

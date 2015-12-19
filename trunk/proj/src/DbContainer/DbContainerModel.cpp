@@ -29,7 +29,10 @@ namespace
 
 model::DbContainerModel::DbContainerModel(QObject* parent /*= nullptr*/)
 	: QAbstractItemModel(parent)
-{ }
+{
+	int registered = qRegisterMetaType<dbc::ContainerElementGuard>();
+	assert(registered != 0);
+}
 
 model::DbContainerModel::~DbContainerModel()
 {
@@ -44,6 +47,17 @@ void model::DbContainerModel::AddContainer(dbc::ContainerGuard container)
 	dbc::ContainerFolderGuard root = container->GetRoot();
 	m_rootNodes.push_back(new TreeNode(nullptr, utils::StdString2QString(root->Path()), root));
 	endInsertRows();
+}
+
+dbc::ContainerElementGuard model::DbContainerModel::GetElementByIndex(const QModelIndex& index)
+{
+	dbc::ContainerElementGuard element;
+	TreeNode* node = Index2Node(index);
+	if (node != nullptr)
+	{
+		element = node->GetElement();
+	}
+	return element;
 }
 
 dbc::ContainerGuard model::DbContainerModel::GetContainerByIndex(const QModelIndex& index)
@@ -188,9 +202,34 @@ bool model::DbContainerModel::removeRows(int row, int count, const QModelIndex& 
 	return false;
 }
 
-bool model::DbContainerModel::removeRow(int arow, const QModelIndex& aparent)
+QModelIndex model::DbContainerModel::AddElement(dbc::ElementType type, const QString& name, const QModelIndex& parent)
 {
-	return removeRows(arow, 1, aparent);
+	assert(!name.isEmpty() && type != dbc::ElementTypeUnknown && parent.isValid());
+	if (name.isEmpty() || type == dbc::ElementTypeUnknown || !parent.isValid())
+	{
+		return QModelIndex();
+	}
+	TreeNode* parentNode = Index2Node(parent);
+	dbc::ContainerFolder* folder = parentNode->GetElement()->AsFolder();
+	assert(folder != nullptr);
+	if (folder == nullptr)
+	{
+		return QModelIndex();
+	}
+	LoadChildren(parent);
+	dbc::ContainerElementGuard element = folder->CreateChild(utils::QString2StdString(name), type);
+
+	DBC_MODEL_TRY(tr("Element adding"));
+	int insertedRow = parentNode->GetChildrenCount();
+	beginInsertRows(parent, insertedRow, insertedRow);
+	TreeNode* insertedNode = parentNode->AddChild(element);
+	assert(insertedRow + 1 == parentNode->GetChildrenCount());
+	endInsertRows();
+	return createIndex(insertedRow, 0, insertedNode);
+	DBC_MODEL_CATCH;
+
+	element->Remove();
+	return QModelIndex();
 }
 
 void model::DbContainerModel::OnItemExpanded(const QModelIndex& index)

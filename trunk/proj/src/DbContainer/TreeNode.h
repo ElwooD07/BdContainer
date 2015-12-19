@@ -21,7 +21,7 @@ namespace model
 
 		TreeNode* GetChild(int row);
 		int GetChildrenCount() const;
-		void AddChild(dbc::ContainerElementGuard child);
+		TreeNode* AddChild(dbc::ContainerElementGuard child);
 		void RemoveChild(int row);
 
 		bool operator<(const TreeNode& node) const;

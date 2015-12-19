@@ -21,6 +21,8 @@ gui::FsTreeWidget::FsTreeWidget(QWidget* parent, MainWindowView* mainWindow)
 	m_ui.treeFs->setModel(m_model);
 	m_ui.treeFs->setItemDelegate(new TreeItemDelegate(this));
 
+	connect(m_ui.treeFs, &QTreeView::clicked, this, &gui::FsTreeWidget::OnItemSelected);
+
 	InitMenus();
 }
 
@@ -46,24 +48,9 @@ QMenu* gui::FsTreeWidget::GetElementMenu()
 	return m_menuElement;
 }
 
-void gui::FsTreeWidget::OnMenuTreeAboutToShow()
-{
-	emit SetEnabledActionsForSelectedItem(m_ui.treeFs->currentIndex().isValid());
-}
-
-void gui::FsTreeWidget::OnCollapseTriggered()
-{
-	m_ui.treeFs->collapse(m_ui.treeFs->currentIndex());
-}
-
 void gui::FsTreeWidget::OnCollapseAllTriggered()
 {
 	m_ui.treeFs->collapseAll();
-}
-
-void gui::FsTreeWidget::OnExpandTriggered()
-{
-	m_ui.treeFs->expand(m_ui.treeFs->currentIndex());
 }
 
 void gui::FsTreeWidget::OnExpandAllTriggered()
@@ -71,22 +58,20 @@ void gui::FsTreeWidget::OnExpandAllTriggered()
 	m_ui.treeFs->expandAll();
 }
 
+void gui::FsTreeWidget::OnItemSelected(const QModelIndex& index)
+{
+	dbc::ContainerElementGuard element = m_model->GetElementByIndex(index);
+	emit CurrentElementChanged(element);
+}
+
 void gui::FsTreeWidget::InitMenus()
 {
 	assert(m_menuTree == nullptr && m_menuElement == nullptr);
 
-	m_menuTree = new FsTreeMenuTree(this, m_ui.treeFs);
+	m_menuTree = new FsTreeMenuTree(this, m_ui.treeFs, m_mainWindow, m_model);
 	m_menuElement = new FsTreeMenuElement(this, m_ui.treeFs, m_mainWindow, m_model);
 
 	m_menuTree->addSeparator();
-	QList<QAction*> actionsForSelectedItem;
-	actionsForSelectedItem << m_menuTree->addAction(tr("Collapse"), this, SLOT(OnCollapseTriggered()));
 	m_menuTree->addAction(tr("Collapse All"), this, SLOT(OnCollapseAllTriggered()));
-	actionsForSelectedItem << m_menuTree->addAction(tr("Expand"), this, SLOT(OnExpandTriggered()));
 	m_menuTree->addAction(tr("Expand All"), this, SLOT(OnExpandAllTriggered()));
-
-	for (QAction* action : actionsForSelectedItem)
-	{
-		connect(this, &FsTreeWidget::SetEnabledActionsForSelectedItem, action, &QAction::setEnabled);
-	}
 }

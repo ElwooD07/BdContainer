@@ -9,5 +9,6 @@ namespace model
 		QString SlashedPath(const QString& path);
 		QString SlashedPath(const std::string& path);
 		bool IsItemEditable(const QModelIndex& index);
+		QString Timestamp2QString(time_t timestamp);
 	}
 }

@@ -30,10 +30,11 @@ void model::TreeNode::RefreshPath(const QString& newParentPath /*= ""*/)
 	}
 }
 
-void model::TreeNode::AddChild(dbc::ContainerElementGuard child)
+model::TreeNode* model::TreeNode::AddChild(dbc::ContainerElementGuard child)
 {
 	assert(child.get() != nullptr);
 	m_children.push_back(new TreeNode(this, m_path, child));
+	return m_children.back();
 }
 
 void model::TreeNode::RemoveChild(int row)
