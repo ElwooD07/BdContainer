@@ -26,6 +26,10 @@ dbc::SymLink::SymLink(ContainerResources resources, int64_t parentId, const std:
 
 std::string dbc::SymLink::TargetPath() const
 {
+	if (m_target == nullptr)
+	{
+		return "";
+	}
 	return m_target;
 }
 

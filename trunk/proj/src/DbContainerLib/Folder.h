@@ -2,6 +2,7 @@
 #include "Element.h"
 #include "ElementsIterator.h"
 #include "SymLink.h"
+#include "DirectLink.h"
 
 namespace dbc
 {
@@ -27,6 +28,7 @@ namespace dbc
 		FileGuard CreateFile(const std::string& name, const std::string& tag = "");
 
 		SymLinkGuard CreateSymLink(const std::string& name, const std::string& targetPath, const std::string& tag = "");
+		DirectLinkGuard CreateDirectLink(const std::string& name, const ElementGuard target, const std::string& tag = "");
 
 		DbcElementsIterator EnumFsEntries();
 

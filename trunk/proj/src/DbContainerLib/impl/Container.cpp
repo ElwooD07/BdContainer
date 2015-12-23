@@ -217,16 +217,7 @@ dbc::ElementGuard dbc::Container::GetElement(const std::string& path)
 		parentId = query.ColumnInt64(1);
 		elementType = query.ColumnInt(2);
 	}
-
-	switch (elementType)
-	{
-	case ElementTypeFolder:
-		return ElementGuard(new Folder(m_resources, parentId));
-	case ElementTypeFile:
-		return ElementGuard(new File(m_resources, parentId));
-	default:
-		throw ContainerException(ERR_INTERNAL);
-	}
+	return CreateElementObject(parentId, static_cast<ElementType>(elementType));
 }
 
 ContainerInfo dbc::Container::GetInfo()
@@ -244,7 +235,7 @@ void dbc::Container::SetDataUsagePreferences(const DataUsagePreferences& prefs)
 	m_dataUsagePrefs = prefs;
 }
 
-dbc::ElementGuard dbc::Container::GetElement(uint64_t id)
+dbc::ElementGuard dbc::Container::GetElement(int64_t id)
 {
 	SQLQuery query(m_connection, "SELECT type FROM FileSystem WHERE id = ?;");
 	query.BindInt64(1, id);
@@ -253,6 +244,11 @@ dbc::ElementGuard dbc::Container::GetElement(uint64_t id)
 		throw ContainerException(Element::notFoundError);
 	}
 	int type = query.ColumnInt(1);
+	return CreateElementObject(id, static_cast<ElementType>(type));
+}
+
+dbc::ElementGuard dbc::Container::CreateElementObject(int64_t id, ElementType type)
+{
 	switch (type)
 	{
 	case ElementTypeFolder:
@@ -261,9 +257,29 @@ dbc::ElementGuard dbc::Container::GetElement(uint64_t id)
 		return ElementGuard(new File(m_resources, id));
 	case ElementTypeSymLink:
 		return ElementGuard(new SymLink(m_resources, id));
+	case ElementTypeDirectLink:
+		return ElementGuard(new DirectLink(m_resources, id));
 	default:
 		assert(!"Unknown element type specified");
-		throw ContainerException(ERR_DB, IS_DAMAGED);
+		throw ContainerException(ERR_INTERNAL);
+	}
+}
+
+dbc::ElementGuard dbc::Container::CreateElementObject(int64_t parentId, const std::string& name, ElementType type)
+{
+	switch (type)
+	{
+	case ElementTypeFolder:
+		return ElementGuard(new Folder(m_resources, parentId, name));
+	case ElementTypeFile:
+		return ElementGuard(new File(m_resources, parentId, name));
+	case ElementTypeSymLink:
+		return ElementGuard(new SymLink(m_resources, parentId, name));
+	case ElementTypeDirectLink:
+		return ElementGuard(new DirectLink(m_resources, parentId, name));
+	default:
+		assert(!"Unknown element type specified");
+		throw ContainerException(ERR_INTERNAL);
 	}
 }
 

@@ -24,7 +24,8 @@ gui::FsTreeMenuTree::FsTreeMenuTree(QWidget* parent, QTreeView* treeView, MainWi
 	QList<QAction*> actionsForSelectedFolder;
 	actionsForSelectedFolder << addAction(tr("Create file"), this, SLOT(OnCreateFileTriggered()));
 	actionsForSelectedFolder << addAction(tr("Create folder"), this, SLOT(OnCreateFolderTriggered()));
-	actionsForSelectedFolder << addAction(tr("Create link..."), this, SLOT(OnCreateLinkTriggered()));
+	actionsForSelectedFolder << addAction(tr("Create symbolic link"), this, SLOT(OnCreateSymLinkTriggered()));
+	actionsForSelectedFolder << addAction(tr("Create direct link"), this, SLOT(OnCreateDirectLinkTriggered()));
 
 	for (QAction* action : actionsForSelectedFolder)
 	{
@@ -48,9 +49,14 @@ void gui::FsTreeMenuTree::OnCreateFolderTriggered()
 	CreateChild(tr("New folder"), tr("Create folder"), dbc::ElementTypeFolder);
 }
 
-void gui::FsTreeMenuTree::OnCreateLinkTriggered()
+void gui::FsTreeMenuTree::OnCreateSymLinkTriggered()
 {
-	CreateChild(tr("New link"), tr("Create link"), dbc::ElementTypeSymLink);
+	CreateChild(tr("New symlink"), tr("Create symbolic link"), dbc::ElementTypeSymLink);
+}
+
+void gui::FsTreeMenuTree::OnCreateDirectLinkTriggered()
+{
+	CreateChild(tr("New direct link"), tr("Create direct link"), dbc::ElementTypeDirectLink);
 }
 
 void gui::FsTreeMenuTree::CreateChild(const QString& defaultName, const QString& titleStr, dbc::ElementType type)
@@ -75,19 +81,17 @@ void gui::FsTreeMenuTree::CreateChild(const QString& defaultName, const QString&
 bool gui::FsTreeMenuTree::CreateChildImpl(const QString& defaultName, dbc::ElementType type)
 {
 	QModelIndex parent = m_treeView->currentIndex();
-	if (model::utils::IsItemEditable(parent))
+	m_treeView->expand(parent);
+	const QString& itemName = GetUnusedChildName(defaultName, parent);
+	if (itemName.isEmpty())
 	{
-		m_treeView->expand(parent);
-		const QString& itemName = GetUnusedChildName(defaultName, parent);
-		if (!itemName.isEmpty())
-		{
-			QModelIndex createdChild = m_model->AddElement(type, itemName, parent);
-			assert(model::utils::IsItemEditable(createdChild));
-			m_treeView->edit(createdChild);
-			return true;
-		}
+		return false;
 	}
-	return false;
+
+	QModelIndex createdChild = m_model->AddElement(type, itemName, parent);
+	assert(model::utils::IsItemEditable(createdChild));
+	m_treeView->edit(createdChild);
+	return true;
 }
 
 QString gui::FsTreeMenuTree::GetUnusedChildName(const QString& defaultName, const QModelIndex& parent)

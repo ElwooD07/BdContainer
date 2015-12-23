@@ -101,37 +101,14 @@ dbc::ElementGuard dbc::Folder::GetChild(const std::string& name)
 		throw ContainerException(ERR_DB, IS_DAMAGED);
 	}
 	int64_t id = query.ColumnInt64(1);
-	int tmp_type = query.ColumnInt(2);
-
-	switch (tmp_type)
-	{
-	case ElementTypeFolder:
-		return ElementGuard(new Folder(m_resources, id));
-	case ElementTypeFile:
-		return ElementGuard(new File(m_resources, id));
-	case ElementTypeSymLink:
-		return ElementGuard(new SymLink(m_resources, id));
-	default:
-		assert(!"Unknown element type specified");
-		throw ContainerException(ERR_DB, IS_DAMAGED);
-	}
+	int type = query.ColumnInt(2);
+	return m_resources->GetContainer().CreateElementObject(id, static_cast<ElementType>(type));
 }
 
 dbc::ElementGuard dbc::Folder::CreateChild(const std::string& name, ElementType type, const std::string& tag /*= 0*/)
 {
 	CreateChildEntry(name, type, tag);
-	switch (type)
-	{
-	case ElementTypeFolder:
-		return ElementGuard(new Folder(m_resources, m_id, name));
-	case ElementTypeFile:
-		return ElementGuard(new File(m_resources, m_id, name));
-	case ElementTypeSymLink:
-		return ElementGuard(new SymLink(m_resources, m_id, name));
-	default:
-		assert(!"Unknown element type specified");
-		throw ContainerException(ERR_INTERNAL);
-	}
+	return m_resources->GetContainer().CreateElementObject(m_id, name, type);
 }
 
 dbc::FolderGuard dbc::Folder::CreateFolder(const std::string& name, const std::string& tag)
@@ -154,6 +131,18 @@ dbc::SymLinkGuard dbc::Folder::CreateSymLink(const std::string& name, const std:
 	}
 	CreateChildEntry(name, ElementTypeSymLink, tag, targetPath);
 	return SymLinkGuard(new SymLink(m_resources, m_id, name));
+}
+
+dbc::DirectLinkGuard dbc::Folder::CreateDirectLink(const std::string& name, const ElementGuard target, const std::string& tag /*= ""*/)
+{
+	Error err = DirectLink::IsElementReferenceable(*target);
+	if (err != SUCCESS)
+	{
+		throw ContainerException(err);
+	}
+	std::string targetStr = utils::NumberToString(GetId(*target));
+	CreateChildEntry(name, ElementTypeDirectLink, tag, targetStr);
+	return DirectLinkGuard(new DirectLink(m_resources, m_id, name));
 }
 
 dbc::DbcElementsIterator dbc::Folder::EnumFsEntries()

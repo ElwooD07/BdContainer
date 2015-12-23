@@ -1,6 +1,10 @@
 #include "stdafx.h"
 #include "Widgets/ElementViewWidget.h"
 #include "ModelUtils.h"
+#include "File.h"
+#include "Folder.h"
+#include "SymLink.h"
+#include "DirectLink.h"
 
 namespace
 {
@@ -29,16 +33,40 @@ gui::ElementViewWidget::ElementViewWidget(QWidget* parent)
 	: QWidget(parent)
 {
 	m_ui.setupUi(this);
-	SetInfoForCurrentElement();
+	RefreshCommonInfo();
+	RefreshSpecificInfo();
 }
 
 void gui::ElementViewWidget::SetElement(dbc::ElementGuard element)
 {
 	m_element = element;
-	SetInfoForCurrentElement();
+	RefreshCommonInfo();
+	RefreshSpecificInfo();
 }
 
-void gui::ElementViewWidget::SetInfoForCurrentElement()
+void gui::ElementViewWidget::on_btnRefreshSpecificInfo_clicked()
+{
+	QString res = "Will be implemented later";
+	switch (m_element->Type())
+	{
+	case dbc::ElementTypeFile:
+		res = QString::number(m_element->AsFile()->Size());
+		break;
+	case dbc::ElementTypeFolder:
+		break;
+	case dbc::ElementTypeSymLink:
+		res = model::utils::StdString2QString(m_element->AsSymLink()->TargetPath());
+		break;
+	case dbc::ElementTypeDirectLink:
+		res = model::utils::StdString2QString(m_element->AsDirectLink()->Target()->Path());
+		break;
+	default:
+		assert(!"Unknown element type");
+	}
+	m_ui.lblSpecificInfo->setText(res);
+}
+
+void gui::ElementViewWidget::RefreshCommonInfo()
 {
 	bool elementIsSet = m_element.get() != nullptr;
 	m_ui.lblImgElementType->setPixmap(QPixmap()); // TODO: load pixmap according to Type()
@@ -52,4 +80,33 @@ void gui::ElementViewWidget::SetInfoForCurrentElement()
 	m_ui.lblCreated->setText(elementIsSet ? model::utils::Timestamp2QString(props.DateCreated()) : "");
 	m_ui.lblModified->setText(elementIsSet ? model::utils::Timestamp2QString(props.DateModified()) : "");
 	m_ui.txtTag->setText(elementIsSet ? model::utils::StdString2QString(props.Tag()) : "");
+}
+
+void gui::ElementViewWidget::RefreshSpecificInfo()
+{
+	bool elementIsSet = m_element.get() != nullptr;
+	m_ui.lblSpecificInfoCaption->setVisible(elementIsSet);
+	m_ui.lblSpecificInfo->setVisible(elementIsSet);
+	m_ui.btnRefreshSpecificInfo->setVisible(elementIsSet);
+	if (elementIsSet)
+	{
+		switch (m_element->Type())
+		{
+		case dbc::ElementTypeFile:
+		case dbc::ElementTypeFolder:
+			m_ui.lblSpecificInfoCaption->setText(tr("Size:"));
+			m_ui.lblSpecificInfo->setText("?");
+			break;
+		case dbc::ElementTypeSymLink:
+			m_ui.lblSpecificInfoCaption->setText(tr("Target:"));
+			m_ui.lblSpecificInfo->setText(model::utils::StdString2QString(m_element->AsSymLink()->TargetPath()));
+			break;
+		case dbc::ElementTypeDirectLink:
+			m_ui.lblSpecificInfoCaption->setText(tr("Target:"));
+			m_ui.lblSpecificInfo->setText("?");
+			break;
+		default:
+			assert(!"Unknown element type");
+		}
+	}
 }

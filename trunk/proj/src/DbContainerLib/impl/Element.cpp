@@ -109,6 +109,16 @@ dbc::File* dbc::Element::AsFile()
 	return dynamic_cast<File*>(this);
 }
 
+dbc::SymLink* dbc::Element::AsSymLink()
+{
+	return dynamic_cast<SymLink*>(this);
+}
+
+dbc::DirectLink* dbc::Element::AsDirectLink()
+{
+	return dynamic_cast<DirectLink*>(this);
+}
+
 bool dbc::Element::IsTheSame(const Element& obj) const
 {
 	const Element& ce = dynamic_cast<const Element&>(obj);
@@ -309,6 +319,11 @@ void dbc::Element::UpdateSpecificData(const RawData& specificData)
 	query.BindInt64(2, m_id);
 	query.Step();
 	m_specificData.assign(specificData.begin(), specificData.end());
+}
+
+int64_t dbc::Element::GetId(const Element& element)
+{
+	return element.m_id;
 }
 
 void dbc::Element::InitElementInfo(SQLQuery& query, int typeN, int propsN, int specificDataN)

@@ -23,7 +23,7 @@ namespace
 			tmpId = query.ColumnInt64(0);
 			tmpParentId = query.ColumnInt64(1);
 			tmp_type = query.ColumnInt(2);
-			if (tmp_type != ElementTypeFolder && tmp_type != ElementTypeFile)
+			if (tmp_type == ElementTypeUnknown || tmp_type > ElementTypeDirectLink)
 			{
 				throw dbc::ContainerException(ERR_DB, IS_DAMAGED);
 			}
@@ -48,14 +48,5 @@ ElementGuard ElementsIterator::Next()
 	}
 
 	ElementInfo current = m_info[m_current++];
-	switch (current.Type)
-	{
-	case ElementTypeFolder:
-		return ElementGuard(new Folder(m_resources, current.ID));
-	case ElementTypeFile:
-		return ElementGuard(new File(m_resources, current.ID));
-	default:
-		assert(!"Unknown element type specified");
-		throw ContainerException(ERR_INTERNAL);
-	}
+	return m_resources->GetContainer().CreateElementObject(current.ID, current.Type);
 }

@@ -34,7 +34,9 @@ namespace dbc
 		virtual void SetDataUsagePreferences(const DataUsagePreferences& prefs);
 		// ~from IContainer
 
-		ElementGuard GetElement(uint64_t id);
+		ElementGuard GetElement(int64_t id);
+		ElementGuard CreateElementObject(int64_t id, ElementType type);
+		ElementGuard CreateElementObject(int64_t parentId, const std::string& name, ElementType type);
 
 	private:
 		void PrepareContainer(const std::string &password, bool create);

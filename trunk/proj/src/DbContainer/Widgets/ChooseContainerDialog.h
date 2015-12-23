@@ -23,10 +23,17 @@ namespace gui
 		void on_btnProceed_clicked();
 		void on_txtPath_textChanged();
 
+	protected:
+		void showEvent(QShowEvent* event);
+
+	private:
+		QString ChooseFile();
+
 	private:
 		Ui::ChooseContainerDialog m_ui;
 		ActionType m_action;
 
 		dbc::ContainerGuard m_container;
+		bool m_wasShown;
 	};
 }

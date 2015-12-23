@@ -89,6 +89,8 @@ QVariant model::DbContainerModel::data(const QModelIndex& index, int role) const
 			return GetDisplayData(node, index.row());
 		case ItemTypeRole:
 			return QVariant::fromValue(node->GetElement()->Type());
+		case ItemSizeRole:
+			return GetSizeData(node);
 		default:
 			return QVariant();
 		}
@@ -234,7 +236,9 @@ QModelIndex model::DbContainerModel::AddElement(dbc::ElementType type, const QSt
 
 void model::DbContainerModel::OnItemExpanded(const QModelIndex& index)
 {
+	DBC_MODEL_TRY(tr("Loading children elements"));
 	LoadChildren(index);
+	DBC_MODEL_CATCH;
 }
 
 void model::DbContainerModel::LoadChildren(const QModelIndex& parent)
@@ -272,6 +276,22 @@ QVariant model::DbContainerModel::GetDisplayData(model::TreeNode* node, int row)
 	else
 	{
 		return utils::StdString2QString(node->GetElement()->Name());
+	}
+	DBC_MODEL_CATCH;
+	return QVariant();
+}
+
+QVariant model::DbContainerModel::GetSizeData(model::TreeNode* node) const
+{
+	DBC_MODEL_TRY(tr("Get element size"));
+	if (node->GetElement()->Type() == dbc::ElementTypeFile)
+	{
+		return static_cast<quint64>(node->GetElement()->AsFile()->Size());
+	}
+	else
+	{
+		static const quint64 s_nullSize = 0;
+		return s_nullSize;
 	}
 	DBC_MODEL_CATCH;
 	return QVariant();

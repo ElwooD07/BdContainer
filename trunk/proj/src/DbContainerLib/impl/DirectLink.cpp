@@ -48,7 +48,7 @@ void dbc::DirectLink::ChangeTarget(Element& newTarget)
 	{
 		throw ContainerException(notFoundError);
 	}
-	m_target = newTarget.m_id;
+	m_target = GetId(newTarget);
 }
 
 dbc::Error dbc::DirectLink::IsElementReferenceable(Element& element)
@@ -69,8 +69,7 @@ void dbc::DirectLink::InitTarget()
 	if (!m_specificData.empty())
 	{
 		std::string targetStr = utils::RawDataToString(m_specificData);
-		int64_t targetTmp = 0;
-		utils::StringToNumber(targetStr, targetTmp);
+		int64_t targetTmp = utils::StringToNumber<int64_t>(targetStr);
 		if (targetTmp != 0)
 		{
 			m_target = targetTmp;

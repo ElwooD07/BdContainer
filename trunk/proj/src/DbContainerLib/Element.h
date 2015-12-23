@@ -11,6 +11,8 @@ namespace dbc
 
 	class Folder;
 	class File;
+	class SymLink;
+	class DirectLink;
 
 	typedef std::shared_ptr<Folder> FolderGuard;
 	typedef std::shared_ptr<File> FileGuard;
@@ -28,6 +30,8 @@ namespace dbc
 
 		virtual Folder* AsFolder();
 		virtual File* AsFile();
+		virtual SymLink* AsSymLink();
+		virtual DirectLink* AsDirectLink();
 
 		virtual bool IsTheSame(const Element& obj) const;
 		virtual bool IsChildOf(const Element& obj);
@@ -48,8 +52,7 @@ namespace dbc
 		Error Exists(int64_t parent_id, std::string name); // Returns s_errElementNotFound (see .cpp) as false and SUCCESS as true, or other error code if there was an error
 		void WriteProps();
 		void UpdateSpecificData(const RawData& specificData);
-
-		friend class DirectLink;
+		int64_t GetId(const Element& element);
 
 	protected:
 		ContainerResources m_resources;

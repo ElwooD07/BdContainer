@@ -20,4 +20,6 @@ namespace dbc
 	private:
 		int64_t m_target;
 	};
+
+	typedef std::shared_ptr<DirectLink> DirectLinkGuard;
 }

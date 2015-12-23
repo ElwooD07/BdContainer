@@ -12,7 +12,8 @@ namespace model
 		enum DbContainerModelDataRoles
 		{
 			ItemNameRole = Qt::UserRole,
-			ItemTypeRole
+			ItemTypeRole,
+			ItemSizeRole
 		};
 
 	public:
@@ -46,6 +47,7 @@ namespace model
 	private:
 		void LoadChildren(const QModelIndex& parent);
 		QVariant GetDisplayData(model::TreeNode* node, int row) const;
+		QVariant GetSizeData(model::TreeNode* node) const;
 
 		void SetNodeName(const QModelIndex& index, const QString& name);
 		void RemoveItem(TreeNode* parent, int row);

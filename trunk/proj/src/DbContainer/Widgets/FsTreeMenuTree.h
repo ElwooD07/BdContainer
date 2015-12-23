@@ -25,7 +25,8 @@ namespace gui
 
 		void OnCreateFileTriggered();
 		void OnCreateFolderTriggered();
-		void OnCreateLinkTriggered();
+		void OnCreateSymLinkTriggered();
+		void OnCreateDirectLinkTriggered();
 
 	private:
 		void CreateChild(const QString& defaultName, const QString& titleStr, dbc::ElementType type);
