@@ -26,10 +26,6 @@ namespace
 			return "This action is forbidden";
 		case CONTAINER_RESOURCES_NOT_AVAILABLE:
 			return "Resources which were allocated by the Container have been deallocated with Container object and are no longer available";
-		case LINK_IS_EMPTY:
-			return "The link is empty";
-		case LINK_IS_NOT_REFERENCEABLE:
-			return "The link is not referenceable";
 		case ERR_INTERNAL:
 			return "Internal error";
 		case ERR_UNDEFINED:

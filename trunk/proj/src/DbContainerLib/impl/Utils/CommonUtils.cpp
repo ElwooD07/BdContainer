@@ -1,23 +1,43 @@
 #include "stdafx.h"
 #include "CommonUtils.h"
 
-void dbc::utils::SplitSavingDelim(const std::string& str, char delim, std::vector<std::string>& out)
+namespace
 {
-	out.clear();
-	std::string::const_iterator last = str.begin();
-	std::string::const_iterator end = str.end();
-	for (std::string::const_iterator i = last; i != end; ++i)
+	void SplitImpl(const std::string& str, char delim, dbc::Strings_vt& out, bool saveDelim)
 	{
-		if (*i == delim)
+		assert(out.empty());
+		out.clear();
+		std::string::const_iterator last = str.begin();
+		std::string::const_iterator end = str.end();
+		for (std::string::const_iterator i = last; i != end; ++i)
 		{
-			out.push_back(std::string(last, i + 1));
-			last = i + 1;
+			if (*i == delim)
+			{
+				std::string::const_iterator to = saveDelim ? i + 1 : i;
+				std::string token(last, to);
+				last = i + 1;
+				if (!saveDelim && token.empty())
+				{
+					continue;
+				}
+				out.push_back(token);
+			}
+		}
+		if (last != end)
+		{
+			out.push_back(std::string(last, end));
 		}
 	}
-	if (last != end)
-	{
-		out.push_back(std::string(last, end));
-	}
+}
+
+void dbc::utils::SplitSavingDelim(const std::string& str, char delim, Strings_vt& out)
+{
+	SplitImpl(str, delim, out, true);
+}
+
+void dbc::utils::SplitWithoutDelim(const std::string& str, char delim, Strings_vt& out)
+{
+	SplitImpl(str, delim, out, false);
 }
 
 std::string dbc::utils::BinaryToHexString(const void* data, size_t dataLen)
@@ -33,7 +53,12 @@ std::string dbc::utils::BinaryToHexString(const void* data, size_t dataLen)
 dbc::RawData dbc::utils::StringToRawData(const std::string& str)
 {
 	const dbc::RawData::value_type* strPtr = reinterpret_cast<const dbc::RawData::value_type*>(str.c_str());
-	return std::move(dbc::RawData(strPtr, strPtr + str.size()));
+	dbc::RawData out(strPtr, strPtr + str.size());
+	if (out.back() != 0)
+	{
+		out.push_back(0);
+	}
+	return std::move(out);
 }
 
 std::string dbc::utils::RawDataToString(const RawData& data)

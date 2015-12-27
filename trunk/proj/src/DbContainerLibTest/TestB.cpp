@@ -38,8 +38,6 @@ TEST(B_ContainerFuncTests, Clear)
 	ASSERT_TRUE(DatabasePrepare());
 	FolderGuard root = cont->GetRoot();
 
-	root->ResetProperties("root tag");
-
 	std::string ce_name1("some name");
 	std::string ce_name2("some other name");
 	// Work with children entries tested in other files
@@ -51,8 +49,7 @@ TEST(B_ContainerFuncTests, Clear)
 	EXPECT_FALSE(ce1->Exists());
 	EXPECT_FALSE(ce2->Exists());
 
-	ElementProperties rootProps;
-	root->GetProperties(rootProps);
+	ElementProperties rootProps = root->GetProperties();
 	EXPECT_TRUE(rootProps.Tag().empty());
 }
 
@@ -73,15 +70,27 @@ TEST(B_ContainerFuncTests, GetElement)
 	const std::string child3path(utils::SlashedPath(child2path) + child3name);
 	
 	ElementGuard ce;
-	EXPECT_NO_THROW(ce = cont->GetElement(child1path));
-	EXPECT_EQ(child1name, ce->Name());
-	EXPECT_EQ(child1path, ce->Path());
+	EXPECT_NO_THROW(ce = cont->GetElement(child3path));
+	EXPECT_EQ(child3name, ce->Name());
+	EXPECT_EQ(child3path, ce->Path());
+	ASSERT_NO_THROW(ce->Remove());
 
 	EXPECT_NO_THROW(ce = cont->GetElement(child2path));
 	EXPECT_EQ(child2name, ce->Name());
 	EXPECT_EQ(child2path, ce->Path());
+	ASSERT_NO_THROW(ce->Remove());
+
+	EXPECT_NO_THROW(ce = cont->GetElement(child1path));
+	EXPECT_EQ(child1name, ce->Name());
+	EXPECT_EQ(child1path, ce->Path());
+	ASSERT_NO_THROW(ce->Remove());
+	
+	EXPECT_NO_THROW(ce = cont->GetElement(child1path));
+	EXPECT_EQ(nullptr, ce.get());
+
+	EXPECT_NO_THROW(ce = cont->GetElement(child2path));
+	EXPECT_EQ(nullptr, ce.get());
 
 	EXPECT_NO_THROW(ce = cont->GetElement(child3path));
-	EXPECT_EQ(child3name, ce->Name());
-	EXPECT_EQ(child3path, ce->Path());
+	EXPECT_EQ(nullptr, ce.get());
 }

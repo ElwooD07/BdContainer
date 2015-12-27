@@ -36,12 +36,13 @@ std::string dbc::Folder::Path()
 
 void dbc::Folder::Remove()
 {
-	Refresh();
-
-	Error err = RemoveFolder(m_resources->GetConnection(), m_id);
-	if (err != SUCCESS)
+	if (Exists())
 	{
-		throw ContainerException(err);
+		Error err = RemoveFolder(m_id);
+		if (err != SUCCESS)
+		{
+			throw ContainerException(err);
+		}
 	}
 }
 
@@ -50,9 +51,7 @@ void dbc::Folder::Rename(const std::string& newName)
 	if (!IsRoot())
 	{
 		Element::Rename(newName);
-
-		m_props.SetDateModified(::time(0));
-		WriteProps();
+		WriteProps(::time(0));
 	}
 	else
 	{
@@ -87,21 +86,19 @@ dbc::ElementGuard dbc::Folder::GetChild(const std::string& name)
 {
 	Refresh();
 
-	SQLQuery query(m_resources->GetConnection(), "SELECT count(*), id, type FROM FileSystem WHERE parent_id = ? AND name = ?;");
+	SQLQuery query(m_resources->GetConnection(), "SELECT id, type FROM FileSystem WHERE parent_id = ? AND name = ?;");
 	query.BindInt64(1, m_id);
 	query.BindText(2, name);
-	query.Step();
-	int count = query.ColumnInt(0);
-	if (count == 0)
+	if (!query.Step())
 	{
-		throw ContainerException(notFoundError);
+		return ElementGuard(0);
 	}
-	else if (count > 1)
+	int64_t id = query.ColumnInt64(0);
+	int type = query.ColumnInt(1);
+	if (query.Step()) // There is one more child with the same name in this folder
 	{
 		throw ContainerException(ERR_DB, IS_DAMAGED);
 	}
-	int64_t id = query.ColumnInt64(1);
-	int type = query.ColumnInt(2);
 	return m_resources->GetContainer().CreateElementObject(id, static_cast<ElementType>(type));
 }
 
@@ -127,21 +124,25 @@ dbc::SymLinkGuard dbc::Folder::CreateSymLink(const std::string& name, const std:
 	Error err = SymLink::IsTargetPathValid(targetPath);
 	if (err != SUCCESS)
 	{
-		throw ContainerException(err);
+		throw ContainerException(ERR_DB_FS, CANT_CREATE, err);
 	}
-	CreateChildEntry(name, ElementTypeSymLink, tag, targetPath);
+	CreateChildEntry(name, ElementTypeSymLink, tag, utils::StringToRawData(targetPath));
 	return SymLinkGuard(new SymLink(m_resources, m_id, name));
 }
 
 dbc::DirectLinkGuard dbc::Folder::CreateDirectLink(const std::string& name, const ElementGuard target, const std::string& tag /*= ""*/)
 {
+	if (target.get() == nullptr)
+	{
+		throw ContainerException(ERR_DB_FS, CANT_CREATE, WRONG_PARAMETERS);
+	}
 	Error err = DirectLink::IsElementReferenceable(*target);
 	if (err != SUCCESS)
 	{
-		throw ContainerException(err);
+		throw ContainerException(ERR_DB_FS, CANT_CREATE, err);
 	}
 	std::string targetStr = utils::NumberToString(GetId(*target));
-	CreateChildEntry(name, ElementTypeDirectLink, tag, targetStr);
+	CreateChildEntry(name, ElementTypeDirectLink, tag, utils::StringToRawData(targetStr));
 	return DirectLinkGuard(new DirectLink(m_resources, m_id, name));
 }
 
@@ -151,7 +152,7 @@ dbc::DbcElementsIterator dbc::Folder::EnumFsEntries()
 	return DbcElementsIterator(new ElementsIterator(m_resources, m_id));
 }
 
-dbc::Error dbc::Folder::RemoveFolder(Connection& connection, int64_t folderId)
+dbc::Error dbc::Folder::RemoveFolder(int64_t folderId)
 {
 	if (folderId <= 1)
 	{
@@ -163,13 +164,13 @@ dbc::Error dbc::Folder::RemoveFolder(Connection& connection, int64_t folderId)
 	{
 		TransactionGuard transaction = m_resources->GetConnection().StartTransaction();
 
-		SQLQuery query(connection, "SELECT id FROM FileSystem WHERE parent_id = ?;");
+		SQLQuery query(m_resources->GetConnection(), "SELECT id FROM FileSystem WHERE parent_id = ?;");
 		int64_t id;
 		query.BindInt64(1, folderId);
 		while (query.Step())
 		{
 			id = query.ColumnInt64(0);
-			ret = RemoveFolder(connection, id);
+			ret = RemoveFolder(id);
 			if (ret != SUCCESS)
 			{
 				break;
@@ -183,12 +184,12 @@ dbc::Error dbc::Folder::RemoveFolder(Connection& connection, int64_t folderId)
 	}
 	catch (const ContainerException &ex)
 	{
-		ret = ex.ErrType();
+		ret = ex.ErrorCode();
 	}
 	return ret;
 }
 
-void dbc::Folder::CreateChildEntry(const std::string& name, ElementType type, const std::string& tag, const std::string& specificData)
+void dbc::Folder::CreateChildEntry(const std::string& name, ElementType type, const std::string& tag, const RawData& specificData /*= RawData()*/)
 {
 	Refresh();
 
@@ -217,7 +218,6 @@ void dbc::Folder::CreateChildEntry(const std::string& name, ElementType type, co
 	std::string propsStr;
 	ElementProperties::MakeString(props, propsStr);
 	query.BindText(4, propsStr);
-	RawData specificDataBlob(utils::StringToRawData(specificData));
-	query.BindBlob(5, specificDataBlob);
+	query.BindBlob(5, specificData);
 	query.Step();
 }

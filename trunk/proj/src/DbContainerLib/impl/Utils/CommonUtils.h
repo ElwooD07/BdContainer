@@ -5,7 +5,8 @@ namespace dbc
 {
 	namespace utils
 	{
-		void SplitSavingDelim(const std::string& str, char delim, std::vector<std::string>& out);
+		void SplitSavingDelim(const std::string& str, char delim, Strings_vt& out);
+		void SplitWithoutDelim(const std::string& str, char delim, Strings_vt& out);
 
 		template<typename T>
 		T StringToNumber(const std::string& str, std::ios::fmtflags flags = std::ios::dec)
@@ -13,7 +14,7 @@ namespace dbc
 			std::stringstream strm;
 			strm.flags(flags);
 			strm << str;
-			T number;
+			T number(0);
 			strm >> number;
 			return number;
 		}

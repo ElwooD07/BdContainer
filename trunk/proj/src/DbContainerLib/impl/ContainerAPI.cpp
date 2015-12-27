@@ -11,7 +11,7 @@ dbc::ContainerGuard dbc::CreateContainer(const std::string& path, const std::str
 	}
 	catch (const ContainerException& ex)
 	{
-		throw ContainerException(ERR_DB, CANT_CREATE, ex.ErrType());
+		throw ContainerException(ERR_DB, CANT_CREATE, ex.ErrorCode());
 	}
 }
 
@@ -23,7 +23,7 @@ dbc::ContainerGuard dbc::CreateContainer(const std::string& path, const std::str
 	}
 	catch (const ContainerException& ex)
 	{
-		throw ContainerException(ERR_DB, CANT_CREATE, ex.ErrType());
+		throw ContainerException(ERR_DB, CANT_CREATE, ex.ErrorCode());
 	}
 }
 

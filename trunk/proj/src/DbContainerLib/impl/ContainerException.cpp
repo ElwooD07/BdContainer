@@ -57,12 +57,12 @@ std::string dbc::ContainerException::FullMessage() const
 	return std::move(stream.str());
 }
 
-dbc::Error dbc::ContainerException::ErrType() const
+dbc::Error dbc::ContainerException::ErrorCode() const
 {
 	return m_err_type;
 }
 
-dbc::Error dbc::ContainerException::ReasonType() const
+dbc::Error dbc::ContainerException::ReasonCode() const
 {
 	return m_reason_type;
 }

@@ -52,7 +52,7 @@ namespace
 			}
 			catch (const dbc::ContainerException& ex)
 			{
-				throw ContainerException(ERR_DB, CANT_CREATE, ex.ErrType());
+				throw ContainerException(ERR_DB, CANT_CREATE, ex.ErrorCode());
 			}
 		}
 	}
@@ -157,7 +157,7 @@ void dbc::Container::Clear()
 	}
 	catch (const ContainerException &ex)
 	{
-		throw ContainerException(ERR_DB, CANT_REMOVE, ex.ErrType());
+		throw ContainerException(ERR_DB, CANT_REMOVE, ex.ErrorCode());
 	}
 
 	try
@@ -166,7 +166,7 @@ void dbc::Container::Clear()
 	}
 	catch (const ContainerException &ex)
 	{
-		throw ContainerException(ERR_DB, CANT_CREATE, ex.ErrType());
+		throw ContainerException(ERR_DB, CANT_CREATE, ex.ErrorCode());
 	}
 }
 
@@ -198,24 +198,22 @@ dbc::ElementGuard dbc::Container::GetElement(const std::string& path)
 	int64_t parentId = 0;
 	int elementType = ElementTypeUnknown;
 
-	SQLQuery query(m_connection, "SELECT count(*), id, type FROM FileSystem WHERE parent_id = ? AND name = ?;");
+	SQLQuery query(m_connection, "SELECT id, type FROM FileSystem WHERE parent_id = ? AND name = ?;");
 	for (std::vector<std::string>::iterator itr = names.begin(); itr != names.end(); ++itr, query.Reset())
 	{
 		query.BindInt64(1, parentId);
 		*itr = dbc::utils::UnslashedPath(*itr);
 		query.BindText(2, *itr);
-		query.Step();
-		int count = query.ColumnInt(0);
-		if (count == 0)
+		if (!query.Step())
 		{
-			throw ContainerException(Element::notFoundError);
+			return ElementGuard(nullptr);
 		}
-		else if (count > 1)
+		parentId = query.ColumnInt64(0);
+		elementType = query.ColumnInt(1);
+		if (query.Step()) // If there is one more file with the same name in the same directory
 		{
 			throw ContainerException(ERR_DB, IS_DAMAGED);
 		}
-		parentId = query.ColumnInt64(1);
-		elementType = query.ColumnInt(2);
 	}
 	return CreateElementObject(parentId, static_cast<ElementType>(elementType));
 }

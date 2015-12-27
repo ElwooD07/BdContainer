@@ -26,14 +26,14 @@ namespace dbc
 		virtual bool Exists();
 		virtual std::string Name();
 		virtual std::string Path();
-		virtual ElementType Type() const;
+		virtual ElementType Type() const throw();
 
-		virtual Folder* AsFolder();
-		virtual File* AsFile();
-		virtual SymLink* AsSymLink();
-		virtual DirectLink* AsDirectLink();
+		virtual Folder* AsFolder() throw();
+		virtual File* AsFile() throw();
+		virtual SymLink* AsSymLink() throw();
+		virtual DirectLink* AsDirectLink() throw();
 
-		virtual bool IsTheSame(const Element& obj) const;
+		virtual bool IsTheSame(const Element& obj) const throw();
 		virtual bool IsChildOf(const Element& obj);
 
 		virtual FolderGuard GetParentEntry();
@@ -42,15 +42,16 @@ namespace dbc
 		virtual void Remove();
 		virtual void Rename(const std::string& newName);
 
-		virtual void GetProperties(ElementProperties& out);
+		virtual ElementProperties GetProperties();
 		virtual void ResetProperties(const std::string& tag);
 
 		static Error notFoundError;
 
 	protected:
 		void Refresh();
+		bool Exists(int64_t id);
 		Error Exists(int64_t parent_id, std::string name); // Returns s_errElementNotFound (see .cpp) as false and SUCCESS as true, or other error code if there was an error
-		void WriteProps();
+		void WriteProps(time_t newDateModified, const char* tag = nullptr);
 		void UpdateSpecificData(const RawData& specificData);
 		int64_t GetId(const Element& element);
 
@@ -61,7 +62,7 @@ namespace dbc
 		int64_t m_parentId;
 		ElementType m_type;
 		std::string m_name;
-		ElementProperties m_props;
+		std::string m_propsStr;
 		RawData m_specificData;
 
 	private:

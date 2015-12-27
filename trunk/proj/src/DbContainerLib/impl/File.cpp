@@ -54,14 +54,15 @@ dbc::File::File(ContainerResources resources, int64_t parent_id, const std::stri
 
 void dbc::File::Remove()
 {
-	Refresh();
+	if (Exists())
+	{
+		SQLQuery query(m_resources->GetConnection(), "UPDATE FileStreams SET used = ? WHERE file_id = ?;");
+		query.BindInt(1, 0);
+		query.BindInt64(2, m_id);
+		while (query.Step());
 
-	SQLQuery query(m_resources->GetConnection(), "UPDATE FileStreams SET used = ? WHERE file_id = ?;");
-	query.BindInt(1, 0);
-	query.BindInt64(2, m_id);
-	while (query.Step());
-
-	Element::Remove();
+		Element::Remove();
+	}
 }
 
 dbc::FileGuard dbc::File::Clone() const
@@ -239,7 +240,7 @@ uint64_t dbc::File::DirectWrite(std::istream& in, uint64_t size, IProgressObserv
 	catch (const ContainerException& ex)
 	{
 		WriteLog("Unable to allocate place for data: " + ex.FullMessage());
-		throw ContainerException(ERR_DATA, CANT_WRITE, ex.ErrType());
+		throw ContainerException(ERR_DATA, CANT_WRITE, ex.ErrorCode());
 	}
 
 	return WriteImpl(in, size, false, observer);
@@ -254,7 +255,7 @@ uint64_t dbc::File::TransactionalWrite(std::istream& in, uint64_t size, IProgres
 	catch (const ContainerException& ex)
 	{
 		WriteLog("Unable to allocate place for data: " + ex.FullMessage());
-		throw ContainerException(ERR_DATA, CANT_WRITE, ex.ErrType());
+		throw ContainerException(ERR_DATA, CANT_WRITE, ex.ErrorCode());
 	}
 
 	uint64_t writtenTotal = WriteImpl(in, size, true, observer);

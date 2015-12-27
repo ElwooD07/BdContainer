@@ -27,17 +27,7 @@ dbc::ElementGuard dbc::DirectLink::Target()
 {
 	if (m_target == s_wrongId)
 	{
-		throw ContainerException(LINK_IS_EMPTY);
-	}
-	else
-	{
-		SQLQuery query(m_resources->GetConnection(), "SELECT count(*) FROM FileSystem WHERE id = ?;");
-		query.BindInt64(1, m_target);
-		query.Step();
-		if (query.ColumnInt(1) == 0)
-		{
-			throw ContainerException(LINK_IS_NOT_REFERENCEABLE);
-		}
+		return (ElementGuard(nullptr));
 	}
 	return m_resources->GetContainer().GetElement(m_target);
 }
@@ -53,11 +43,7 @@ void dbc::DirectLink::ChangeTarget(Element& newTarget)
 
 dbc::Error dbc::DirectLink::IsElementReferenceable(Element& element)
 {
-	if (element.Type() == ElementTypeFolder && element.AsFolder()->IsRoot())
-	{
-		return ACTION_IS_FORBIDDEN;
-	}
-	else if (!element.Exists())
+	if (!element.Exists())
 	{
 		return notFoundError;
 	}
@@ -70,7 +56,7 @@ void dbc::DirectLink::InitTarget()
 	{
 		std::string targetStr = utils::RawDataToString(m_specificData);
 		int64_t targetTmp = utils::StringToNumber<int64_t>(targetStr);
-		if (targetTmp != 0)
+		if (targetTmp > 0)
 		{
 			m_target = targetTmp;
 		}

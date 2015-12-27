@@ -33,7 +33,7 @@ namespace dbc
 		DbcElementsIterator EnumFsEntries();
 
 	private:
-		Error RemoveFolder(Connection& owner, int64_t folderId); // Recursive
-		void CreateChildEntry(const std::string& name, ElementType type, const std::string& tag, const std::string& specificData = "");
+		Error RemoveFolder(int64_t folderId); // Recursive
+		void CreateChildEntry(const std::string& name, ElementType type, const std::string& tag, const RawData& specificData = RawData());
 	};
 }

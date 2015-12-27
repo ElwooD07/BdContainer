@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "SymLink.h"
 #include "CommonUtils.h"
+#include "FsUtils.h"
 #include "ContainerException.h"
 #include "IContainnerResources.h"
 
@@ -37,7 +38,7 @@ dbc::ElementGuard dbc::SymLink::Target() const
 {
 	if (m_target == nullptr)
 	{
-		throw ContainerException(ERR_DB_FS, IS_EMPTY);
+		return (ElementGuard(nullptr));
 	}
 	return m_resources->GetContainer().GetElement(m_target);
 }
@@ -53,14 +54,16 @@ dbc::Error dbc::SymLink::IsTargetPathValid(const std::string& target)
 	{
 		return WRONG_PARAMETERS;
 	}
-	else if (target == std::string({ dbc::PATH_SEPARATOR }))
+	std::vector<std::string> names;
+	utils::SplitWithoutDelim(target, dbc::PATH_SEPARATOR, names);
+	for (auto& name : names)
 	{
-		return ACTION_IS_FORBIDDEN; // Can't create link to the root
+		if (!utils::FileNameIsValid(name))
+		{
+			return WRONG_PARAMETERS;
+		}
 	}
-	else
-	{
-		return SUCCESS;
-	}
+	return SUCCESS;
 }
 
 void dbc::SymLink::InitTarget(const std::string& target)

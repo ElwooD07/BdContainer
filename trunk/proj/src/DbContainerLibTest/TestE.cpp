@@ -52,15 +52,15 @@ TEST(E_FileSystemTest, Files_CreateRemove)
 	EXPECT_NO_THROW(cfile = ce->AsFile()->Clone());
 	
 	DbcElementsIterator ei;
-	EXPECT_NO_THROW(ei = root->EnumFsEntries());
+	ASSERT_NO_THROW(ei = root->EnumFsEntries());
 	EXPECT_EQ(1, ei->Count());
 
-	FileGuard cfile2;
 	EXPECT_THROW(ce = root->CreateChild(fname, ElementTypeFile), ContainerException);
 	EXPECT_NO_THROW(ce = root->CreateChild(fname + " 2", ElementTypeFile));
+	FileGuard cfile2;
 	EXPECT_NO_THROW(cfile2 = ce->AsFile()->Clone());
 
-	EXPECT_NO_THROW(ei = root->EnumFsEntries());
+	ASSERT_NO_THROW(ei = root->EnumFsEntries());
 	EXPECT_EQ(2, ei->Count());
 	EXPECT_TRUE(ei->HasNext());
 	EXPECT_NO_THROW(ce = ei->Next());
@@ -71,8 +71,8 @@ TEST(E_FileSystemTest, Files_CreateRemove)
 	EXPECT_NO_THROW(ce->Remove());
 	EXPECT_FALSE(ce->Exists());
 	EXPECT_FALSE(cfile->Exists());
-	EXPECT_THROW(ce->Remove(), ContainerException);
-	EXPECT_THROW(cfile->Remove(), ContainerException);
+	EXPECT_NO_THROW(ce->Remove()); // see ThrowAndNoThrowBehavior_Element
+	EXPECT_NO_THROW(cfile->Remove()); // see ThrowAndNoThrowBehavior_Element
 
 	EXPECT_TRUE(ei->HasNext());
 	EXPECT_NO_THROW(ce = ei->Next());

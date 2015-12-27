@@ -18,6 +18,8 @@ namespace dbc
 	#define NONCOPYABLE_IMPL(TYPE) explicit TYPE(const TYPE&) = delete; TYPE& operator=(const TYPE&) = delete;
 	#define NONCOPYABLE(TYPE) NONCOPYABLE_IMPL(TYPE)
 
+	typedef std::vector<std::string> Strings_vt;
+
 	typedef std::lock_guard<std::mutex> MutexLock;
 	typedef std::shared_ptr<MutexLock> MutexLockGuard;
 }

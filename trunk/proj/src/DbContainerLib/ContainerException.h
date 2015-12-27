@@ -16,8 +16,8 @@ namespace dbc
 		std::string Message() const; // Main information about exception
 		std::string Reason() const; // Additional information
 		std::string FullMessage() const;
-		Error ErrType() const;
-		Error ReasonType() const;
+		Error ErrorCode() const;
+		Error ReasonCode() const;
 
 		// Determines whether the error code result of an error, or is it just the flag
 		static bool Safe(Error err_type);
