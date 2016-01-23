@@ -58,7 +58,14 @@ void gui::ElementViewWidget::on_btnRefreshSpecificInfo_clicked()
 		res = model::utils::StdString2QString(m_element->AsSymLink()->TargetPath());
 		break;
 	case dbc::ElementTypeDirectLink:
-		res = model::utils::StdString2QString(m_element->AsDirectLink()->Target()->Path());
+		if (m_element->AsDirectLink()->Target().get() != nullptr)
+		{
+			res = model::utils::StdString2QString(m_element->AsDirectLink()->Target()->Path());
+		}
+		else
+		{
+			res = tr("Not exists");
+		}
 		break;
 	default:
 		assert(!"Unknown element type");
@@ -75,7 +82,7 @@ void gui::ElementViewWidget::RefreshCommonInfo()
 	dbc::ElementProperties props;
 	if (elementIsSet)
 	{
-		m_element->GetProperties(props);
+		props = m_element->GetProperties();
 	}
 	m_ui.lblCreated->setText(elementIsSet ? model::utils::Timestamp2QString(props.DateCreated()) : "");
 	m_ui.lblModified->setText(elementIsSet ? model::utils::Timestamp2QString(props.DateModified()) : "");
