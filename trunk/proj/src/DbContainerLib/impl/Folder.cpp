@@ -132,11 +132,7 @@ dbc::SymLinkGuard dbc::Folder::CreateSymLink(const std::string& name, const std:
 
 dbc::DirectLinkGuard dbc::Folder::CreateDirectLink(const std::string& name, const ElementGuard target, const std::string& tag /*= ""*/)
 {
-	if (target.get() == nullptr)
-	{
-		throw ContainerException(ERR_DB_FS, CANT_CREATE, WRONG_PARAMETERS);
-	}
-	Error err = DirectLink::IsElementReferenceable(*target);
+	Error err = DirectLink::IsElementReferenceable(target);
 	if (err != SUCCESS)
 	{
 		throw ContainerException(ERR_DB_FS, CANT_CREATE, err);
@@ -199,7 +195,7 @@ void dbc::Folder::CreateChildEntry(const std::string& name, ElementType type, co
 	}
 
 	Error tmp = Exists(m_id, name);
-	if (tmp != notFoundError)
+	if (tmp != s_notFoundError)
 	{
 		if (tmp == SUCCESS)
 		{

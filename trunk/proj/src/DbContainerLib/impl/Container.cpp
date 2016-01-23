@@ -239,9 +239,9 @@ dbc::ElementGuard dbc::Container::GetElement(int64_t id)
 	query.BindInt64(1, id);
 	if (!query.Step())
 	{
-		throw ContainerException(Element::notFoundError);
+		throw ContainerException(Element::s_notFoundError);
 	}
-	int type = query.ColumnInt(1);
+	int type = query.ColumnInt(0);
 	return CreateElementObject(id, static_cast<ElementType>(type));
 }
 

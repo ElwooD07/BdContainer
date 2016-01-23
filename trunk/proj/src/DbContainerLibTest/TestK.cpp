@@ -7,6 +7,36 @@ using namespace dbc;
 
 extern ContainerGuard cont;
 
+TEST(LinksTest, SymLink_IsTargetPathValid)
+{
+	EXPECT_NE(Error(SUCCESS), SymLink::IsTargetPathValid("")); // Empty target
+	EXPECT_NE(Error(SUCCESS), SymLink::IsTargetPathValid("folder/file")); // Path is relative
+	EXPECT_NE(Error(SUCCESS), SymLink::IsTargetPathValid("/folder/*")); // Forbidden file name in target
+	EXPECT_NE(Error(SUCCESS), SymLink::IsTargetPathValid("/folder1/fold*er2/file")); // Forbidden file name in target
+	EXPECT_NE(Error(SUCCESS), SymLink::IsTargetPathValid("/folder1/folder2/fi*le")); // Forbidden file name in target
+	EXPECT_EQ(Error(SUCCESS), SymLink::IsTargetPathValid("/folder1"));
+	EXPECT_EQ(Error(SUCCESS), SymLink::IsTargetPathValid("/folder1/file 2"));
+	EXPECT_EQ(Error(SUCCESS), SymLink::IsTargetPathValid("/folder1/fo l d e r2/!@#$%^&()|/file 2"));
+}
+
+TEST(LinksTest, DirctLink_IsElementReferenceable)
+{
+	ASSERT_TRUE(DatabasePrepare());
+
+	FolderGuard root = cont->GetRoot();
+	const std::string linkName = "symlink1";
+	const std::string linkPath = root->Name() + linkName;
+
+	ElementGuard file = root->CreateFile("ordinary file");
+	DirectLinkGuard link;
+	EXPECT_EQ(Error(SUCCESS), DirectLink::IsElementReferenceable(file));
+	EXPECT_EQ(Error(SUCCESS), DirectLink::IsElementReferenceable(root)); // Direct link to the root is not forbidden
+	ASSERT_NO_THROW(file->Remove());
+	EXPECT_NE(Error(SUCCESS), DirectLink::IsElementReferenceable(file)); // Target was deleted
+	ElementGuard emptyElement;
+	EXPECT_NE(Error(SUCCESS), DirectLink::IsElementReferenceable(emptyElement));
+}
+
 TEST(LinksTest, SymLink_Basics_TargetName)
 {
 	ASSERT_TRUE(DatabasePrepare());
@@ -20,7 +50,7 @@ TEST(LinksTest, SymLink_Basics_TargetName)
 	EXPECT_THROW(root->CreateSymLink("testLink1", "/folder/*"), ContainerException); // Forbidden file name in target
 	EXPECT_THROW(root->CreateSymLink("testLink1", "/folder1/fold*er2/file"), ContainerException); // Forbidden file name in target
 	EXPECT_THROW(root->CreateSymLink("testLink1", "/folder1/folder2/fi*le"), ContainerException); // Forbidden file name in target
-	ASSERT_NO_THROW(link = root->CreateSymLink(linkName, linkPath), ContainerException); // Link to itself
+	ASSERT_NO_THROW(link = root->CreateSymLink(linkName, linkPath)); // Link to itself
 	ASSERT_NO_THROW(link->Remove());
 	ASSERT_NO_THROW(link = root->CreateSymLink(linkName, "/abc")); // Target not exists
 	EXPECT_NE(nullptr, link.get());
@@ -28,7 +58,7 @@ TEST(LinksTest, SymLink_Basics_TargetName)
 	EXPECT_THROW(link->ChangeTarget("/folder/*"), ContainerException); // Forbidden file name in target
 	EXPECT_THROW(link->ChangeTarget("/folder1/fold*er2/file"), ContainerException); // Forbidden file name in target
 	EXPECT_THROW(link->ChangeTarget("/folder1/folder2/fi*le"), ContainerException); // Forbidden file name in target
-	EXPECT_NO_THROW(link->ChangeTarget(linkPath), ContainerException); // Link to itself
+	EXPECT_NO_THROW(link->ChangeTarget(linkPath)); // Link to itself
 
 	ElementGuard element = cont->GetElement(linkPath);
 	EXPECT_NE(nullptr, element.get());
@@ -60,7 +90,7 @@ TEST(LinksTest, SymLink_Basics_TargetExistance)
 	const std::string targetPath = root->Name() + targetName;
 
 	SymLinkGuard link;
-	ASSERT_NO_THROW(link = root->CreateSymLink(linkName, "someFakeFile"));
+	ASSERT_NO_THROW(link = root->CreateSymLink(linkName, "/someFakeFile"));
 	ElementGuard element = cont->GetElement(linkPath);
 	EXPECT_NE(nullptr, element.get());
 	EXPECT_TRUE(element->IsTheSame(*link));
@@ -187,4 +217,74 @@ TEST(LinksTest, SymLink_ToDirectLink)
 	ASSERT_NO_THROW(directLink->Remove());
 	ASSERT_NO_THROW(element = symLink->Target());
 	EXPECT_EQ(nullptr, element.get());
+}
+
+TEST(LinksTest, DirectLink_Basics_Target)
+{
+	ASSERT_TRUE(DatabasePrepare());
+
+	FolderGuard root = cont->GetRoot();
+	const std::string linkName = "directlink";
+	const std::string linkPath = root->Name() + linkName;
+	const std::string targetName = "target";
+	const std::string targetPath = root->Name() + targetName;
+
+	ElementGuard target = root->CreateFile(targetName);
+	DirectLinkGuard link;
+	ASSERT_NO_THROW(link = root->CreateDirectLink(linkName, target));
+	ElementGuard element;
+	EXPECT_NO_THROW(element = link->Target());
+	EXPECT_NE(nullptr, element.get());
+	EXPECT_TRUE(element->IsTheSame(*target));
+
+	ASSERT_NO_THROW(target->Remove());
+	EXPECT_NO_THROW(element = link->Target());
+	EXPECT_EQ(nullptr, element.get());
+
+	EXPECT_NO_THROW(link->ChangeTarget(*root));
+	EXPECT_NO_THROW(element = link->Target());
+	EXPECT_TRUE(element->IsTheSame(*root));
+
+	ASSERT_FALSE(target->Exists());
+	EXPECT_THROW(link->ChangeTarget(*target), ContainerException);
+}
+
+TEST(LinksTest, DirectLink_ToDirectLink)
+{
+	ASSERT_TRUE(DatabasePrepare());
+
+	FolderGuard root = cont->GetRoot();
+	const std::string link1Name = "directlink1";
+	const std::string link1Path = root->Name() + link1Name;
+	const std::string link2Name = "directlink2";
+	const std::string link2Path = root->Name() + link2Name;
+	const std::string targetFileName = "targetFile";
+	const std::string targetFilePath = root->Name() + targetFileName;
+
+	ElementGuard targetFile = root->CreateFile(targetFileName);
+	DirectLinkGuard link1;
+	ASSERT_NO_THROW(link1 = root->CreateDirectLink(link1Name, targetFile));
+	ElementGuard element1;
+	EXPECT_NO_THROW(element1 = link1->Target());
+	EXPECT_NE(nullptr, element1.get());
+	EXPECT_TRUE(element1->IsTheSame(*targetFile));
+
+	DirectLinkGuard link2;
+	ASSERT_NO_THROW(link2 = root->CreateDirectLink(link2Name, link1));
+	ElementGuard element2;
+	EXPECT_NO_THROW(element2 = link2->Target());
+	EXPECT_NE(nullptr, element2.get());
+	EXPECT_TRUE(element2->IsTheSame(*link1));
+
+	ElementGuard targetFileAbstract;
+	ASSERT_NO_FATAL_FAILURE(targetFileAbstract = link2->Target()->AsDirectLink()->Target());
+	EXPECT_TRUE(targetFileAbstract->IsTheSame(*targetFile));
+
+	ASSERT_NO_THROW(link1->Remove());
+	EXPECT_NO_THROW(element2 = link2->Target());
+	EXPECT_EQ(nullptr, element2.get());
+
+	bool targetFileExists = false;
+	ASSERT_NO_THROW(targetFileExists = targetFile->Exists());
+	EXPECT_TRUE(targetFileExists);
 }

@@ -12,7 +12,7 @@ namespace dbc
 		ElementGuard Target();
 		void ChangeTarget(Element& newTarget);
 
-		static Error IsElementReferenceable(Element& element);
+		static Error IsElementReferenceable(ElementGuard element);
 
 	private:
 		void InitTarget();

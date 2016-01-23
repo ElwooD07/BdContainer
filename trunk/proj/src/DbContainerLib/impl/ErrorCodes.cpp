@@ -75,7 +75,7 @@ namespace
 		case CANT_REMOVE:
 			return "- unable to remove";
 		case CANT_EXEC:
-			return " - unable to execute";
+			return "- unable to execute";
 		case NOT_VALID:
 			return "is not valid";
 		case IS_EMPTY:

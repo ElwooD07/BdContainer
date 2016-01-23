@@ -29,23 +29,31 @@ dbc::ElementGuard dbc::DirectLink::Target()
 	{
 		return (ElementGuard(nullptr));
 	}
-	return m_resources->GetContainer().GetElement(m_target);
+	if (Exists(m_target))
+	{
+		return m_resources->GetContainer().GetElement(m_target);
+	}
+	return ElementGuard();
 }
 
 void dbc::DirectLink::ChangeTarget(Element& newTarget)
 {
 	if (!newTarget.Exists())
 	{
-		throw ContainerException(notFoundError);
+		throw ContainerException(s_notFoundError);
 	}
 	m_target = GetId(newTarget);
 }
 
-dbc::Error dbc::DirectLink::IsElementReferenceable(Element& element)
+dbc::Error dbc::DirectLink::IsElementReferenceable(ElementGuard element)
 {
-	if (!element.Exists())
+	if (element.get() == nullptr)
 	{
-		return notFoundError;
+		return WRONG_PARAMETERS;
+	}
+	else if (!element->Exists())
+	{
+		return s_notFoundError;
 	}
 	return SUCCESS;
 }

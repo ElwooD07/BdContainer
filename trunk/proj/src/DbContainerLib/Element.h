@@ -45,7 +45,7 @@ namespace dbc
 		virtual ElementProperties GetProperties();
 		virtual void ResetProperties(const std::string& tag);
 
-		static Error notFoundError;
+		static Error s_notFoundError;
 
 	protected:
 		void Refresh();

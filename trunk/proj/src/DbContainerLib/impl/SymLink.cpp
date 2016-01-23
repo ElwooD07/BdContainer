@@ -54,6 +54,10 @@ dbc::Error dbc::SymLink::IsTargetPathValid(const std::string& target)
 	{
 		return WRONG_PARAMETERS;
 	}
+	else if (target.front() != dbc::PATH_SEPARATOR)
+	{
+		return ACTION_IS_FORBIDDEN; // Path is relative
+	}
 	std::vector<std::string> names;
 	utils::SplitWithoutDelim(target, dbc::PATH_SEPARATOR, names);
 	for (auto& name : names)

@@ -9,7 +9,7 @@
 #include "FsUtils.h"
 #include "IContainnerResources.h"
 
-dbc::Error dbc::Element::notFoundError = dbc::Error(ERR_DB_FS, NOT_FOUND);
+dbc::Error dbc::Element::s_notFoundError = dbc::Error(ERR_DB_FS, NOT_FOUND);
 
 dbc::Element::Element(ContainerResources resources, int64_t id)
 	: m_resources(resources), m_id(id)
@@ -18,7 +18,7 @@ dbc::Element::Element(ContainerResources resources, int64_t id)
 	query.BindInt64(1, id);
 	if (!query.Step()) // SQLITE_DONE or SQLITE_OK, but not SQLITE_ROW, which expected
 	{
-		throw ContainerException(ERR_DB_FS, CANT_OPEN, notFoundError);
+		throw ContainerException(ERR_DB_FS, CANT_OPEN, s_notFoundError);
 	}
 	m_parentId = query.ColumnInt64(0);
 	query.ColumnText(1, m_name);
@@ -33,7 +33,7 @@ dbc::Element::Element(ContainerResources resources, int64_t parent_id, const std
 	query.BindText(2, name);
 	if (!query.Step()) // SQLITE_DONE or SQLITE_OK, but not SQLITE_ROW, which expected
 	{
-		throw ContainerException(notFoundError);
+		throw ContainerException(s_notFoundError);
 	}
 	m_id = query.ColumnInt64(0);
 	InitElementInfo(query, 1, 2, 3);
@@ -68,7 +68,7 @@ std::string dbc::Element::Path()
 		int count = query.ColumnInt(0);
 		if (count == 0)
 		{
-			throw ContainerException(ERR_DB, NOT_VALID, notFoundError);
+			throw ContainerException(ERR_DB, NOT_VALID, s_notFoundError);
 		}
 		query.ColumnText(1, tmp_name);
 		parentId = query.ColumnInt64(2);
@@ -125,7 +125,7 @@ bool dbc::Element::IsChildOf(const Element& obj)
 	int64_t targetId = elementObj.m_id;
 	if (!Exists(targetId))
 	{
-		throw ContainerException(notFoundError);
+		throw ContainerException(s_notFoundError);
 	}
 
 	if (targetId == m_id)
@@ -160,7 +160,7 @@ dbc::FolderGuard dbc::Element::GetParentEntry()
 {
 	if (m_parentId < Container::ROOT_ID)
 	{
-		throw ContainerException(notFoundError);
+		throw ContainerException(s_notFoundError);
 	}
 
 	return FolderGuard(new Folder(m_resources, m_parentId));
@@ -179,7 +179,7 @@ void dbc::Element::MoveToEntry(Folder& newParent)
 	try
 	{
 		Error res = Exists(elementObj.m_id, m_name);
-		if (res != notFoundError)
+		if (res != s_notFoundError)
 		{
 			if (res == SUCCESS)
 			{
@@ -216,7 +216,7 @@ void dbc::Element::Rename(const std::string& newName)
 
 	Refresh();
 	Error tmp = Exists(m_parentId, newName);
-	if (tmp != notFoundError)
+	if (tmp != s_notFoundError)
 	{
 		if (tmp == SUCCESS)
 		{
@@ -255,7 +255,7 @@ void dbc::Element::Refresh()
 	query.BindInt64(1, m_id);
 	if (!query.Step())
 	{
-		throw ContainerException(notFoundError);
+		throw ContainerException(s_notFoundError);
 	}
 	m_parentId = query.ColumnInt64(0);
 	query.ColumnText(1, m_name);
@@ -265,7 +265,7 @@ void dbc::Element::Refresh()
 bool dbc::Element::Exists(int64_t id)
 {
 	SQLQuery query(m_resources->GetConnection(), "SELECT count(*) FROM FileSystem WHERE id = ?;");
-	query.BindInt64(1, m_id);
+	query.BindInt64(1, id);
 	query.Step();
 	int count = query.ColumnInt(0);
 	return count != 0;
@@ -279,7 +279,7 @@ dbc::Error dbc::Element::Exists(int64_t parent_id, std::string name)
 		SQLQuery query(m_resources->GetConnection(), "SELECT id FROM FileSystem WHERE parent_id = ? AND name = ?;");
 		query.BindInt64(1, parent_id);
 		query.BindText(2, name);
-		return query.Step() ? SUCCESS : notFoundError;
+		return query.Step() ? SUCCESS : s_notFoundError;
 	}
 	catch (const ContainerException& ex)
 	{
