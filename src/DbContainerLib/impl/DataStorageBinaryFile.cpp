@@ -141,7 +141,7 @@ void dbc::DataStorageBinaryFile::ClearData()
 
 void dbc::DataStorageBinaryFile::GetDataToSave(RawData& data)
 {
-	// TODO: Save some data to the database!
+    data.clear();
 }
 
 uint64_t dbc::DataStorageBinaryFile::Write(std::istream& data, uint64_t begin, uint64_t end, dbc::IProgressObserver* observer)

@@ -51,7 +51,7 @@ void dbc::Folder::Rename(const std::string& newName)
 	if (!IsRoot())
 	{
 		Element::Rename(newName);
-		WriteProps(::time(0));
+        UpdateModifiedAndMetaData();
 	}
 	else
 	{
@@ -102,35 +102,35 @@ dbc::ElementGuard dbc::Folder::GetChild(const std::string& name)
 	return m_resources->GetContainer().CreateElementObject(id, static_cast<ElementType>(type));
 }
 
-dbc::ElementGuard dbc::Folder::CreateChild(const std::string& name, ElementType type, const std::string& tag /*= 0*/)
+dbc::ElementGuard dbc::Folder::CreateChild(const std::string& name, ElementType type, const std::string& meta /*= ""*/)
 {
-	CreateChildEntry(name, type, tag);
+    CreateChildEntry(name, type, meta);
 	return m_resources->GetContainer().CreateElementObject(m_id, name, type);
 }
 
-dbc::FolderGuard dbc::Folder::CreateFolder(const std::string& name, const std::string& tag)
+dbc::FolderGuard dbc::Folder::CreateFolder(const std::string& name, const std::string& meta)
 {
-	CreateChildEntry(name, ElementTypeFolder, tag);
+    CreateChildEntry(name, ElementTypeFolder, meta);
 	return FolderGuard(new Folder(m_resources, m_id, name));
 }
-dbc::FileGuard dbc::Folder::CreateFile(const std::string& name, const std::string& tag)
+dbc::FileGuard dbc::Folder::CreateFile(const std::string& name, const std::string& meta)
 {
-	CreateChildEntry(name, ElementTypeFile, tag);
+    CreateChildEntry(name, ElementTypeFile, meta);
 	return FileGuard(new File(m_resources, m_id, name));
 }
 
-dbc::SymLinkGuard dbc::Folder::CreateSymLink(const std::string& name, const std::string& targetPath, const std::string& tag /*= ""*/)
+dbc::SymLinkGuard dbc::Folder::CreateSymLink(const std::string& name, const std::string& targetPath)
 {
 	Error err = SymLink::IsTargetPathValid(targetPath);
 	if (err != SUCCESS)
 	{
 		throw ContainerException(ERR_DB_FS, CANT_CREATE, err);
 	}
-	CreateChildEntry(name, ElementTypeSymLink, tag, utils::StringToRawData(targetPath));
+    CreateChildEntry(name, ElementTypeSymLink, targetPath);
 	return SymLinkGuard(new SymLink(m_resources, m_id, name));
 }
 
-dbc::DirectLinkGuard dbc::Folder::CreateDirectLink(const std::string& name, const ElementGuard target, const std::string& tag /*= ""*/)
+dbc::DirectLinkGuard dbc::Folder::CreateDirectLink(const std::string& name, const ElementGuard target)
 {
 	Error err = DirectLink::IsElementReferenceable(target);
 	if (err != SUCCESS)
@@ -138,7 +138,7 @@ dbc::DirectLinkGuard dbc::Folder::CreateDirectLink(const std::string& name, cons
 		throw ContainerException(ERR_DB_FS, CANT_CREATE, err);
 	}
 	std::string targetStr = utils::NumberToString(GetId(*target));
-	CreateChildEntry(name, ElementTypeDirectLink, tag, utils::StringToRawData(targetStr));
+    CreateChildEntry(name, ElementTypeDirectLink, targetStr);
 	return DirectLinkGuard(new DirectLink(m_resources, m_id, name));
 }
 
@@ -185,7 +185,7 @@ dbc::Error dbc::Folder::RemoveFolder(int64_t folderId)
 	return ret;
 }
 
-void dbc::Folder::CreateChildEntry(const std::string& name, ElementType type, const std::string& tag, const RawData& specificData /*= RawData()*/)
+void dbc::Folder::CreateChildEntry(const std::string& name, ElementType type, const std::string& meta)
 {
 	Refresh();
 
@@ -204,16 +204,14 @@ void dbc::Folder::CreateChildEntry(const std::string& name, ElementType type, co
 		throw ContainerException(ERR_DB_FS, CANT_WRITE, tmp);
 	}
 
-	SQLQuery query(m_resources->GetConnection(), "INSERT INTO FileSystem(parent_id, name, type, props, specific_data) VALUES (?, ?, ?, ?, ?);");
+    SQLQuery query(m_resources->GetConnection(), "INSERT INTO FileSystem(parent_id, name, type, created, modified, meta) VALUES (?, ?, ?, ?, ?, ?);");
 	query.BindInt64(1, m_id);
 	query.BindText(2, name);
 	query.BindInt(3, type);
 	ElementProperties props;
-	ElementProperties::SetCurrentTime(props);
-	props.SetTag(tag);
-	std::string propsStr;
-	ElementProperties::MakeString(props, propsStr);
-	query.BindText(4, propsStr);
-	query.BindBlob(5, specificData);
+    props.SetCurrentTime();
+    query.BindInt64(4, props.DateCreated());
+    query.BindInt64(5, props.DateModified());
+    query.BindText(6, meta);
 	query.Step();
 }

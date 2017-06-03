@@ -146,7 +146,6 @@ TEST(H_FilesPartialWrite, NonTransactional_Fragmented)
 	File::SpaceUsageInfo info2 = file2->GetSpaceUsageInfo();
 	EXPECT_EQ(newTotalSize2, info2.spaceUsed);
 	EXPECT_NE(info1.spaceAvailable, info2.spaceAvailable);
-	uint64_t spaceAvailableBeforeTruncating = info1.spaceAvailable;
 	EXPECT_NE(info1.streamsTotal, info2.streamsTotal);
 	EXPECT_NE(info1.streamsUsed, info2.streamsUsed);
 

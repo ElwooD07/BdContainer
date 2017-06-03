@@ -17,14 +17,12 @@ namespace
 {
 	void ClearDB(Connection& connection)
 	{
-		const int tables_count = 3;
-		std::string tables[tables_count] = { "Sets", "FileSystem", "FileStreams" };
-
+        std::string tables[] = { "Sets", "FileSystem", "FileStreams" };
 		dbc::SQLQuery query = connection.CreateQuery();
 		std::string dropCommand("DROP TABLE ");
-		for (size_t i = 0; i < tables_count; ++i)
+        for (const std::string& table : tables)
 		{
-			query.Prepare(dropCommand + tables[i] + ";");
+            query.Prepare(dropCommand + table + ";");
 			query.Step();
 		}
 
@@ -34,25 +32,22 @@ namespace
 
 	void WriteTables(Connection& connection)
 	{
-		// Creation of the database tables
-		Error ret(SUCCESS);
 		SQLQuery query = connection.CreateQuery();
+        std::list<std::string> queries;
+        queries.push_back("CREATE TABLE Sets(id INTEGER PRIMARY KEY NOT NULL, storage_data_size INTEGER, storage_data BLOB);");
+        queries.push_back("CREATE TABLE FileSystem(id INTEGER PRIMARY KEY NOT NULL, parent_id INTEGER, name TEXT, type INTEGER, created INTEGER, modified INTEGER, meta TEXT);");
+        queries.push_back("CREATE TABLE FileStreams(id INTEGER PRIMARY KEY NOT NULL, file_id INTEGER NOT NULL, stream_order INTEGER, start INTEGER, size INTEGER, used INTEGER);");
 
-		std::list<std::string> tables;
-		tables.push_back("CREATE TABLE Sets(id INTEGER PRIMARY KEY NOT NULL, storage_data_size INTEGER, storage_data BLOB);");
-		tables.push_back("CREATE TABLE FileSystem(id INTEGER PRIMARY KEY NOT NULL, parent_id INTEGER, name TEXT, type INTEGER, props TEXT, specific_data BLOB);");
-		tables.push_back("CREATE TABLE FileStreams(id INTEGER PRIMARY KEY NOT NULL, file_id INTEGER NOT NULL, stream_order INTEGER, start INTEGER, size INTEGER, used INTEGER);");
-
-		for (std::list<std::string>::const_iterator itr = tables.begin(); itr != tables.end(); ++itr)
+        for (const std::string& tableCreationQuery : queries)
 		{
 			try
 			{
-				query.Prepare(*itr);
+                query.Prepare(tableCreationQuery);
 				query.Step();
 			}
 			catch (const dbc::ContainerException& ex)
 			{
-				throw ContainerException(ERR_DB, CANT_CREATE, ex.ErrorCode());
+                throw ContainerException(ERR_DB, CANT_CREATE, ex.ErrorCode());
 			}
 		}
 	}
@@ -60,17 +55,16 @@ namespace
 	void WriteRoot(Connection& connection)
 	{
 		// Creating root folder
-		SQLQuery query = connection.CreateQuery("INSERT INTO FileSystem(parent_id, name, type, props) VALUES (?, ?, ?, ?);");
+        SQLQuery query = connection.CreateQuery("INSERT INTO FileSystem(parent_id, name, type, created, modified) VALUES (?, ?, ?, ?, ?);");
 
 		query.BindInt(1, 0);
-		std::string tmp_name(1, dbc::PATH_SEPARATOR);
-		query.BindText(2, tmp_name);
+        std::string rootName(1, dbc::PATH_SEPARATOR);
+        query.BindText(2, rootName);
 		query.BindInt(3, static_cast<int>(dbc::ElementTypeFolder));
 		ElementProperties elProps;
-		ElementProperties::SetCurrentTime(elProps);
-		std::string propsStr;
-		ElementProperties::MakeString(elProps, propsStr);
-		query.BindText(4, propsStr);
+        elProps.SetCurrentTime();
+        query.BindInt64(4, elProps.DateCreated());
+        query.BindInt64(5, elProps.DateModified());
 		query.Step();
 	}
 

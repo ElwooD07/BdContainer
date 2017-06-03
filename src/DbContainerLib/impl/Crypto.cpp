@@ -130,7 +130,7 @@ uint64_t dbc::crypto::AesCryptorBase::CryptBetweenStreams(std::istream &in, std:
 		}
 
 		size_t updated = CryptPortion(bufIn, bufOut, static_cast<size_t>(in.gcount()), observer);
-		if (updated < in.gcount())
+        if (updated < static_cast<size_t>(in.gcount()))
 		{
 			throw ContainerException("Encryption/Decryption error", ERR_INTERNAL);
 		}

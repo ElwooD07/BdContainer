@@ -43,7 +43,7 @@ namespace dbc
 		virtual void Rename(const std::string& newName);
 
 		virtual ElementProperties GetProperties();
-		virtual void ResetProperties(const std::string& tag);
+        virtual void SetMetaInformation(const std::string& meta);
 
 		static Error s_notFoundError;
 
@@ -51,8 +51,7 @@ namespace dbc
 		void Refresh();
 		bool Exists(int64_t id);
 		Error Exists(int64_t parent_id, std::string name); // Returns s_errElementNotFound (see .cpp) as false and SUCCESS as true, or other error code if there was an error
-		void WriteProps(time_t newDateModified, const char* tag = nullptr);
-		void UpdateSpecificData(const RawData& specificData);
+        void UpdateModifiedAndMetaData(const char* meta = nullptr);
 		int64_t GetId(const Element& element);
 
 	protected:
@@ -62,11 +61,11 @@ namespace dbc
 		int64_t m_parentId;
 		ElementType m_type;
 		std::string m_name;
-		std::string m_propsStr;
+        ElementProperties m_props;
 		RawData m_specificData;
 
 	private:
-		void InitElementInfo(SQLQuery& query, int typeN, int propsN, int specificDataN);
+        void InitElementInfo(int type, int64_t created, int64_t modified, const std::string& meta);
 	};
 
 	typedef std::shared_ptr<Element> ElementGuard;

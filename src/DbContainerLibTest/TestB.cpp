@@ -9,18 +9,13 @@ extern ContainerGuard cont;
 
 TEST(B_ContainerFuncTests, ElementProperties)
 {
-	ElementProperties props("dasd|3213|dasd|daskdhjkasdhjkasd|dasjdhjasdh|dasjkdhas");
-	EXPECT_EQ(props.Size(), 0);
+    ElementProperties props(3213, 0, "daskdhjkasdhjkasd|dasjdhjasdh|dasjkdhas");
 	EXPECT_EQ(props.DateCreated(), 3213);
 	EXPECT_EQ(props.DateModified(), 0);
-	EXPECT_EQ(props.Tag(), "daskdhjkasdhjkasd|dasjdhjasdh|dasjkdhas");
-	ElementProperties props_dummy;
-	EXPECT_TRUE(ElementProperties::ParseString("0|asasas|342|", props_dummy));
-	EXPECT_TRUE(ElementProperties::ParseString("0||342|", props_dummy));
-	EXPECT_FALSE(ElementProperties::ParseString("0|342|", props_dummy));
-	std::string large_tag(ElementProperties::s_MaxTagLength+ 10, '0');
-	props.SetTag(large_tag);
-	EXPECT_EQ(std::string(ElementProperties::s_MaxTagLength, '0'), props.Tag());
+	EXPECT_EQ(props.Meta(), "daskdhjkasdhjkasd|dasjdhjasdh|dasjkdhas");
+    std::string largeMeta(ElementProperties::s_MaxTagLength+ 10, '0');
+    props.SetMeta(largeMeta);
+	EXPECT_EQ(std::string(ElementProperties::s_MaxTagLength, '0'), props.Meta());
 }
 
 TEST(B_ContainerFuncTests, GetRoot)
@@ -50,7 +45,7 @@ TEST(B_ContainerFuncTests, Clear)
 	EXPECT_FALSE(ce2->Exists());
 
 	ElementProperties rootProps = root->GetProperties();
-	EXPECT_TRUE(rootProps.Tag().empty());
+	EXPECT_TRUE(rootProps.Meta().empty());
 }
 
 TEST(B_ContainerFuncTests, GetElement)

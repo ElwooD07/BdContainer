@@ -124,7 +124,7 @@ Qt::ItemFlags model::DbContainerModel::flags(const QModelIndex& index) const
 	return flags;
 }
 
-QVariant model::DbContainerModel::headerData(int section, Qt::Orientation orientation, int role /*= Qt::DisplayRole*/) const
+QVariant model::DbContainerModel::headerData(int /*section*/, Qt::Orientation /*orientation*/, int /*role = Qt::DisplayRole*/) const
 {
 	return QVariant();
 }
@@ -161,7 +161,7 @@ int model::DbContainerModel::rowCount(const QModelIndex& parent /*= QModelIndex(
 	return (node == nullptr) ? m_rootNodes.size() : node->GetChildrenCount();
 }
 
-int model::DbContainerModel::columnCount(const QModelIndex& parent /*= QModelIndex()*/) const
+int model::DbContainerModel::columnCount(const QModelIndex& /*parent = QModelIndex()*/) const
 {
 	return 1;
 }
@@ -253,7 +253,7 @@ void model::DbContainerModel::LoadChildren(const QModelIndex& parent)
 		dbc::DbcElementsIterator iterator = folder->EnumFsEntries();
 		if (iterator->HasNext())
 		{
-			beginInsertRows(parent, 0, iterator->Count() - 1);
+            beginInsertRows(parent, 0, static_cast<int>(iterator->Count() - 1));
 			int row = 0;
 			for (; iterator->HasNext(); ++row)
 			{

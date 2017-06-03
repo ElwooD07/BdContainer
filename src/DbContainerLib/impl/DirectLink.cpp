@@ -60,10 +60,9 @@ dbc::Error dbc::DirectLink::IsElementReferenceable(ElementGuard element)
 
 void dbc::DirectLink::InitTarget()
 {
-	if (!m_specificData.empty())
+    if (!m_props.Meta().empty())
 	{
-		std::string targetStr = utils::RawDataToString(m_specificData);
-		int64_t targetTmp = utils::StringToNumber<int64_t>(targetStr);
+        int64_t targetTmp = utils::StringToNumber<int64_t>(m_props.Meta());
 		if (targetTmp > 0)
 		{
 			m_target = targetTmp;

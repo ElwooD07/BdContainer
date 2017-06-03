@@ -65,7 +65,6 @@ TEST(CryptingTest, DecryptString)
 	RawData expression(StringToRawData("1234567890"));
 	AesEncryptor encryptor(keyNormal, ivNormal);
 	RawData encrypted;
-	uint64_t encryptedSize = 0;
 	encryptor.Encrypt(expression, encrypted); // This test case must be passed above
 
 	RawData decrypted;

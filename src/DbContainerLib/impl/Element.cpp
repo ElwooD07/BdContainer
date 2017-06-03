@@ -14,7 +14,7 @@ dbc::Error dbc::Element::s_notFoundError = dbc::Error(ERR_DB_FS, NOT_FOUND);
 dbc::Element::Element(ContainerResources resources, int64_t id)
 	: m_resources(resources), m_id(id)
 {
-	SQLQuery query(m_resources->GetConnection(), "SELECT parent_id, name, type, props, specific_data FROM FileSystem WHERE id = ?;");
+    SQLQuery query(m_resources->GetConnection(), "SELECT parent_id, name, type, created, modified, meta FROM FileSystem WHERE id = ?;");
 	query.BindInt64(1, id);
 	if (!query.Step()) // SQLITE_DONE or SQLITE_OK, but not SQLITE_ROW, which expected
 	{
@@ -22,13 +22,15 @@ dbc::Element::Element(ContainerResources resources, int64_t id)
 	}
 	m_parentId = query.ColumnInt64(0);
 	query.ColumnText(1, m_name);
-	InitElementInfo(query, 2, 3, 4);
+    std::string meta;
+    query.ColumnText(5, meta);
+    InitElementInfo(query.ColumnInt(2), query.ColumnInt64(3), query.ColumnInt64(4), meta);
 }
 
 dbc::Element::Element(ContainerResources resources, int64_t parent_id, const std::string& name)
 	: m_resources(resources), m_parentId(parent_id), m_name(name)
 {
-	SQLQuery query(m_resources->GetConnection(), "SELECT id, type, props, specific_data FROM FileSystem WHERE parent_id = ? AND name = ?;");
+    SQLQuery query(m_resources->GetConnection(), "SELECT id, type, created, modified, meta FROM FileSystem WHERE parent_id = ? AND name = ?;");
 	query.BindInt64(1, parent_id);
 	query.BindText(2, name);
 	if (!query.Step()) // SQLITE_DONE or SQLITE_OK, but not SQLITE_ROW, which expected
@@ -36,7 +38,9 @@ dbc::Element::Element(ContainerResources resources, int64_t parent_id, const std
 		throw ContainerException(s_notFoundError);
 	}
 	m_id = query.ColumnInt64(0);
-	InitElementInfo(query, 1, 2, 3);
+    std::string meta;
+    query.ColumnText(4, meta);
+    InitElementInfo(query.ColumnInt(1), query.ColumnInt64(2), query.ColumnInt64(3), meta);
 }
 
 bool dbc::Element::Exists()
@@ -192,7 +196,7 @@ void dbc::Element::MoveToEntry(Folder& newParent)
 		query.BindInt64(1, elementObj.m_id);
 		query.BindInt64(2, m_id);
 		query.Step();
-		WriteProps(::time(0));
+        UpdateModifiedAndMetaData();
 	}
 	catch (const ContainerException& ex)
 	{
@@ -230,7 +234,7 @@ void dbc::Element::Rename(const std::string& newName)
 	query.BindInt64(2, m_id);
 	query.Step();
 
-	WriteProps(::time(0));
+    UpdateModifiedAndMetaData();
 
 	m_name = newName;
 }
@@ -238,20 +242,18 @@ void dbc::Element::Rename(const std::string& newName)
 dbc::ElementProperties dbc::Element::GetProperties()
 {
 	Refresh();
-	ElementProperties props;
-	ElementProperties::ParseString(m_propsStr, props);
-	return std::move(props);
+    return m_props;
 }
 
-void dbc::Element::ResetProperties(const std::string& tag)
+void dbc::Element::SetMetaInformation(const std::string& meta)
 {
 	Refresh();
-	WriteProps(::time(0), tag.c_str());
+    UpdateModifiedAndMetaData(meta.c_str());
 }
 
 void dbc::Element::Refresh()
 {
-	SQLQuery query(m_resources->GetConnection(), "SELECT parent_id, name, props FROM FileSystem WHERE id = ?;");
+    SQLQuery query(m_resources->GetConnection(), "SELECT parent_id, name, modified, meta FROM FileSystem WHERE id = ?;");
 	query.BindInt64(1, m_id);
 	if (!query.Step())
 	{
@@ -259,7 +261,10 @@ void dbc::Element::Refresh()
 	}
 	m_parentId = query.ColumnInt64(0);
 	query.ColumnText(1, m_name);
-	query.ColumnText(2, m_propsStr);
+    m_props.SetDateModified(query.ColumnInt64(2));
+    std::string meta;
+    query.ColumnText(3, meta);
+    m_props.SetMeta(meta);
 }
 
 bool dbc::Element::Exists(int64_t id)
@@ -273,7 +278,6 @@ bool dbc::Element::Exists(int64_t id)
 
 dbc::Error dbc::Element::Exists(int64_t parent_id, std::string name)
 {
-	int count = 0;
 	try
 	{
 		SQLQuery query(m_resources->GetConnection(), "SELECT id FROM FileSystem WHERE parent_id = ? AND name = ?;");
@@ -287,33 +291,25 @@ dbc::Error dbc::Element::Exists(int64_t parent_id, std::string name)
 	}
 }
 
-void dbc::Element::WriteProps(time_t newDateModified, const char* tag /*= nullptr*/)
+void dbc::Element::UpdateModifiedAndMetaData(const char* meta /*= nullptr*/)
 {
-	ElementProperties props;
-	ElementProperties::ParseString(m_propsStr, props);
-	if (newDateModified != props.DateModified() || tag != nullptr)
-	{
-		props.SetDateModified(newDateModified);
-		if (tag != nullptr)
-		{
-			props.SetTag(tag);
-		}
-		ElementProperties::MakeString(props, m_propsStr);
-		SQLQuery query(m_resources->GetConnection(), "UPDATE FileSystem SET props = ? WHERE id = ?;");
-		query.BindText(1, m_propsStr);
-		query.BindInt64(2, m_id);
-		query.Step();
-	}
-}
-
-void dbc::Element::UpdateSpecificData(const RawData& specificData)
-{
-	m_specificData.reserve(specificData.size());
-	SQLQuery query(m_resources->GetConnection(), "UPDATE FileSystem SET specific_data = ? WHERE id = ?");
-	query.BindBlob(1, specificData);
-	query.BindInt64(2, m_id);
-	query.Step();
-	m_specificData.assign(specificData.begin(), specificData.end());
+    m_props.SetDateModified(::time(0));
+    SQLQuery query(m_resources->GetConnection());
+    if (meta != nullptr)
+    {
+        m_props.SetMeta(meta);
+        query.Prepare("UPDATE FileSystem SET modified = ?, meta = ? WHERE id = ?;");
+        query.BindInt64(1, m_props.DateModified());
+        query.BindText(2, m_props.Meta());
+        query.BindInt64(3, m_id);
+    }
+    else
+    {
+        query.Prepare("UPDATE FileSystem SET modified = ? WHERE id = ?;");
+        query.BindInt64(1, m_props.DateModified());
+        query.BindInt64(2, m_id);
+    }
+    query.Step();
 }
 
 int64_t dbc::Element::GetId(const Element& element)
@@ -321,16 +317,12 @@ int64_t dbc::Element::GetId(const Element& element)
 	return element.m_id;
 }
 
-void dbc::Element::InitElementInfo(SQLQuery& query, int typeN, int propsN, int specificDataN)
+void dbc::Element::InitElementInfo(int type, int64_t created, int64_t modified, const std::string& meta)
 {
-	int tmpType = query.ColumnInt(typeN);
-	m_type = static_cast<ElementType>(tmpType);
+    m_type = static_cast<ElementType>(type);
 	if (m_type == ElementTypeUnknown)
 	{
 		throw ContainerException(ERR_DB_FS, CANT_OPEN, ERR_DB, IS_DAMAGED);
 	}
-
-	std::string propsStr;
-	query.ColumnText(propsN, m_propsStr);
-	query.ColumnBlob(specificDataN, m_specificData);
+    m_props = ElementProperties(created, modified, meta);
 }

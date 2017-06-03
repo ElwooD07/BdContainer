@@ -74,7 +74,7 @@ TEST(F_ContainerObjectsTest, ThrowAndNoThrowBehavior_Element)
 		EXPECT_NO_THROW(data.element->GetParentEntry());
 		EXPECT_NO_THROW(data.element->MoveToEntry(*folderMoveDest));
 		EXPECT_NO_THROW(data.element->GetProperties());
-		EXPECT_NO_THROW(data.element->ResetProperties("tag"));
+		EXPECT_NO_THROW(data.element->SetMetaInformation("tag"));
 		std::string newName = data.name;
 		newName.pop_back();
 		EXPECT_NO_THROW(data.element->Rename(newName));
@@ -93,7 +93,7 @@ TEST(F_ContainerObjectsTest, ThrowAndNoThrowBehavior_Element)
 		EXPECT_NO_THROW(data.element->GetParentEntry());
 		EXPECT_THROW(data.element->MoveToEntry(*root), ContainerException);
 		EXPECT_THROW(data.element->GetProperties(), ContainerException);
-		EXPECT_THROW(data.element->ResetProperties("tag"), ContainerException);
+		EXPECT_THROW(data.element->SetMetaInformation("tag"), ContainerException);
 		EXPECT_THROW(data.element->Rename(data.name), ContainerException);
 		EXPECT_NO_THROW(data.element->Remove());
 	}
@@ -125,7 +125,7 @@ TEST(F_ContainerObjectsTest, ExceptionalSituations_1)
 	EXPECT_THROW(ce2->Clone(), ContainerException);
 	EXPECT_THROW(ce->GetParentEntry(), ContainerException);
 	EXPECT_THROW(ce->MoveToEntry(*root), ContainerException);
-	EXPECT_THROW(ce->ResetProperties("tag"), ContainerException);
+	EXPECT_THROW(ce->SetMetaInformation("tag"), ContainerException);
 	EXPECT_THROW(ce->Exists(), ContainerException);
 	EXPECT_THROW(ce->Path(), ContainerException);
 }

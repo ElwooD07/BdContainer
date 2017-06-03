@@ -3,59 +3,44 @@
 #include "CommonUtils.h"
 #include <sstream>
 
-dbc::ElementProperties::ElementProperties(uint64_t size, time_t date_created, time_t date_modified, const std::string& tag)
-{
-	m_size = size;
-	m_date_created = date_created;
-	m_date_modified = date_modified;
-	m_tag = tag;
-}
-
-dbc::ElementProperties::ElementProperties(const std::string& propsStr)
-	: m_size(0)
-	, m_date_created(0)
-	, m_date_modified(0)
-{
-	ParseString(propsStr, *this);
-}
-
-uint64_t dbc::ElementProperties::Size() const
-{
-	return m_size;
-}
+dbc::ElementProperties::ElementProperties(time_t date_created, time_t date_modified, const std::string& meta)
+    : m_created(date_created)
+    , m_modified(date_modified)
+    , m_meta(meta)
+{ }
 
 time_t dbc::ElementProperties::DateCreated() const
 {
-	return m_date_created;
+    return m_created;
 }
 
 time_t dbc::ElementProperties::DateModified() const
 {
-	return m_date_modified;
+    return m_modified;
 }
 
-std::string dbc::ElementProperties::Tag() const
+const std::string& dbc::ElementProperties::Meta() const
 {
-	return m_tag;
+    return m_meta;
 }
 
 void dbc::ElementProperties::SetDateModified(time_t new_date)
 {
-	m_date_modified = new_date;
+    m_modified = new_date;
 }
 
-void dbc::ElementProperties::SetTag(const std::string& tag)
+void dbc::ElementProperties::SetMeta(const std::string& meta)
 {
-	std::string::const_iterator end = tag.length() > s_MaxTagLength ? tag.begin() + s_MaxTagLength : tag.end();
-	m_tag.assign(tag.cbegin(), end);
+    std::string::const_iterator end = meta.length() > s_MaxTagLength ? meta.begin() + s_MaxTagLength : meta.end();
+    m_meta.assign(meta.cbegin(), end);
 }
 
 bool dbc::ElementProperties::operator==(const ElementProperties& obj) const
 {
 	bool ret = (m_size == obj.m_size);
-	ret = ret && (m_date_created == obj.m_date_created);
-	ret = ret && (m_date_modified == obj.m_date_modified);
-	ret = ret && (m_tag == obj.m_tag);
+    ret = ret && (m_created == obj.m_created);
+    ret = ret && (m_modified == obj.m_modified);
+    ret = ret && (m_meta == obj.m_meta);
 	return ret;
 }
 
@@ -64,47 +49,9 @@ bool dbc::ElementProperties::operator!=(const ElementProperties& obj) const
 	return !operator==(obj);
 }
 
-bool dbc::ElementProperties::ParseString(const std::string& props_str, ElementProperties& out_props)
+void dbc::ElementProperties::SetCurrentTime()
 {
-	std::vector<std::string> lst;
-	dbc::utils::SplitSavingDelim(props_str, '|', lst);
-	size_t size = lst.size();
-	if (size < 3)
-	{
-		return false;
-	}
-
-	out_props.m_size = utils::StringToNumber<uint64_t>(lst[0]);
-	out_props.m_date_created = utils::StringToNumber<size_t>(lst[1]);
-	out_props.m_date_modified = utils::StringToNumber<size_t>(lst[2]);
-
-	std::string tag;
-	size_t len = 0;
-	for (std::vector<std::string>::const_iterator i = lst.begin() + 3; i != lst.cend(); ++i, len < s_MaxTagLength)
-	{
-		tag.append((*i).begin(), (*i).end());
-		len += (*i).length();
-	}
-	out_props.SetTag(tag);
-	return true;
-}
-
-void dbc::ElementProperties::MakeString(const ElementProperties& obj, std::string& out_str)
-{
-	out_str.clear();
-	std::stringstream ss;
-	ss << obj.m_size << '|' << obj.m_date_created << '|' << obj.m_date_modified << '|';
-	ss >> out_str;
-	if (!obj.m_tag.empty())
-	{
-		out_str.append(obj.m_tag.cbegin(), obj.m_tag.cend());
-	}
-}
-
-void dbc::ElementProperties::SetCurrentTime(ElementProperties& out_props)
-{
-	time_t cur;
-	time(&cur);
-	out_props.m_date_created = cur;
-	out_props.m_date_modified = cur;
+    time_t currentTime = ::time(nullptr);
+    m_created = currentTime;
+    m_modified = currentTime;
 }

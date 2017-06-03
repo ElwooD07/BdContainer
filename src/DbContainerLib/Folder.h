@@ -23,17 +23,17 @@ namespace dbc
 		bool IsRoot() const;
 		bool HasChildren();
 		ElementGuard GetChild(const std::string& name);
-		ElementGuard CreateChild(const std::string& name, ElementType type, const std::string& tag = "");
-		FolderGuard CreateFolder(const std::string& name, const std::string& tag = "");
-		FileGuard CreateFile(const std::string& name, const std::string& tag = "");
+        ElementGuard CreateChild(const std::string& name, ElementType type, const std::string& meta = "");
+        FolderGuard CreateFolder(const std::string& name, const std::string& meta = "");
+        FileGuard CreateFile(const std::string& name, const std::string& meta = "");
 
-		SymLinkGuard CreateSymLink(const std::string& name, const std::string& targetPath, const std::string& tag = "");
-		DirectLinkGuard CreateDirectLink(const std::string& name, const ElementGuard target, const std::string& tag = "");
+        SymLinkGuard CreateSymLink(const std::string& name, const std::string& targetPath);
+        DirectLinkGuard CreateDirectLink(const std::string& name, const ElementGuard target);
 
 		DbcElementsIterator EnumFsEntries();
 
 	private:
 		Error RemoveFolder(int64_t folderId); // Recursive
-		void CreateChildEntry(const std::string& name, ElementType type, const std::string& tag, const RawData& specificData = RawData());
+        void CreateChildEntry(const std::string& name, ElementType type, const std::string& meta);
 	};
 }

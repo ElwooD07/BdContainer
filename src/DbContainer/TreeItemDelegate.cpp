@@ -11,7 +11,7 @@ gui::TreeItemDelegate::TreeItemDelegate(QObject* parent /*= 0*/)
 	: QStyledItemDelegate(parent)
 { }
 
-QWidget * gui::TreeItemDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const
+QWidget * gui::TreeItemDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem& /*option*/, const QModelIndex& /*index*/) const
 {
 	return new QLineEdit(parent);
 }
@@ -38,7 +38,7 @@ void gui::TreeItemDelegate::setModelData(QWidget* editor, QAbstractItemModel* mo
 	}
 }
 
-void gui::TreeItemDelegate::updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem& option, const QModelIndex& index) const
+void gui::TreeItemDelegate::updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem& option, const QModelIndex& /*index*/) const
 {
 	editor->setGeometry(option.rect);
 }

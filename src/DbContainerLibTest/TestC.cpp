@@ -30,7 +30,7 @@ TEST(C_FileSystemTest, Folders_Root)
 	EXPECT_TRUE(root->IsRoot());
 
 	std::string rootTag("This is root!\n\n\r\r");
-	EXPECT_NO_THROW(root->ResetProperties(rootTag));
+	EXPECT_NO_THROW(root->SetMetaInformation(rootTag));
 
 	std::string rootName;
 	EXPECT_NO_THROW(rootName = root->Name());
@@ -42,7 +42,7 @@ TEST(C_FileSystemTest, Folders_Root)
 
 	ElementProperties props;
 	EXPECT_NO_THROW(props = root->GetProperties());
-	EXPECT_EQ(props.Tag(), rootTag);
+	EXPECT_EQ(props.Meta(), rootTag);
 
 	cont->Clear();
 	EXPECT_TRUE(root->Exists());
@@ -64,10 +64,10 @@ TEST(C_FileSystemTest, Folders_RootAndChild)
 	EXPECT_THROW(root->MoveToEntry(*cf), ContainerException); // forbidden
 	EXPECT_THROW(root->GetParentEntry(), ContainerException); // there is no parent for the root
 
-	EXPECT_NO_THROW(cf->ResetProperties(folder1tag));
+	EXPECT_NO_THROW(cf->SetMetaInformation(folder1tag));
 	ElementProperties props;
 	EXPECT_NO_THROW(props = ce->GetProperties());
-	EXPECT_EQ(props.Tag(), folder1tag);
+	EXPECT_EQ(props.Meta(), folder1tag);
 	EXPECT_EQ(cf->Name(), ce->Name());
 	EXPECT_TRUE(ce->IsTheSame(*cf));
 	EXPECT_TRUE(cf->IsTheSame(*ce));
@@ -97,7 +97,7 @@ TEST(C_FileSystemTest, Folders_RootAndChildrenCreate)
 
 	ElementProperties props1;
 	EXPECT_NO_THROW(props1 = cfold->GetProperties());
-	EXPECT_EQ(folder1tag, props1.Tag());
+	EXPECT_EQ(folder1tag, props1.Meta());
 	std::string folder1path(root->Name() + folder1name);
 	EXPECT_EQ(folder1path, cfold->Path());
 
@@ -112,7 +112,7 @@ TEST(C_FileSystemTest, Folders_RootAndChildrenCreate)
 
 	ElementProperties props2;
 	EXPECT_NO_THROW(props2 = cfile->GetProperties());
-	EXPECT_EQ(file1tag, props2.Tag());
+	EXPECT_EQ(file1tag, props2.Meta());
 	std::string file1path(root->Name() + file1name);
 	EXPECT_EQ(file1path, cfile->Path());
 
@@ -167,8 +167,8 @@ TEST(C_FileSystemTest, Folders_RootAndChildrenMove)
 	ElementProperties propsFile2 = ceFile2->GetProperties();
 	ElementProperties propsFold1 = ceFold1->GetProperties();
 	ElementProperties propsFold2 = ceFold2->GetProperties();
-	EXPECT_EQ(file1tag, propsFile1.Tag());
-	EXPECT_EQ(file2tag, propsFile2.Tag());
-	EXPECT_EQ(folder1tag, propsFold1.Tag());
-	EXPECT_EQ(folder2tag, propsFold2.Tag());
+	EXPECT_EQ(file1tag, propsFile1.Meta());
+	EXPECT_EQ(file2tag, propsFile2.Meta());
+	EXPECT_EQ(folder1tag, propsFold1.Meta());
+	EXPECT_EQ(folder2tag, propsFold2.Meta());
 }

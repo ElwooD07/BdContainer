@@ -36,7 +36,7 @@ void dbc::SQLQuery::Prepare(const std::string& query)
 	}
 	if (!query.empty())
 	{
-		int err = sqlite3_prepare_v2(m_db, query.c_str(), query.size(), &m_stmt, 0);
+        int err = sqlite3_prepare_v2(m_db, query.c_str(), static_cast<int>(query.size()), &m_stmt, 0);
 
 		std::stringstream stream;
 		stream << "+ SQLQuery prepared: \"" << query << "\"; returned code - " << err << ": " << ((err != SQLITE_OK) ? sqlite3_errmsg(m_db) : "OK");
@@ -67,13 +67,13 @@ void dbc::SQLQuery::BindInt64(int column, int64_t value)
 void dbc::SQLQuery::BindText(int column, const std::string& value)
 {
 	CheckSTMT();
-	DecideToThrow(sqlite3_bind_text(m_stmt, column, value.c_str(), value.length() * sizeof(char), 0));
+    DecideToThrow(sqlite3_bind_text(m_stmt, column, value.c_str(), static_cast<int>(value.length() * sizeof(char)), 0));
 }
 
 void dbc::SQLQuery::BindBlob(int column, const RawData& data)
 {
 	CheckSTMT();
-	DecideToThrow(sqlite3_bind_blob(m_stmt, column, data.data(), data.size(), 0));
+    DecideToThrow(sqlite3_bind_blob(m_stmt, column, data.data(), static_cast<int>(data.size()), 0));
 }
 
 bool dbc::SQLQuery::Step()

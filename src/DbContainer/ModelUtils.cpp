@@ -4,7 +4,7 @@
 
 QString model::utils::StdString2QString(const std::string& stdString)
 {
-	return std::move(QString::fromUtf8(stdString.c_str(), stdString.size()));
+    return std::move(QString::fromUtf8(stdString.c_str(), static_cast<int>(stdString.size())));
 }
 
 std::string model::utils::QString2StdString(const QString& str)

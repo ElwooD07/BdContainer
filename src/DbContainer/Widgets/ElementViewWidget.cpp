@@ -86,7 +86,7 @@ void gui::ElementViewWidget::RefreshCommonInfo()
 	}
 	m_ui.lblCreated->setText(elementIsSet ? model::utils::Timestamp2QString(props.DateCreated()) : "");
 	m_ui.lblModified->setText(elementIsSet ? model::utils::Timestamp2QString(props.DateModified()) : "");
-	m_ui.txtTag->setText(elementIsSet ? model::utils::StdString2QString(props.Tag()) : "");
+	m_ui.txtTag->setText(elementIsSet ? model::utils::StdString2QString(props.Meta()) : "");
 }
 
 void gui::ElementViewWidget::RefreshSpecificInfo()

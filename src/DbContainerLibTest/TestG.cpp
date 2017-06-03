@@ -73,9 +73,9 @@ TEST(G_ContainerInfoTests, TotalDataSize)
 	data.push_back("01234567890123456789");
 	data.push_back("012345678901234");
 	data.push_back("01234");
-	unsigned totalSize(0);
+    size_t totalSize(0);
 	const std::string fileBaseName("file");
-	for (size_t i = 0; i < data.size(); ++i)
+    for (char i = 0; i < data.size(); ++i)
 	{
 		FileGuard cf = root->CreateFile(fileBaseName + std::string(1, i + 97));
 		EXPECT_EQ(0, cf->Size());
@@ -86,7 +86,7 @@ TEST(G_ContainerInfoTests, TotalDataSize)
 		totalSize += data[i].size();
 		EXPECT_EQ(totalSize, info->UsedSpace());
 	}
-	for (size_t i = 0; i < data.size(); ++i)
+    for (char i = 0; i < data.size(); ++i)
 	{
 		ElementGuard ce = root->GetChild(fileBaseName + std::string(1, i + 97));
 		EXPECT_EQ(data[i].size(), ce->AsFile()->Size());

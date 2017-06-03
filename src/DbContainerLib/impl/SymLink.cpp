@@ -9,9 +9,9 @@ dbc::SymLink::SymLink(ContainerResources resources, int64_t id)
 	: Element(resources, id)
 	, m_target(nullptr)
 {
-	if (!m_specificData.empty())
+    if (!m_props.Meta().empty())
 	{
-		InitTarget(utils::RawDataToString(m_specificData));
+        InitTarget(m_props.Meta());
 	}
 }
 
@@ -19,9 +19,9 @@ dbc::SymLink::SymLink(ContainerResources resources, int64_t parentId, const std:
 	: Element(resources, parentId, name)
 	, m_target(nullptr)
 {
-	if (!m_specificData.empty())
+    if (!m_props.Meta().empty())
 	{
-		InitTarget(utils::RawDataToString(m_specificData));
+        InitTarget(m_props.Meta());
 	}
 }
 
@@ -77,6 +77,6 @@ void dbc::SymLink::InitTarget(const std::string& target)
 	{
 		throw ContainerException(err);
 	}
-	UpdateSpecificData(utils::StringToRawData(target));
-	m_target = reinterpret_cast<const char*>(m_specificData.data());
+    UpdateModifiedAndMetaData(target.c_str());
+    m_target = m_props.Meta().data();
 }
