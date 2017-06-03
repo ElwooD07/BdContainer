@@ -41,7 +41,8 @@ SOURCES += \
     Utils/CommonUtils.cpp \
     Utils/FileStreamsUtils.cpp \
     Utils/FsUtils.cpp \
-    Utils/Logging.cpp
+    Utils/Logging.cpp \
+    Link.cpp
 
 HEADERS += \
     ../ContainerAPI.h \
@@ -83,4 +84,5 @@ HEADERS += \
     Utils/CommonUtils.h \
     Utils/FileStreamsUtils.h \
     Utils/FsUtils.h \
-    Utils/Logging.h
+    Utils/Logging.h \
+    ../Link.h

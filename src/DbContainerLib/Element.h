@@ -24,16 +24,16 @@ namespace dbc
 		Element(ContainerResources resources, int64_t parentId, const std::string& name);
 
 		virtual bool Exists();
-		virtual std::string Name();
+        virtual std::string Name();
 		virtual std::string Path();
-		virtual ElementType Type() const throw();
+        virtual ElementType Type() const throw();
 
-		virtual Folder* AsFolder() throw();
-		virtual File* AsFile() throw();
-		virtual SymLink* AsSymLink() throw();
-		virtual DirectLink* AsDirectLink() throw();
+        virtual Folder* AsFolder() throw();
+        virtual File* AsFile() throw();
+        virtual SymLink* AsSymLink() throw();
+        virtual DirectLink* AsDirectLink() throw();
 
-		virtual bool IsTheSame(const Element& obj) const throw();
+        virtual bool IsTheSame(const Element& obj) const throw();
 		virtual bool IsChildOf(const Element& obj);
 
 		virtual FolderGuard GetParentEntry();

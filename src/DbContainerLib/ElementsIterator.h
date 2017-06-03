@@ -36,5 +36,5 @@ namespace dbc
 		ElementInfo_vt m_info;
 	};
 
-	typedef std::auto_ptr<Iterator<ElementGuard> > DbcElementsIterator;
+    using DbcElementsIterator = std::unique_ptr<Iterator<ElementGuard>>;
 }

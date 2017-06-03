@@ -22,7 +22,7 @@ namespace
 	{
 		assert(key.empty() && iv.empty());
 
-		static const char s_salt[]("arbadakarba123");
+        static const char s_salt[]("DBContainer1");
 		dbc::RawData hash = dbc::crypto::utils::SHA256_GetHash(dbc::utils::StringToRawData(password + s_salt));
 		const unsigned int keyAndIvLen = dbc::crypto::AesCryptorBase::GetKeyAndIvLen();
 		assert(hash.size() == keyAndIvLen * 2);

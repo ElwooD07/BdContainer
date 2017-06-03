@@ -11,20 +11,21 @@ namespace
 }
 
 dbc::DirectLink::DirectLink(ContainerResources resources, int64_t id)
-	: Element(resources, id)
+    : Link(resources, id)
 	, m_target(s_wrongId)
 {
 	InitTarget();
 }
 
 dbc::DirectLink::DirectLink(ContainerResources resources, int64_t parentId, const std::string& name)
-	: Element(resources, parentId, name)
+    : Link(resources, parentId, name)
 {
-	InitTarget();
+    InitTarget();
 }
 
 dbc::ElementGuard dbc::DirectLink::Target()
 {
+    Refresh();
 	if (m_target == s_wrongId)
 	{
 		return (ElementGuard(nullptr));

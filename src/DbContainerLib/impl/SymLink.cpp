@@ -6,7 +6,7 @@
 #include "IContainnerResources.h"
 
 dbc::SymLink::SymLink(ContainerResources resources, int64_t id)
-	: Element(resources, id)
+    : Link(resources, id)
 	, m_target(nullptr)
 {
     if (!m_props.Meta().empty())
@@ -16,7 +16,7 @@ dbc::SymLink::SymLink(ContainerResources resources, int64_t id)
 }
 
 dbc::SymLink::SymLink(ContainerResources resources, int64_t parentId, const std::string& name)
-	: Element(resources, parentId, name)
+    : Link(resources, parentId, name)
 	, m_target(nullptr)
 {
     if (!m_props.Meta().empty())
@@ -34,13 +34,19 @@ std::string dbc::SymLink::TargetPath() const
 	return m_target;
 }
 
-dbc::ElementGuard dbc::SymLink::Target() const
+dbc::ElementGuard dbc::SymLink::Target()
 {
+    Refresh();
 	if (m_target == nullptr)
 	{
 		return (ElementGuard(nullptr));
 	}
-	return m_resources->GetContainer().GetElement(m_target);
+    return m_resources->GetContainer().GetElement(m_target);
+}
+
+void dbc::SymLink::ChangeTarget(dbc::Element& newTarget)
+{
+    InitTarget(newTarget.Path());
 }
 
 void dbc::SymLink::ChangeTarget(const std::string& newTarget)

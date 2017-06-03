@@ -97,7 +97,7 @@ TEST(G_ContainerInfoTests, TotalDataSize)
 	EXPECT_EQ(0, info->UsedSpace());
 }
 
-TEST(H_FilesInfoTest, SpaceUsageInfo)
+TEST(G_FilesInfoTest, SpaceUsageInfo)
 {
 	ASSERT_TRUE(DatabasePrepare());
 	unsigned int clusterSize = cont->GetDataUsagePreferences().ClusterSize();

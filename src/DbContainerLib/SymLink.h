@@ -1,18 +1,20 @@
 #pragma once
-#include "Element.h"
+#include "Link.h"
 
 namespace dbc
 {
-	class SymLink : public Element
+    class SymLink : public Link
 	{
 	public:
 		SymLink(ContainerResources resources, int64_t id);
 		SymLink(ContainerResources resources, int64_t parentId, const std::string& name);
 
-		std::string TargetPath() const;
-		ElementGuard Target() const;
-		void ChangeTarget(const std::string& newTarget);
+        // Link
+        virtual ElementGuard Target() override;
+        virtual void ChangeTarget(Element& newTarget) override;
 
+        void ChangeTarget(const std::string& newTarget);
+        std::string TargetPath() const;
 		static Error IsTargetPathValid(const std::string& target);
 
 	private:

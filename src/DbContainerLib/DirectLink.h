@@ -1,16 +1,17 @@
 #pragma once
-#include "Element.h"
+#include "Link.h"
 
 namespace dbc
 {
-	class DirectLink : public Element
+    class DirectLink : public Link
 	{
 	public:
 		DirectLink(ContainerResources resources, int64_t id);
 		DirectLink(ContainerResources resources, int64_t parentId, const std::string& name);
 
-		ElementGuard Target();
-		void ChangeTarget(Element& newTarget);
+        // Link
+        virtual ElementGuard Target() override;
+        virtual void ChangeTarget(Element& newTarget) override;
 
 		static Error IsElementReferenceable(ElementGuard element);
 

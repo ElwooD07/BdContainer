@@ -7,7 +7,7 @@ using namespace dbc;
 
 extern ContainerGuard cont;
 
-TEST(LinksTest, SymLink_IsTargetPathValid)
+TEST(K_LinksTest, SymLink_IsTargetPathValid)
 {
 	EXPECT_NE(Error(SUCCESS), SymLink::IsTargetPathValid("")); // Empty target
 	EXPECT_NE(Error(SUCCESS), SymLink::IsTargetPathValid("folder/file")); // Path is relative
@@ -19,7 +19,7 @@ TEST(LinksTest, SymLink_IsTargetPathValid)
 	EXPECT_EQ(Error(SUCCESS), SymLink::IsTargetPathValid("/folder1/fo l d e r2/!@#$%^&()|/file 2"));
 }
 
-TEST(LinksTest, DirctLink_IsElementReferenceable)
+TEST(K_LinksTest, DirctLink_IsElementReferenceable)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
@@ -37,7 +37,7 @@ TEST(LinksTest, DirctLink_IsElementReferenceable)
 	EXPECT_NE(Error(SUCCESS), DirectLink::IsElementReferenceable(emptyElement));
 }
 
-TEST(LinksTest, SymLink_Basics_TargetName)
+TEST(K_LinksTest, SymLink_Basics_TargetName)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
@@ -79,7 +79,7 @@ TEST(LinksTest, SymLink_Basics_TargetName)
 	EXPECT_EQ(nullptr, root->GetChild(linkName).get());
 }
 
-TEST(LinksTest, SymLink_Basics_TargetExistance)
+TEST(K_LinksTest, SymLink_Basics_TargetExistance)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
@@ -110,7 +110,7 @@ TEST(LinksTest, SymLink_Basics_TargetExistance)
 	EXPECT_EQ(nullptr, root->GetChild(linkName).get());
 }
 
-TEST(LinksTest, SymLink_ToFile)
+TEST(K_LinksTest, SymLink_ToFile)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
@@ -135,7 +135,7 @@ TEST(LinksTest, SymLink_ToFile)
 	EXPECT_EQ(nullptr, element.get());
 }
 
-TEST(LinksTest, SymLink_ToFolder)
+TEST(K_LinksTest, SymLink_ToFolder)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
@@ -160,7 +160,7 @@ TEST(LinksTest, SymLink_ToFolder)
 	EXPECT_EQ(nullptr, element.get());
 }
 
-TEST(LinksTest, SymLink_ToSymLink)
+TEST(K_LinksTest, SymLink_ToSymLink)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
@@ -193,7 +193,7 @@ TEST(LinksTest, SymLink_ToSymLink)
 	EXPECT_EQ(nullptr, element.get());
 }
 
-TEST(LinksTest, SymLink_ToDirectLink)
+TEST(K_LinksTest, SymLink_ToDirectLink)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
@@ -219,7 +219,7 @@ TEST(LinksTest, SymLink_ToDirectLink)
 	EXPECT_EQ(nullptr, element.get());
 }
 
-TEST(LinksTest, DirectLink_Basics_Target)
+TEST(K_LinksTest, DirectLink_Basics_Target)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
@@ -249,17 +249,14 @@ TEST(LinksTest, DirectLink_Basics_Target)
 	EXPECT_THROW(link->ChangeTarget(*target), ContainerException);
 }
 
-TEST(LinksTest, DirectLink_ToDirectLink)
+TEST(K_LinksTest, DirectLink_ToDirectLink)
 {
 	ASSERT_TRUE(DatabasePrepare());
 
 	FolderGuard root = cont->GetRoot();
 	const std::string link1Name = "directlink1";
-	const std::string link1Path = root->Name() + link1Name;
 	const std::string link2Name = "directlink2";
-	const std::string link2Path = root->Name() + link2Name;
 	const std::string targetFileName = "targetFile";
-	const std::string targetFilePath = root->Name() + targetFileName;
 
 	ElementGuard targetFile = root->CreateFile(targetFileName);
 	DirectLinkGuard link1;
@@ -287,4 +284,85 @@ TEST(LinksTest, DirectLink_ToDirectLink)
 	bool targetFileExists = false;
 	ASSERT_NO_THROW(targetFileExists = targetFile->Exists());
 	EXPECT_TRUE(targetFileExists);
+}
+
+TEST(K_LinksTest, DirectLink_ToSymLink)
+{
+    ASSERT_TRUE(DatabasePrepare());
+
+    FolderGuard root = cont->GetRoot();
+    const std::string link1Name = "directlink1";
+    const std::string link2Name = "symlink1";
+    const std::string targetFileName = "targetFile";
+
+    ElementGuard targetFile = root->CreateFile(targetFileName);
+    SymLinkGuard symlink;
+    ASSERT_NO_THROW(symlink = root->CreateSymLink(link1Name, targetFile->Path()));
+    ElementGuard element1;
+    EXPECT_NO_THROW(element1 = symlink->Target());
+    EXPECT_NE(nullptr, element1.get());
+    EXPECT_TRUE(element1->IsTheSame(*targetFile));
+
+    DirectLinkGuard directlink;
+    ASSERT_NO_THROW(directlink = root->CreateDirectLink(link2Name, symlink));
+    ElementGuard element2;
+    EXPECT_NO_THROW(element2 = directlink->Target());
+    EXPECT_NE(nullptr, element2.get());
+    EXPECT_TRUE(element2->IsTheSame(*symlink));
+
+    ElementGuard targetFileAbstract;
+    ASSERT_NO_FATAL_FAILURE(targetFileAbstract = directlink->Target()->AsSymLink()->Target());
+    EXPECT_TRUE(targetFileAbstract->IsTheSame(*targetFile));
+
+    ASSERT_NO_THROW(symlink->Remove());
+    EXPECT_NO_THROW(element2 = directlink->Target());
+    EXPECT_EQ(nullptr, element2.get());
+
+    bool targetFileExists = false;
+    ASSERT_NO_THROW(targetFileExists = targetFile->Exists());
+    EXPECT_TRUE(targetFileExists);
+}
+
+TEST(K_LinksTest, MetaData)
+{
+    ASSERT_TRUE(DatabasePrepare());
+
+    FolderGuard root = cont->GetRoot();
+    const std::string symLinkName = "symlink1";
+    const std::string directLinkName = "directlink1";
+    const std::string targetFileName = "targetFile";
+
+    FileGuard file = root->CreateFile(targetFileName);
+    SymLinkGuard symLink = root->CreateSymLink(symLinkName, file->Path());
+    DirectLinkGuard directLink = root->CreateDirectLink(directLinkName, file);
+
+    EXPECT_TRUE(file->GetProperties().Meta().empty());
+    EXPECT_TRUE(symLink->GetProperties().Meta().empty());
+    EXPECT_TRUE(directLink->GetProperties().Meta().empty());
+
+    std::string meta = "Target file meta information like JSON {\"prop_name\": \"prop_value, 0 : 1\"}";
+    file->SetMetaInformation(meta);
+    EXPECT_EQ(meta, file->GetProperties().Meta());
+    EXPECT_EQ(meta, symLink->GetProperties().Meta());
+    EXPECT_EQ(meta, directLink->GetProperties().Meta());
+
+    symLink->ChangeTarget(*directLink);
+    EXPECT_EQ(meta, symLink->GetProperties().Meta());
+    EXPECT_EQ(meta, directLink->GetProperties().Meta());
+
+    meta += ". Some additional data.";
+    symLink->SetMetaInformation(meta);
+    EXPECT_EQ(meta, file->GetProperties().Meta());
+    EXPECT_EQ(meta, symLink->GetProperties().Meta());
+    EXPECT_EQ(meta, directLink->GetProperties().Meta());
+
+    directLink->ChangeTarget(*symLink);
+    symLink->ChangeTarget(*file);
+    EXPECT_EQ(meta, file->GetProperties().Meta());
+    EXPECT_EQ(meta, symLink->GetProperties().Meta());
+    EXPECT_EQ(meta, directLink->GetProperties().Meta());
+
+    file->Remove();
+    EXPECT_TRUE(symLink->GetProperties().Meta().empty());
+    EXPECT_TRUE(directLink->GetProperties().Meta().empty());
 }
