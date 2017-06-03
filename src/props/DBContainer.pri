@@ -31,4 +31,4 @@ win32-msvc* {
 PRECOMPILED_SOURCE = stdafx.cpp
 }
 
-include($$SRC_ROOT/../../../externals/props/externals.pri)
+include($$SRC_ROOT/../ext/props/externals.pri)
