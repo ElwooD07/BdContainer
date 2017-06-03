@@ -31,7 +31,7 @@ namespace dbc
 		// Used for space allocation in transactional write.
 		// 1. Saves previously used streams of current file
 		// 2. Allocates unused streams of current file and other files and allocates new stream if necessary.
-		// All unused streams in m_allStreams will be prepared for writing after running ths function.
+		// All unused streams in m_allStreams will be prepared for writing after running this function.
 		// All previously used streams will be saved to the m_usedStreams. Run DeallocatePlaceAfterTransactionalWrite() to free previously used streams.
 		void AllocatePlaceForTransactionalWrite(uint64_t sizeRequested);
 		// Used before finishing transactional write for deallocating previously used streams in m_usedStreams.

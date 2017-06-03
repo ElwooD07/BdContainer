@@ -14,7 +14,7 @@ dbc::FileStreamsAllocator::FileStreamsAllocator(FileStreamsManager& streamsManag
 void dbc::FileStreamsAllocator::ReserveExistingStreams(uint64_t requestedSize)
 {
 	// it is so difficult because of optimization for Database
-	auto allStreams = m_streamsManager.GetAllStreams();
+	auto& allStreams = m_streamsManager.GetAllStreams();
 	if (allStreams.empty())
 	{
 		return;

@@ -8,7 +8,7 @@
 void dbc::detail::CreateNewSavepointName(std::string& name)
 {
 	static const char minLetter = 'a';
-	static const char maxLetter = 'a';
+	static const char maxLetter = 'z';
 
 	if (name.empty())
 	{
